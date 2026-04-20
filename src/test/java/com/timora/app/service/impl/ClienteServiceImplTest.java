@@ -50,20 +50,16 @@ class ClienteServiceImplTest {
 
         when(clienteRepository.findByUsuario_IdUsuario(idUsuario)).thenReturn(Optional.of(cliente));
 
-        // Act
         Cliente resultado = clienteService.findByUsuario(idUsuario);
 
-        // Assert
         assertEquals(100, resultado.getIdCliente());
         assertEquals(idUsuario, resultado.getUsuario().getIdUsuario());
     }
 
     @Test
     void findByUsuario_CuandoNoExiste_LanzaExcepcion() {
-        // Arrange
         when(clienteRepository.findByUsuario_IdUsuario(99)).thenReturn(Optional.empty());
 
-        // Assert & Act
         assertThrows(IllegalArgumentException.class, () -> {
             clienteService.findByUsuario(99);
         });
