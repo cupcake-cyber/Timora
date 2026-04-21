@@ -34,10 +34,10 @@ class DisponibilidadControllerTest {
     @BeforeEach
     void setUp() {
         Proveedor proveedor = new Proveedor();
-        proveedor.setIdProveedor(1);
+        proveedor.setIdProveedor(1L);
 
         disponibilidad = Disponibilidad.builder()
-                .idDisponibilidad(1)
+                .idDisponibilidad(1L)
                 .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 1, 1))
                 .fechaFin(LocalDate.of(2025, 1, 31))
@@ -61,14 +61,14 @@ class DisponibilidadControllerTest {
 
     @Test
     void getById_retornaDisponibilidadConEstado200() {
-        when(disponibilidadService.findById(1)).thenReturn(disponibilidad);
+        when(disponibilidadService.findById(1L)).thenReturn(disponibilidad);
 
-        ResponseEntity<Disponibilidad> response = disponibilidadController.getById(1);
+        ResponseEntity<Disponibilidad> response = disponibilidadController.getById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getIdDisponibilidad());
-        verify(disponibilidadService, times(1)).findById(1);
+        verify(disponibilidadService, times(1)).findById(1L);
     }
 
     @Test
@@ -85,23 +85,23 @@ class DisponibilidadControllerTest {
 
     @Test
     void actualizar_retornaDisponibilidadActualizada() {
-        when(disponibilidadService.actualizar(any(Integer.class), any(Disponibilidad.class)))
+        when(disponibilidadService.actualizar(any(Long.class), any(Disponibilidad.class)))
                 .thenReturn(disponibilidad);
 
-        ResponseEntity<Disponibilidad> response = disponibilidadController.actualizar(1, disponibilidad);
+        ResponseEntity<Disponibilidad> response = disponibilidadController.actualizar(1L, disponibilidad);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(disponibilidadService, times(1)).actualizar(any(Integer.class), any(Disponibilidad.class));
+        verify(disponibilidadService, times(1)).actualizar(any(Long.class), any(Disponibilidad.class));
     }
 
     @Test
     void borrar_retornaEstado204() {
-        doNothing().when(disponibilidadService).borrar(1);
+        doNothing().when(disponibilidadService).borrar(1L);
 
-        ResponseEntity<Void> response = disponibilidadController.borrar(1);
+        ResponseEntity<Void> response = disponibilidadController.borrar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(disponibilidadService, times(1)).borrar(1);
+        verify(disponibilidadService, times(1)).borrar(1L);
     }
 }

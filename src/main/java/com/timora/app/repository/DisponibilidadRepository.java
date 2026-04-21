@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, Integer> {
+public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, Long> {
 
-    List<Disponibilidad> findByProveedorIdProveedor(Integer idProveedor);
+    List<Disponibilidad> findByProveedorIdProveedor(Long idProveedor);
 }

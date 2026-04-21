@@ -8,7 +8,7 @@ public interface ClienteService {
 
     Cliente guardar(Cliente cliente);
 
-    Cliente findById(Integer id);
+    Cliente findById(Long id);
 
-    Cliente findByUsuario(Integer idUsuario);
+    Cliente findByUsuario(Long idUsuario);
 }

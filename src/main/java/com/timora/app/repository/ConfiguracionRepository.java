@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface ConfiguracionRepository extends JpaRepository<Configuracion, Integer> {
+public interface ConfiguracionRepository extends JpaRepository<Configuracion, Long> {
 
     Optional<Configuracion> findByUsuario(Usuario usuario);
 
-    Optional<Configuracion> findByUsuarioIdUsuario(Integer idUsuario);
+    Optional<Configuracion> findByUsuarioIdUsuario(Long idUsuario);
 }

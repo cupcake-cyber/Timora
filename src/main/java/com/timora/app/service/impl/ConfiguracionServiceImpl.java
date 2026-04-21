@@ -24,13 +24,13 @@ public class ConfiguracionServiceImpl implements ConfiguracionService {
     }
 
     @Override
-    public Configuracion findById(Integer id) {
+    public Configuracion findById(Long id) {
         return configuracionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Configuración no encontrada"));
     }
 
     @Override
-    public Configuracion findByUsuarioId(Integer idUsuario) {
+    public Configuracion findByUsuarioId(Long idUsuario) {
         return configuracionRepository.findByUsuarioIdUsuario(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Configuración no encontrada para el usuario"));
     }
@@ -41,7 +41,7 @@ public class ConfiguracionServiceImpl implements ConfiguracionService {
     }
 
     @Override
-    public Configuracion actualizar(Integer id, Configuracion configuracion) {
+    public Configuracion actualizar(Long id, Configuracion configuracion) {
         Configuracion existente = findById(id);
 
         existente.setActivas(configuracion.getActivas());
@@ -59,7 +59,7 @@ public class ConfiguracionServiceImpl implements ConfiguracionService {
     }
 
     @Override
-    public void borrar(Integer id) {
+    public void borrar(Long id) {
         configuracionRepository.delete(findById(id));
     }
 }

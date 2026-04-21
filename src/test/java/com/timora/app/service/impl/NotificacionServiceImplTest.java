@@ -40,7 +40,7 @@ class NotificacionServiceImplTest {
 
     @Test
     void actualizar_DebeModificarNotificacion() {
-        Integer id = 1;
+        Long id = 1L;
 
         Notificacion existente = new Notificacion();
         existente.setIdNotificacion(id);
@@ -66,7 +66,7 @@ class NotificacionServiceImplTest {
 
     @Test
     void borrar_DebeEliminarSiExiste() {
-        Integer id = 1;
+        Long id = 1L;
 
         Notificacion noti = new Notificacion();
         noti.setIdNotificacion(id);

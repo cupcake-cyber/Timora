@@ -25,12 +25,12 @@ public class ConfiguracionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Configuracion> getById(@PathVariable Integer id) {
+    public ResponseEntity<Configuracion> getById(@PathVariable Long id) {
         return ResponseEntity.ok(configuracionService.findById(id));
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<Configuracion> getByUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Configuracion> getByUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(configuracionService.findByUsuarioId(idUsuario));
     }
 

@@ -37,7 +37,7 @@ class ConfiguracionServiceImplTest {
 
     @Test
     void actualizar_DebeModificarConfiguracion() {
-        Integer id = 1;
+        Long id = 1;
 
         Configuracion existente = new Configuracion();
         existente.setIdConfiguracion(id);

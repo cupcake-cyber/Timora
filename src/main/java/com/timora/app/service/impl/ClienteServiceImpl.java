@@ -44,7 +44,7 @@ public class ClienteServiceImpl implements ClienteService {
      * @throws IllegalArgumentException si no existe el cliente
      */
     @Override
-    public Cliente findById(Integer id) {
+    public Cliente findById(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
     }
@@ -57,7 +57,7 @@ public class ClienteServiceImpl implements ClienteService {
      * @throws IllegalArgumentException si no existe el cliente
      */
     @Override
-    public Cliente findByUsuario(Integer idUsuario) {
+    public Cliente findByUsuario(Long idUsuario) {
         return clienteRepository.findByUsuario_IdUsuario(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
     }

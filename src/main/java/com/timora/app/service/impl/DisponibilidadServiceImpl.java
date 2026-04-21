@@ -22,13 +22,13 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     }
 
     @Override
-    public Disponibilidad findById(Integer id) {
+    public Disponibilidad findById(Long id) {
         return disponibilidadRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Disponibilidad no encontrada con id: " + id));
     }
 
     @Override
-    public List<Disponibilidad> findByProveedor(Integer idProveedor) {
+    public List<Disponibilidad> findByProveedor(Long idProveedor) {
         return disponibilidadRepository.findByProveedorIdProveedor(idProveedor);
     }
 
@@ -38,7 +38,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     }
 
     @Override
-    public Disponibilidad actualizar(Integer id, Disponibilidad disponibilidad) {
+    public Disponibilidad actualizar(Long id, Disponibilidad disponibilidad) {
         Disponibilidad existente = disponibilidadRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Disponibilidad no encontrada con id: " + id));
 
@@ -53,7 +53,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     }
 
     @Override
-    public void borrar(Integer id) {
+    public void borrar(Long id) {
         disponibilidadRepository.deleteById(id);
     }
 }

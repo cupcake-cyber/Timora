@@ -8,13 +8,13 @@ public interface DisponibilidadService {
 
     List<Disponibilidad> findAll();
 
-    Disponibilidad findById(Integer id);
+    Disponibilidad findById(Long id);
 
-    List<Disponibilidad> findByProveedor(Integer idProveedor);
+    List<Disponibilidad> findByProveedor(Long idProveedor);
 
     Disponibilidad guardar(Disponibilidad disponibilidad);
 
-    Disponibilidad actualizar(Integer id, Disponibilidad disponibilidad);
+    Disponibilidad actualizar(Long id, Disponibilidad disponibilidad);
 
-    void borrar(Integer id);
+    void borrar(Long id);
 }

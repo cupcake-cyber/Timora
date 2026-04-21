@@ -8,13 +8,13 @@ public interface ConfiguracionService {
 
     List<Configuracion> findAll();
 
-    Configuracion findById(Integer id);
+    Configuracion findById(Long id);
 
-    Configuracion findByUsuarioId(Integer idUsuario);
+    Configuracion findByUsuarioId(Long idUsuario);
 
     Configuracion guardar(Configuracion configuracion);
 
-    Configuracion actualizar(Integer id, Configuracion configuracion);
+    Configuracion actualizar(Long id, Configuracion configuracion);
 
-    void borrar(Integer id);
+    void borrar(Long id);
 }

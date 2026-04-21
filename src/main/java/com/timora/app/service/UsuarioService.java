@@ -8,13 +8,13 @@ public interface UsuarioService {
 
     List<Usuario> findAll();
 
-    Usuario findById(Integer id);
+    Usuario findById(Long id);
 
     Usuario findByEmail(String email);
 
     Usuario guardar(Usuario usuario);
 
-    Usuario actualizar(Integer id, Usuario usuario);
+    Usuario actualizar(Long id, Usuario usuario);
 
-    void borrar(Integer id);
+    void borrar(Long id);
 }

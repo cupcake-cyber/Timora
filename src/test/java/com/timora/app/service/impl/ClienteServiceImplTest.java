@@ -40,12 +40,12 @@ class ClienteServiceImplTest {
     @Test
     void findByUsuario_CuandoExiste_RetornaCliente() {
         // Arrange
-        Integer idUsuario = 1;
+        Long idUsuario = 1L;
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
 
         Cliente cliente = new Cliente();
-        cliente.setIdCliente(100);
+        cliente.setIdCliente(100L);
         cliente.setUsuario(usuario);
 
         when(clienteRepository.findByUsuario_IdUsuario(idUsuario)).thenReturn(Optional.of(cliente));
@@ -58,10 +58,10 @@ class ClienteServiceImplTest {
 
     @Test
     void findByUsuario_CuandoNoExiste_LanzaExcepcion() {
-        when(clienteRepository.findByUsuario_IdUsuario(99)).thenReturn(Optional.empty());
+        when(clienteRepository.findByUsuario_IdUsuario(99L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {
-            clienteService.findByUsuario(99);
+            clienteService.findByUsuario(99L);
         });
     }
 }

@@ -37,7 +37,7 @@ class UsuarioServiceImplTest {
 
     @Test
     void actualizar_DebeModificarUsuarioExistente() {
-        Integer id = 1;
+        Long id = 1L;
         Usuario existente = new Usuario();
         existente.setIdUsuario(id);
         existente.setNombre("Viejo Nombre");
@@ -58,7 +58,7 @@ class UsuarioServiceImplTest {
 
     @Test
     void borrar_DebeLlamarAlRepositorySiExiste() {
-        Integer id = 1;
+        Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(id);
         when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
