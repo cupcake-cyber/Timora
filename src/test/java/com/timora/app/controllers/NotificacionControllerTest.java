@@ -2,7 +2,7 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Notificacion;
 import com.timora.app.models.Usuario;
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.TipoNotificacion;
 import com.timora.app.service.NotificacionService;
 import com.timora.app.service.UsuarioService;
@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -75,8 +73,8 @@ class NotificacionControllerTest {
     void crear_DebeGuardarNotificacion() {
         Notificacion noti = new Notificacion();
         noti.setMensaje("Test");
-        noti.setTipo(TipoNotificacion.GENERAL);
-        noti.setEstado(Estado.ACTIVO);
+        noti.setTipo(TipoNotificacion.PAGO);
+        noti.setEstado(EstadoUsuario.ACTIVO);
         noti.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionService.guardar(noti)).thenReturn(noti);

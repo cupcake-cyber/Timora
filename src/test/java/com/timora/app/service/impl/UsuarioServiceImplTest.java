@@ -1,8 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Usuario;
-import com.timora.app.models.enums.Estado;
-import com.timora.app.models.enums.Rol;
+import com.timora.app.models.enums.RolUsuario;
 import com.timora.app.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +43,7 @@ class UsuarioServiceImplTest {
 
         Usuario nuevosDatos = new Usuario();
         nuevosDatos.setNombre("Nuevo Nombre");
-        nuevosDatos.setRol(Rol.ADMINISTRADOR);
+        nuevosDatos.setRol(RolUsuario.ADMINISTRADOR);
 
         when(usuarioRepository.findById(id)).thenReturn(Optional.of(existente));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -52,7 +51,7 @@ class UsuarioServiceImplTest {
         Usuario actualizado = usuarioService.actualizar(id, nuevosDatos);
 
         assertEquals("Nuevo Nombre", actualizado.getNombre());
-        assertEquals(Rol.ADMINISTRADOR, actualizado.getRol());
+        assertEquals(RolUsuario.ADMINISTRADOR, actualizado.getRol());
         verify(usuarioRepository).save(existente);
     }
 

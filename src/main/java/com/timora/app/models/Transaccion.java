@@ -2,6 +2,7 @@ package com.timora.app.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.timora.app.models.enums.EstadoTransaccion;
+import com.timora.app.models.enums.MetodoTransaccion;
 import com.timora.app.models.enums.TipoTransaccion;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class Transaccion {
 
     @Enumerated(EnumType.STRING)
     private EstadoTransaccion estado;
+
+    @Enumerated(EnumType.STRING)
+    private MetodoTransaccion metodo;
 
     private LocalDateTime fecha;
 

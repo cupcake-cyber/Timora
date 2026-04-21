@@ -1,6 +1,6 @@
 package com.timora.app.models;
 
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoNotificacion;
 import com.timora.app.models.enums.TipoNotificacion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,7 +35,7 @@ public class Notificacion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private Estado estado;
+    private EstadoNotificacion estado;
 
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;

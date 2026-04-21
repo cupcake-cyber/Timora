@@ -1,6 +1,6 @@
 package com.timora.app.models.enums;
 
-public enum Estado {
+public enum EstadoUsuario {
     ACTIVO,
     INACTIVO
 }

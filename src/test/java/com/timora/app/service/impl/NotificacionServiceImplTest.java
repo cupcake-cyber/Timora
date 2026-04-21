@@ -1,8 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Notificacion;
-import com.timora.app.models.Usuario;
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.TipoNotificacion;
 import com.timora.app.repository.NotificacionRepository;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ class NotificacionServiceImplTest {
         Notificacion nuevosDatos = new Notificacion();
         nuevosDatos.setMensaje("Nuevo");
         nuevosDatos.setTipo(TipoNotificacion.RESERVA);
-        nuevosDatos.setEstado(Estado.ACTIVO);
+        nuevosDatos.setEstado(EstadoUsuario.ACTIVO);
         nuevosDatos.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionRepository.findById(id))

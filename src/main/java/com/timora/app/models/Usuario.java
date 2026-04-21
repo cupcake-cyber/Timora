@@ -1,7 +1,7 @@
 package com.timora.app.models;
 
-import com.timora.app.models.enums.Estado;
-import com.timora.app.models.enums.Rol;
+import com.timora.app.models.enums.EstadoUsuario;
+import com.timora.app.models.enums.RolUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,11 +36,11 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol")
-    private Rol rol;
+    private RolUsuario rol;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private Estado estado;
+    private EstadoUsuario estado;
 
     @Column(name = "fecha_creacion", updatable = false)
     @CreationTimestamp
