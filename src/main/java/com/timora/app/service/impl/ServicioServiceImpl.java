@@ -1,6 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Servicio;
+import com.timora.app.models.enums.EstadoServicio;
 import com.timora.app.repository.ServicioRepository;
 import com.timora.app.service.ServicioService;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,7 @@ public class ServicioServiceImpl implements ServicioService {
     }
 
     @Override
-    public List<Servicio> findByEstado(String estado) {
+    public List<Servicio> findByEstado(EstadoServicio estado) {
         return servicioRepository.findByEstado(estado);
     }
     
