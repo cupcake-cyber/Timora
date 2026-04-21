@@ -40,13 +40,13 @@ public class ConfiguracionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Configuracion> actualizar(@PathVariable Integer id,
+    public ResponseEntity<Configuracion> actualizar(@PathVariable Long id,
                                                     @RequestBody Configuracion configuracion) {
         return ResponseEntity.ok(configuracionService.actualizar(id, configuracion));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> borrar(@PathVariable Integer id) {
+    public ResponseEntity<Void> borrar(@PathVariable Long id) {
         configuracionService.borrar(id);
         return ResponseEntity.noContent().build();
     }
