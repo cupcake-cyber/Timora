@@ -7,11 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface CitaRepository extends JpaRepository<Cita,Integer> {
+public interface CitaRepository extends JpaRepository<Cita, Integer> {
 
-    List<Cita> findByEstado(EstadoCita estadoCita);
+    List<Cita> findByEstado(EstadoCita estado);
 
-    List<Cita> findByClienteId(Integer clienteId);
+    List<Cita> findByClienteIdCliente(Integer idCliente);
+
+    List<Cita> findByClienteUsuarioIdUsuario(Integer idUsuario);
 
     List<Cita> findByFechaCreacionBetween(LocalDateTime inicio, LocalDateTime fin);
 }
