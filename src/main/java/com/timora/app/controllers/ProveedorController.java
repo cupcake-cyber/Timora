@@ -1,0 +1,34 @@
+package com.timora.app.controllers;
+
+import com.timora.app.models.Proveedor;
+import com.timora.app.service.ProveedorService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/proveedores")
+public class ProveedorController {
+
+    private final ProveedorService proveedorService;
+
+    public ProveedorController(ProveedorService proveedorService) {
+        this.proveedorService = proveedorService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Proveedor> crear(@RequestBody Proveedor proveedor) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(proveedorService.guardar(proveedor));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Proveedor> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(proveedorService.findById(id));
+    }
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<Proveedor> getByUsuario(@PathVariable Integer idUsuario) {
+        return ResponseEntity.ok(proveedorService.findByUsuario(idUsuario));
+    }
+}
