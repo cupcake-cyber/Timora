@@ -2,51 +2,49 @@ package com.timora.app.service.impl;
 
 import com.timora.app.models.Transaccion;
 import com.timora.app.repository.TransaccionRepository;
+import com.timora.app.service.TransaccionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class TransaccionServiceImpl {
+public class TransaccionServiceImpl implements TransaccionService {
 
     private final TransaccionRepository repository;
 
-    // Inyección por constructor (MEJOR práctica)
     public TransaccionServiceImpl(TransaccionRepository repository) {
         this.repository = repository;
     }
 
-    public List<Transaccion> listar() {
+    @Override
+    public List<Transaccion> listarTodas() {
         return repository.findAll();
     }
 
+    @Override
+    public Optional<Transaccion> obtenerPorId(Long id) {
+        return repository.findById(id);
+    }
+
+    @Override
     public Transaccion guardar(Transaccion transaccion) {
         return repository.save(transaccion);
     }
 
-    public Transaccion obtenerPorId(Long id) {
-        return repository.findById(id).orElse(null);
-    }
-
+    @Override
     public Transaccion actualizar(Long id, Transaccion nueva) {
-        Optional<Transaccion> optional = repository.findById(id);
-
-        if (optional.isPresent()) {
-            Transaccion existente = optional.get();
-
+        return repository.findById(id).map(existente -> {
             existente.setTipo(nueva.getTipo());
             existente.setMonto(nueva.getMonto());
             existente.setEstado(nueva.getEstado());
             existente.setFecha(nueva.getFecha());
             existente.setCita(nueva.getCita());
-
             return repository.save(existente);
-        }
-
-        return null;
+        }).orElse(null);
     }
 
+    @Override
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
