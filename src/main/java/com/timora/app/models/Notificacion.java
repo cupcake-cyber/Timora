@@ -19,7 +19,7 @@ public class Notificacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacion")
-    private Integer idNotificacion;
+    private Long idNotificacion;
 
     // Relación con Usuario
     @ManyToOne

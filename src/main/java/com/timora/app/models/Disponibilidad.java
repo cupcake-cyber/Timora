@@ -16,7 +16,7 @@ public class Disponibilidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_disponibilidad")
-    private Integer idDisponibilidad;
+    private Long idDisponibilidad;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = false)
