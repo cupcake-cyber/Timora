@@ -23,12 +23,12 @@ public class ProveedorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Proveedor> getById(@PathVariable Integer id) {
+    public ResponseEntity<Proveedor> getById(@PathVariable Long id) {
         return ResponseEntity.ok(proveedorService.findById(id));
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<Proveedor> getByUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Proveedor> getByUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(proveedorService.findByUsuario(idUsuario));
     }
 }

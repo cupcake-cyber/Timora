@@ -46,18 +46,18 @@ class NotificacionControllerTest {
     @Test
     void obtener_DebeRetornarNotificacion() {
         Notificacion noti = new Notificacion();
-        noti.setIdNotificacion(1);
+        noti.setIdNotificacion(1L);
 
-        when(notificacionService.findById(1)).thenReturn(noti);
+        when(notificacionService.findById(1L)).thenReturn(noti);
 
-        Notificacion response = notificacionController.obtener(1);
+        Notificacion response = notificacionController.obtener(1L);
 
         assertEquals(1, response.getIdNotificacion());
     }
 
     @Test
     void porUsuario_DebeRetornarLista() {
-        Integer idUsuario = 1;
+        Long idUsuario = 1L;
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
 
@@ -88,7 +88,7 @@ class NotificacionControllerTest {
 
     @Test
     void actualizar_DebeRetornarNotificacionActualizada() {
-        Integer id = 1;
+        Long id = 1L;
         Notificacion noti = new Notificacion();
         noti.setMensaje("Actualizado");
 
@@ -101,8 +101,8 @@ class NotificacionControllerTest {
 
     @Test
     void eliminar_DebeLlamarService() {
-        notificacionController.eliminar(1);
+        notificacionController.eliminar(1L);
 
-        verify(notificacionService).borrar(1);
+        verify(notificacionService).borrar(1L);
     }
 }

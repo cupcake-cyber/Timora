@@ -37,15 +37,15 @@ class ClienteControllerTest {
     @Test
     void getByUsuario_DebeRetornarClienteOk() {
         Usuario u = new Usuario();
-        u.setIdUsuario(1);
+        u.setIdUsuario(1L);
 
         Cliente c = new Cliente();
-        c.setIdCliente(50);
+        c.setIdCliente(50L);
         c.setUsuario(u);
 
-        when(clienteService.findByUsuario(1)).thenReturn(c);
+        when(clienteService.findByUsuario(1L)).thenReturn(c);
 
-        ResponseEntity<Cliente> response = clienteController.getByUsuario(1);
+        ResponseEntity<Cliente> response = clienteController.getByUsuario(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(50, response.getBody().getIdCliente());

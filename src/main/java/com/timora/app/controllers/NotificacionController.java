@@ -28,12 +28,12 @@ public class NotificacionController {
     }
 
     @GetMapping("/{id}")
-    public Notificacion obtener(@PathVariable Integer id) {
+    public Notificacion obtener(@PathVariable Long id) {
         return notificacionService.findById(id);
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public List<Notificacion> porUsuario(@PathVariable Integer idUsuario) {
+    public List<Notificacion> porUsuario(@PathVariable Long idUsuario) {
         Usuario usuario = usuarioService.findById(idUsuario);
         return notificacionService.findByUsuario(usuario);
     }
@@ -44,13 +44,13 @@ public class NotificacionController {
     }
 
     @PutMapping("/{id}")
-    public Notificacion actualizar(@PathVariable Integer id,
+    public Notificacion actualizar(@PathVariable Long id,
                                    @RequestBody Notificacion notificacion) {
         return notificacionService.actualizar(id, notificacion);
     }
 
     @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Integer id) {
+    public void eliminar(@PathVariable Long id) {
         notificacionService.borrar(id);
     }
 }
