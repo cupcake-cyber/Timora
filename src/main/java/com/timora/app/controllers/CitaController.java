@@ -18,13 +18,13 @@ public class CitaController {
         this.citaService = citaService;
     }
 
-    // ✅ GET - listar todas
+
     @GetMapping
     public ResponseEntity<List<Cita>> listarTodas() {
         return ResponseEntity.ok(citaService.listarTodas());
     }
 
-    // ✅ GET - obtener por ID
+
     @GetMapping("/{id}")
     public ResponseEntity<Cita> obtenerPorId(@PathVariable Integer id) {
         return citaService.obtenerPorId(id)
