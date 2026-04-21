@@ -1,43 +1,44 @@
 package com.timora.app.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.timora.app.models.Disponibilidad;
+import com.timora.app.models.Proveedor;
 import com.timora.app.service.DisponibilidadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(DisponibilidadController.class)
+@ExtendWith(MockitoExtension.class)
 class DisponibilidadControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private DisponibilidadService disponibilidadService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private DisponibilidadController disponibilidadController;
 
     private Disponibilidad disponibilidad;
 
     @BeforeEach
     void setUp() {
+        Proveedor proveedor = new Proveedor();
+        proveedor.setIdProveedor(1);
+
         disponibilidad = Disponibilidad.builder()
                 .idDisponibilidad(1)
-                .idProveedor(1)
+                .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 1, 1))
                 .fechaFin(LocalDate.of(2025, 1, 31))
                 .tipoRecurrencia("SEMANAL")
@@ -47,39 +48,60 @@ class DisponibilidadControllerTest {
     }
 
     @Test
-    void getAll_debeRetornar200ConLista() throws Exception {
+    void getAll_retornaListaConEstado200() {
         when(disponibilidadService.findAll()).thenReturn(List.of(disponibilidad));
 
-        mockMvc.perform(get("/api/disponibilidades"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].idDisponibilidad").value(1));
+        ResponseEntity<List<Disponibilidad>> response = disponibilidadController.getAll();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        verify(disponibilidadService, times(1)).findAll();
     }
 
     @Test
-    void getById_debeRetornar200CuandoExiste() throws Exception {
+    void getById_retornaDisponibilidadConEstado200() {
         when(disponibilidadService.findById(1)).thenReturn(disponibilidad);
 
-        mockMvc.perform(get("/api/disponibilidades/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idDisponibilidad").value(1));
+        ResponseEntity<Disponibilidad> response = disponibilidadController.getById(1);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getIdDisponibilidad());
+        verify(disponibilidadService, times(1)).findById(1);
     }
 
     @Test
-    void crear_debeRetornar201AlGuardar() throws Exception {
+    void crear_retornaDisponibilidadConEstado201() {
         when(disponibilidadService.guardar(any(Disponibilidad.class))).thenReturn(disponibilidad);
 
-        mockMvc.perform(post("/api/disponibilidades")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(disponibilidad)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idDisponibilidad").value(1));
+        ResponseEntity<Disponibilidad> response = disponibilidadController.crear(disponibilidad);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getIdDisponibilidad());
+        verify(disponibilidadService, times(1)).guardar(any(Disponibilidad.class));
     }
 
     @Test
-    void borrar_debeRetornar204() throws Exception {
+    void actualizar_retornaDisponibilidadActualizada() {
+        when(disponibilidadService.actualizar(any(Integer.class), any(Disponibilidad.class)))
+                .thenReturn(disponibilidad);
+
+        ResponseEntity<Disponibilidad> response = disponibilidadController.actualizar(1, disponibilidad);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(disponibilidadService, times(1)).actualizar(any(Integer.class), any(Disponibilidad.class));
+    }
+
+    @Test
+    void borrar_retornaEstado204() {
         doNothing().when(disponibilidadService).borrar(1);
 
-        mockMvc.perform(delete("/api/disponibilidades/1"))
-                .andExpect(status().isNoContent());
+        ResponseEntity<Void> response = disponibilidadController.borrar(1);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(disponibilidadService, times(1)).borrar(1);
     }
 }
