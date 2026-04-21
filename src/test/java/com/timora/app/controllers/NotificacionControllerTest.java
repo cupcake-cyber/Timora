@@ -2,6 +2,7 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Notificacion;
 import com.timora.app.models.Usuario;
+import com.timora.app.models.enums.EstadoNotificacion;
 import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.TipoNotificacion;
 import com.timora.app.service.NotificacionService;
@@ -74,7 +75,7 @@ class NotificacionControllerTest {
         Notificacion noti = new Notificacion();
         noti.setMensaje("Test");
         noti.setTipo(TipoNotificacion.PAGO);
-        noti.setEstado(EstadoUsuario.ACTIVO);
+        noti.setEstado(EstadoNotificacion.NO_LEIDA);
         noti.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionService.guardar(noti)).thenReturn(noti);
