@@ -1,6 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Servicio;
+import com.timora.app.models.enums.EstadoServicio;
 import com.timora.app.repository.ServicioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ServicioServiceImplTest {
+
     @Mock
     private ServicioRepository servicioRepository;
 
@@ -26,12 +28,14 @@ class ServicioServiceImplTest {
     @Test
     void findAllServRepositoryData() {
         List<Servicio> esperadoServicios = List.of(
-                new Servicio("Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO"),
-                new Servicio("Medicina General", "Consulta médica para Medicina General", 1, 80.00, "APROBADO")
+                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO),
+                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, EstadoServicio.APROBADO)
         );
+
         when(servicioRepository.findAll()).thenReturn(esperadoServicios);
 
         List<Servicio> result = servicioService.findAll();
+
         assertEquals(esperadoServicios, result);
         verify(servicioRepository).findAll();
     }
@@ -39,7 +43,9 @@ class ServicioServiceImplTest {
     @Test
     void findByIdServWhenExists() {
         Long id = 1L;
-        Servicio servicio = new Servicio(id, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
+        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        servicio.setId(id);
+
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));
 
         Servicio result = servicioService.findById(id);
@@ -52,6 +58,7 @@ class ServicioServiceImplTest {
     @Test
     void findByIdServWhenNotExists() {
         Long id = 90L;
+
         when(servicioRepository.findById(id)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -64,7 +71,8 @@ class ServicioServiceImplTest {
     @Test
     void findByNombreServWhenExists() {
         String nombre = "Limpieza facial";
-        Servicio servicio = new Servicio(1L, nombre, "Limpieza de rostro", 3, 120.00, "APROBADO");
+        Servicio servicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+
         when(servicioRepository.findByNombre(nombre)).thenReturn(Optional.of(servicio));
 
         Servicio result = servicioService.findByNombre(nombre);
@@ -88,14 +96,16 @@ class ServicioServiceImplTest {
 
     @Test
     void findByEstadoServWhenExists() {
-        String estado = "APROBADO";
+        EstadoServicio estado = EstadoServicio.APROBADO;
         List<Servicio> esperadoServicios = List.of(
-                new Servicio(1L, "Limpieza facial", "Limpieza de rostro", 3, 120.00, estado),
-                new Servicio(2L, "Medicina General", "Consulta médica para Medicina General", 1, 80.00, estado)
+                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, estado),
+                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, estado)
         );
+
         when(servicioRepository.findByEstado(estado)).thenReturn(esperadoServicios);
 
         List<Servicio> result = servicioService.findByEstado(estado);
+
         assertEquals(2, result.size());
         assertEquals(estado, result.get(0).getEstado());
         verify(servicioRepository).findByEstado(estado);
@@ -103,20 +113,22 @@ class ServicioServiceImplTest {
 
     @Test
     void findByEstadoServWhenNotExists() {
-        String estado = "No existe";
+        EstadoServicio estado = EstadoServicio.SUSPENDIDO;
         when(servicioRepository.findByEstado(estado)).thenReturn(List.of());
 
         List<Servicio> result = servicioService.findByEstado(estado);
+
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        assertEquals(0, result.size());
         verify(servicioRepository).findByEstado(estado);
     }
 
     @Test
     void saveServForcesNullIdBeforePersist() {
-        Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
-        Servicio servicioGuardado = new Servicio(10L, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
+        Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicioGuardado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        servicioGuardado.setId(10L);
+
         when(servicioRepository.save(servicioNuevo)).thenReturn(servicioGuardado);
 
         Servicio result = servicioService.guardar(servicioNuevo);
@@ -129,22 +141,25 @@ class ServicioServiceImplTest {
     @Test
     void updateServChangesFieldsAndPersist() {
         Long id = 1L;
-        Servicio servicioExistente = new Servicio(id, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
-        Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
+        Servicio servicioExistente = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        servicioExistente.setId(id);
+
+        Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, EstadoServicio.SUSPENDIDO);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicioExistente));
         when(servicioRepository.save(servicioExistente)).thenReturn(servicioExistente);
 
         Servicio result = servicioService.actualizar(id, servicioNuevo);
 
-        assertEquals("Limpieza facial", result.getNombre());
-        assertEquals("APROBADO", result.getEstado());
+        assertEquals("Nuevo nombre", result.getNombre());
+        assertEquals(EstadoServicio.SUSPENDIDO, result.getEstado());
         verify(servicioRepository).save(servicioExistente);
     }
 
     @Test
     void updateServThrowsWhenServNotExists() {
         Long id = 1L;
+
         when(servicioRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -155,10 +170,13 @@ class ServicioServiceImplTest {
     @Test
     void deleteServWhenExists() {
         Long id = 1L;
-        Servicio servicio = new Servicio(id, "Limpieza facial", "Limpieza de rostro", 3, 120.00, "APROBADO");
+        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        servicio.setId(id);
+
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));
 
         servicioService.borrar(id);
+
         verify(servicioRepository).delete(servicio);
     }
 }

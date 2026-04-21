@@ -1,8 +1,11 @@
 package com.timora.app.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.timora.app.models.enums.EstadoServicio;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 import java.util.ArrayList;
@@ -10,6 +13,7 @@ import java.util.ArrayList;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 @Table(name = "Servicio")
 public class Servicio {
     @Id
@@ -32,17 +36,15 @@ public class Servicio {
     @Column(nullable = false)
     private double precio;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String estado;
+    private EstadoServicio estado;
 
     @JsonIgnore
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<Cita> citas = new ArrayList<>();
 
-    public Servicio() {
-    }
-
-    public Servicio(Proveedor proveedor, String nombre, String descripcion, int duracion, double precio, String estado) {
+    public Servicio(Proveedor proveedor, String nombre, String descripcion, int duracion, double precio, EstadoServicio estado) {
         this.proveedor = proveedor;
         this.nombre = nombre;
         this.descripcion = descripcion;
