@@ -50,7 +50,7 @@ class ConfiguracionControllerTest {
 
     @Test
     void borrar_DebeRetornarNoContent() {
-        ResponseEntity<Void> response = configuracionController.borrar(1);
+        ResponseEntity<Void> response = configuracionController.borrar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(configuracionService).borrar(1L);
