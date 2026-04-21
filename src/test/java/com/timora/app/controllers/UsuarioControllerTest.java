@@ -50,9 +50,9 @@ class UsuarioControllerTest {
 
     @Test
     void borrar_DebeRetornarNoContent() {
-        ResponseEntity<Void> response = usuarioController.borrar(1);
+        ResponseEntity<Void> response = usuarioController.borrar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(usuarioService).borrar(1);
+        verify(usuarioService).borrar(1L);
     }
 }

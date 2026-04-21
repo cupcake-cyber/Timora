@@ -40,12 +40,12 @@ class ProveedorControllerTest {
     void getById_DebeRetornarProveedor() {
 
         Proveedor p = new Proveedor();
-        p.setIdProveedor(1);
+        p.setIdProveedor(1L);
         p.setNombreNegocio("Insumos Pro");
 
-        when(proveedorService.findById(1)).thenReturn(p);
+        when(proveedorService.findById(1L)).thenReturn(p);
 
-        ResponseEntity<Proveedor> response = proveedorController.getById(1);
+        ResponseEntity<Proveedor> response = proveedorController.getById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Insumos Pro", response.getBody().getNombreNegocio());

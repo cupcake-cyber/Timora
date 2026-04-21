@@ -34,7 +34,7 @@ class CitaServiceImplTest {
     @BeforeEach
     void setUp() {
         cita = new Cita();
-        cita.setId(1);
+        cita.setId(1L);
         cita.setHoraInicio(LocalTime.of(10, 0));
         cita.setHoraFin(LocalTime.of(11, 0));
         cita.setEstado(EstadoCita.PENDIENTE);

@@ -39,7 +39,7 @@ public class UsuarioServiceImpl implements UsuarioService {
      * @throws IllegalArgumentException si no existe
      */
     @Override
-    public Usuario findById(Integer id) {
+    public Usuario findById(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
     }
@@ -76,7 +76,7 @@ public class UsuarioServiceImpl implements UsuarioService {
      * @return usuario actualizado
      */
     @Override
-    public Usuario actualizar(Integer id, Usuario usuario) {
+    public Usuario actualizar(Long id, Usuario usuario) {
         Usuario existente = findById(id);
 
         existente.setNombre(usuario.getNombre());
@@ -95,7 +95,7 @@ public class UsuarioServiceImpl implements UsuarioService {
      * @param id identificador del usuario
      */
     @Override
-    public void borrar(Integer id) {
+    public void borrar(Long id) {
         usuarioRepository.delete(findById(id));
     }
 }

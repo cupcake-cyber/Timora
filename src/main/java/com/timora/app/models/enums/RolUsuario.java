@@ -1,6 +1,6 @@
 package com.timora.app.models.enums;
 
-public enum Rol {
+public enum RolUsuario {
     ADMINISTRADOR,
     PROVEEDOR,
     CLIENTE

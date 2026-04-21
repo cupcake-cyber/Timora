@@ -113,7 +113,7 @@ class ServicioServiceImplTest {
 
     @Test
     void findByEstadoServWhenNotExists() {
-        EstadoServicio estado = EstadoServicio.SUSPENDIDO;
+        EstadoServicio estado = EstadoServicio.PAUSADO;
         when(servicioRepository.findByEstado(estado)).thenReturn(List.of());
 
         List<Servicio> result = servicioService.findByEstado(estado);
@@ -144,7 +144,7 @@ class ServicioServiceImplTest {
         Servicio servicioExistente = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
         servicioExistente.setId(id);
 
-        Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, EstadoServicio.SUSPENDIDO);
+        Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, EstadoServicio.PAUSADO);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicioExistente));
         when(servicioRepository.save(servicioExistente)).thenReturn(servicioExistente);
@@ -152,7 +152,7 @@ class ServicioServiceImplTest {
         Servicio result = servicioService.actualizar(id, servicioNuevo);
 
         assertEquals("Nuevo nombre", result.getNombre());
-        assertEquals(EstadoServicio.SUSPENDIDO, result.getEstado());
+        assertEquals(EstadoServicio.PAUSADO, result.getEstado());
         verify(servicioRepository).save(servicioExistente);
     }
 

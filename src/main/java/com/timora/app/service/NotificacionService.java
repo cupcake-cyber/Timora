@@ -9,13 +9,13 @@ public interface NotificacionService {
 
     List<Notificacion> findAll();
 
-    Notificacion findById(Integer id);
+    Notificacion findById(Long id);
 
     List<Notificacion> findByUsuario(Usuario usuario);
 
     Notificacion guardar(Notificacion notificacion);
 
-    Notificacion actualizar(Integer id, Notificacion notificacion);
+    Notificacion actualizar(Long id, Notificacion notificacion);
 
-    void borrar(Integer id);
+    void borrar(Long id);
 }

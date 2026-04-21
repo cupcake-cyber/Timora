@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface NotificacionRepository extends JpaRepository<Notificacion, Integer> {
+public interface NotificacionRepository extends JpaRepository<Notificacion, Long> {
 
     // Obtener notificaciones por usuario
     List<Notificacion> findByUsuario(Usuario usuario);

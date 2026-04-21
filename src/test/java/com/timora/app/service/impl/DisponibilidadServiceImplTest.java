@@ -34,10 +34,10 @@ class DisponibilidadServiceImplTest {
     @BeforeEach
     void setUp() {
         proveedor = new Proveedor();
-        proveedor.setIdProveedor(1);
+        proveedor.setIdProveedor(1L);
 
         disponibilidad = Disponibilidad.builder()
-                .idDisponibilidad(1)
+                .idDisponibilidad(1L)
                 .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 1, 1))
                 .fechaFin(LocalDate.of(2025, 1, 31))
@@ -60,21 +60,21 @@ class DisponibilidadServiceImplTest {
 
     @Test
     void findById_debeRetornarDisponibilidadCuandoExiste() {
-        when(disponibilidadRepository.findById(1)).thenReturn(Optional.of(disponibilidad));
+        when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disponibilidad));
 
-        Disponibilidad resultado = disponibilidadService.findById(1);
+        Disponibilidad resultado = disponibilidadService.findById(1L);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.getIdDisponibilidad());
-        verify(disponibilidadRepository, times(1)).findById(1);
+        verify(disponibilidadRepository, times(1)).findById(1L);
     }
 
     @Test
     void findById_debeLanzarExcepcionCuandoNoExiste() {
-        when(disponibilidadRepository.findById(99)).thenReturn(Optional.empty());
+        when(disponibilidadRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> disponibilidadService.findById(99));
+                () -> disponibilidadService.findById(99L));
 
         assertEquals("Disponibilidad no encontrada con id: 99", ex.getMessage());
     }
@@ -101,10 +101,10 @@ class DisponibilidadServiceImplTest {
                 .horaFin(LocalTime.of(18, 0))
                 .build();
 
-        when(disponibilidadRepository.findById(1)).thenReturn(Optional.of(disponibilidad));
+        when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disponibilidad));
         when(disponibilidadRepository.save(any(Disponibilidad.class))).thenReturn(disponibilidad);
 
-        Disponibilidad resultado = disponibilidadService.actualizar(1, actualizado);
+        Disponibilidad resultado = disponibilidadService.actualizar(1L, actualizado);
 
         assertNotNull(resultado);
         verify(disponibilidadRepository, times(1)).save(any(Disponibilidad.class));
@@ -112,22 +112,22 @@ class DisponibilidadServiceImplTest {
 
     @Test
     void borrar_debeEliminarDisponibilidad() {
-        doNothing().when(disponibilidadRepository).deleteById(1);
+        doNothing().when(disponibilidadRepository).deleteById(1L);
 
-        disponibilidadService.borrar(1);
+        disponibilidadService.borrar(1L);
 
-        verify(disponibilidadRepository, times(1)).deleteById(1);
+        verify(disponibilidadRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void findByProveedor_debeRetornarListaPorProveedor() {
-        when(disponibilidadRepository.findByProveedorIdProveedor(1))
+        when(disponibilidadRepository.findByProveedorIdProveedor(1L))
                 .thenReturn(List.of(disponibilidad));
 
-        List<Disponibilidad> resultado = disponibilidadService.findByProveedor(1);
+        List<Disponibilidad> resultado = disponibilidadService.findByProveedor(1L);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
-        verify(disponibilidadRepository, times(1)).findByProveedorIdProveedor(1);
+        verify(disponibilidadRepository, times(1)).findByProveedorIdProveedor(1L);
     }
 }

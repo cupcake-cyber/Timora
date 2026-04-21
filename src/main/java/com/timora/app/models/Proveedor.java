@@ -13,7 +13,7 @@ public class Proveedor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_proveedor")
-    private Integer idProveedor;
+    private Long idProveedor;
 
     private String nombreNegocio;
 

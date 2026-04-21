@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "Configuracion")
+@Table(name = "configuracion")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +17,7 @@ public class Configuracion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_configuracion")
-    private Integer idConfiguracion;
+    private Long idConfiguracion;
 
     // Relación 1 a 1 con Usuario
     @OneToOne

@@ -39,12 +39,12 @@ class ProveedorServiceImplTest {
 
     @Test
     void findByUsuario_CuandoExiste_RetornaProveedor() {
-        Integer idBusqueda = 10;
+        Long idBusqueda = 10L;
         Usuario mockUsuario = new Usuario();
         mockUsuario.setIdUsuario(idBusqueda);
 
         Proveedor mockProveedor = new Proveedor();
-        mockProveedor.setIdProveedor(1);
+        mockProveedor.setIdProveedor(1L);
         mockProveedor.setNombreNegocio("Alimentos S.A.");
         mockProveedor.setUsuario(mockUsuario);
 
@@ -60,10 +60,10 @@ class ProveedorServiceImplTest {
 
     @Test
     void findById_CuandoNoExiste_LanzaIllegalArgumentException() {
-        when(proveedorRepository.findById(999)).thenReturn(Optional.empty());
+        when(proveedorRepository.findById(999L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            proveedorService.findById(999);
+            proveedorService.findById(999L);
         });
 
         assertEquals("Proveedor no encontrado", exception.getMessage());

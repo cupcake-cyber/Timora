@@ -44,7 +44,7 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @throws IllegalArgumentException si no existe el proveedor
      */
     @Override
-    public Proveedor findById(Integer id) {
+    public Proveedor findById(Long id) {
         return proveedorRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
     }
@@ -57,7 +57,7 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @throws IllegalArgumentException si no existe el proveedor
      */
     @Override
-    public Proveedor findByUsuario(Integer idUsuario) {
+    public Proveedor findByUsuario(Long idUsuario) {
         return proveedorRepository.findByUsuario_IdUsuario(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
     }

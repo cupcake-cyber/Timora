@@ -23,12 +23,12 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> getById(@PathVariable Integer id) {
+    public ResponseEntity<Cliente> getById(@PathVariable Long id) {
         return ResponseEntity.ok(clienteService.findById(id));
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<Cliente> getByUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Cliente> getByUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(clienteService.findByUsuario(idUsuario));
     }
 }

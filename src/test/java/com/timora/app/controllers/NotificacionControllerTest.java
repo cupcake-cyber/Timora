@@ -2,7 +2,8 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Notificacion;
 import com.timora.app.models.Usuario;
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoNotificacion;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.TipoNotificacion;
 import com.timora.app.service.NotificacionService;
 import com.timora.app.service.UsuarioService;
@@ -11,8 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -46,18 +45,18 @@ class NotificacionControllerTest {
     @Test
     void obtener_DebeRetornarNotificacion() {
         Notificacion noti = new Notificacion();
-        noti.setIdNotificacion(1);
+        noti.setIdNotificacion(1L);
 
-        when(notificacionService.findById(1)).thenReturn(noti);
+        when(notificacionService.findById(1L)).thenReturn(noti);
 
-        Notificacion response = notificacionController.obtener(1);
+        Notificacion response = notificacionController.obtener(1L);
 
         assertEquals(1, response.getIdNotificacion());
     }
 
     @Test
     void porUsuario_DebeRetornarLista() {
-        Integer idUsuario = 1;
+        Long idUsuario = 1L;
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
 
@@ -75,8 +74,8 @@ class NotificacionControllerTest {
     void crear_DebeGuardarNotificacion() {
         Notificacion noti = new Notificacion();
         noti.setMensaje("Test");
-        noti.setTipo(TipoNotificacion.GENERAL);
-        noti.setEstado(Estado.ACTIVO);
+        noti.setTipo(TipoNotificacion.PAGO);
+        noti.setEstado(EstadoNotificacion.NO_LEIDA);
         noti.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionService.guardar(noti)).thenReturn(noti);
@@ -88,7 +87,7 @@ class NotificacionControllerTest {
 
     @Test
     void actualizar_DebeRetornarNotificacionActualizada() {
-        Integer id = 1;
+        Long id = 1L;
         Notificacion noti = new Notificacion();
         noti.setMensaje("Actualizado");
 
@@ -101,8 +100,8 @@ class NotificacionControllerTest {
 
     @Test
     void eliminar_DebeLlamarService() {
-        notificacionController.eliminar(1);
+        notificacionController.eliminar(1L);
 
-        verify(notificacionService).borrar(1);
+        verify(notificacionService).borrar(1L);
     }
 }

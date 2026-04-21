@@ -38,11 +38,11 @@ class ConfiguracionControllerTest {
     @Test
     void getById_DebeRetornarConfiguracion() {
         Configuracion config = new Configuracion();
-        config.setIdConfiguracion(1);
+        config.setIdConfiguracion(1L);
 
-        when(configuracionService.findById(1)).thenReturn(config);
+        when(configuracionService.findById(1L)).thenReturn(config);
 
-        ResponseEntity<Configuracion> response = configuracionController.getById(1);
+        ResponseEntity<Configuracion> response = configuracionController.getById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().getIdConfiguracion());
@@ -50,9 +50,9 @@ class ConfiguracionControllerTest {
 
     @Test
     void borrar_DebeRetornarNoContent() {
-        ResponseEntity<Void> response = configuracionController.borrar(1);
+        ResponseEntity<Void> response = configuracionController.borrar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(configuracionService).borrar(1);
+        verify(configuracionService).borrar(1L);
     }
 }

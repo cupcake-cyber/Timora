@@ -25,7 +25,7 @@ public class NotificacionServiceImpl implements NotificacionService {
     }
 
     @Override
-    public Notificacion findById(Integer id) {
+    public Notificacion findById(Long id) {
         return notificacionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Notificación no encontrada"));
     }
@@ -41,7 +41,7 @@ public class NotificacionServiceImpl implements NotificacionService {
     }
 
     @Override
-    public Notificacion actualizar(Integer id, Notificacion notificacion) {
+    public Notificacion actualizar(Long id, Notificacion notificacion) {
         Notificacion existente = findById(id);
 
         existente.setUsuario(notificacion.getUsuario());
@@ -55,7 +55,7 @@ public class NotificacionServiceImpl implements NotificacionService {
     }
 
     @Override
-    public void borrar(Integer id) {
+    public void borrar(Long id) {
         notificacionRepository.delete(findById(id));
     }
 }

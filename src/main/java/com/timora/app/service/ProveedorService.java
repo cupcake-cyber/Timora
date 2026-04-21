@@ -8,7 +8,7 @@ public interface ProveedorService {
 
     Proveedor guardar(Proveedor proveedor);
 
-    Proveedor findById(Integer id);
+    Proveedor findById(Long id);
 
-    Proveedor findByUsuario(Integer idUsuario);
+    Proveedor findByUsuario(Long idUsuario);
 }

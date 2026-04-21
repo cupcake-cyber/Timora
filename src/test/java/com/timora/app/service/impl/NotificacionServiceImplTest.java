@@ -1,8 +1,8 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Notificacion;
-import com.timora.app.models.Usuario;
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoNotificacion;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.TipoNotificacion;
 import com.timora.app.repository.NotificacionRepository;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class NotificacionServiceImplTest {
 
     @Test
     void actualizar_DebeModificarNotificacion() {
-        Integer id = 1;
+        Long id = 1L;
 
         Notificacion existente = new Notificacion();
         existente.setIdNotificacion(id);
@@ -49,7 +49,7 @@ class NotificacionServiceImplTest {
         Notificacion nuevosDatos = new Notificacion();
         nuevosDatos.setMensaje("Nuevo");
         nuevosDatos.setTipo(TipoNotificacion.RESERVA);
-        nuevosDatos.setEstado(Estado.ACTIVO);
+        nuevosDatos.setEstado(EstadoNotificacion.LEIDA);
         nuevosDatos.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionRepository.findById(id))
@@ -66,7 +66,7 @@ class NotificacionServiceImplTest {
 
     @Test
     void borrar_DebeEliminarSiExiste() {
-        Integer id = 1;
+        Long id = 1L;
 
         Notificacion noti = new Notificacion();
         noti.setIdNotificacion(id);

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "Servicio")
+@Table(name = "servicio")
 public class Servicio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

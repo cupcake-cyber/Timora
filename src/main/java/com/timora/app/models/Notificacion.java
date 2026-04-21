@@ -1,6 +1,6 @@
 package com.timora.app.models;
 
-import com.timora.app.models.enums.Estado;
+import com.timora.app.models.enums.EstadoNotificacion;
 import com.timora.app.models.enums.TipoNotificacion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Notificacion")
+@Table(name = "notificacion")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +19,7 @@ public class Notificacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacion")
-    private Integer idNotificacion;
+    private Long idNotificacion;
 
     // Relación con Usuario
     @ManyToOne
@@ -35,7 +35,7 @@ public class Notificacion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private Estado estado;
+    private EstadoNotificacion estado;
 
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
