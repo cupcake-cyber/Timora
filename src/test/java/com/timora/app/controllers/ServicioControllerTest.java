@@ -47,7 +47,7 @@ class ServicioControllerTest {
     void getById() {
         Long id = 1L;
         Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        esperadoServicio.setId(id);
+        esperadoServicio.setIdServicio(id);
 
         when(servicioService.findById(id)).thenReturn(esperadoServicio);
 
@@ -62,7 +62,7 @@ class ServicioControllerTest {
     void getByNombre() {
         String nombre = "Limpieza facial";
         Servicio esperadoServicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        esperadoServicio.setId(1L);
+        esperadoServicio.setIdServicio(1L);
 
         when(servicioService.findByNombre(nombre)).thenReturn(esperadoServicio);
 
@@ -77,7 +77,7 @@ class ServicioControllerTest {
     void getByEstado() {
         EstadoServicio estado = EstadoServicio.APROBADO;
         Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, estado);
-        esperadoServicio.setId(1L);
+        esperadoServicio.setIdServicio(1L);
 
         List<Servicio> esperadoServicios = List.of(esperadoServicio);
 
@@ -95,7 +95,7 @@ class ServicioControllerTest {
     void createServ() {
         Servicio servicioPorCrear = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
         Servicio servicioCreado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicioCreado.setId(1L);
+        servicioCreado.setIdServicio(1L);
 
         when(servicioService.guardar(servicioPorCrear)).thenReturn(servicioCreado);
 
@@ -113,7 +113,7 @@ class ServicioControllerTest {
         Long id = 1L;
         Servicio servicioPorActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
         Servicio servicioActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicioActu.setId(id);
+        servicioActu.setIdServicio(id);
 
         when(servicioService.actualizar(id, servicioPorActu)).thenReturn(servicioActu);
 

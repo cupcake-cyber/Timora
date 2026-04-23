@@ -16,16 +16,19 @@ import java.util.Optional;
 
 @Service
 public class CitaServiceImpl implements CitaService {
+
     private final CitaRepository citaRepository;
+    private final ClienteRepository clienteRepository;
+    private final ServicioRepository servicioRepository;
 
-    @Autowired
-    private ClienteRepository clienteRepository;
-
-    @Autowired
-    private ServicioRepository servicioRepository;
-
-    public CitaServiceImpl(CitaRepository citaRepository) {
+    public CitaServiceImpl(
+            CitaRepository citaRepository,
+            ClienteRepository clienteRepository,
+            ServicioRepository servicioRepository
+    ) {
         this.citaRepository = citaRepository;
+        this.clienteRepository = clienteRepository;
+        this.servicioRepository = servicioRepository;
     }
 
     @Override
@@ -77,10 +80,12 @@ public class CitaServiceImpl implements CitaService {
     public List<Cita> findByCliente(Long idCliente) {
         return citaRepository.findByClienteIdCliente(idCliente);
     }
+
     @Override
     public List<Cita> findByProveedor(Long idProveedor) {
         return citaRepository.findByServicioProveedorIdProveedor(idProveedor);
     }
+
     @Override
     public Cita confirmar(Long id) {
         return citaRepository.findById(id).map(cita -> {
@@ -88,6 +93,7 @@ public class CitaServiceImpl implements CitaService {
             return citaRepository.save(cita);
         }).orElseThrow(() -> new RuntimeException("Cita no encontrada"));
     }
+
     @Override
     public Cita cancelar(Long id) {
         return citaRepository.findById(id).map(cita -> {

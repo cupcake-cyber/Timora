@@ -65,7 +65,7 @@ class CitaControllerTest {
     void obtenerPorId_DebeRetornarCita() {
 
         Cita cita = new Cita();
-        cita.setId(1L);
+        cita.setIdCita(1L);
         cita.setEstado(EstadoCita.CONFIRMADA);
 
         when(citaService.findById(1L)).thenReturn(Optional.of(cita));

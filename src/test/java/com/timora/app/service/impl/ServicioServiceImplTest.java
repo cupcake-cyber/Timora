@@ -44,14 +44,14 @@ class ServicioServiceImplTest {
     void findByIdServWhenExists() {
         Long id = 1L;
         Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicio.setId(id);
+        servicio.setIdServicio(id);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));
 
         Servicio result = servicioService.findById(id);
 
         assertNotNull(result);
-        assertEquals(id, result.getId());
+        assertEquals(id, result.getIdServicio());
         verify(servicioRepository).findById(id);
     }
 
@@ -127,13 +127,13 @@ class ServicioServiceImplTest {
     void saveServForcesNullIdBeforePersist() {
         Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
         Servicio servicioGuardado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicioGuardado.setId(10L);
+        servicioGuardado.setIdServicio(10L);
 
         when(servicioRepository.save(servicioNuevo)).thenReturn(servicioGuardado);
 
         Servicio result = servicioService.guardar(servicioNuevo);
 
-        assertEquals(10L, result.getId());
+        assertEquals(10L, result.getIdServicio());
         assertEquals(servicioGuardado, result);
         verify(servicioRepository).save(servicioNuevo);
     }
@@ -142,7 +142,7 @@ class ServicioServiceImplTest {
     void updateServChangesFieldsAndPersist() {
         Long id = 1L;
         Servicio servicioExistente = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicioExistente.setId(id);
+        servicioExistente.setIdServicio(id);
 
         Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, EstadoServicio.PAUSADO);
 
@@ -171,7 +171,7 @@ class ServicioServiceImplTest {
     void deleteServWhenExists() {
         Long id = 1L;
         Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        servicio.setId(id);
+        servicio.setIdServicio(id);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));
 
