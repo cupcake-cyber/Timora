@@ -18,12 +18,12 @@ public class TransaccionServiceImpl implements TransaccionService {
     }
 
     @Override
-    public List<Transaccion> listarTodas() {
+    public List<Transaccion> findAll() {
         return repository.findAll();
     }
 
     @Override
-    public Optional<Transaccion> obtenerPorId(Long id) {
+    public Optional<Transaccion> findById(Long id) {
         return repository.findById(id);
     }
 

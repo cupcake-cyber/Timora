@@ -42,10 +42,10 @@ class CitaServiceImplTest {
     }
 
     @Test
-    void listarTodas() {
+    void findAll() {
         when(citaRepository.findAll()).thenReturn(List.of(cita));
 
-        List<Cita> resultado = citaService.listarTodas();
+        List<Cita> resultado = citaService.findAll();
 
         assertThat(resultado).isNotEmpty();
         assertThat(resultado).hasSize(1);
@@ -54,10 +54,10 @@ class CitaServiceImplTest {
 
 
     @Test
-    void obtenerPorId() {
+    void findById() {
         when(citaRepository.findById(1)).thenReturn(Optional.of(cita));
 
-        Optional<Cita> resultado = citaService.obtenerPorId(1);
+        Optional<Cita> resultado = citaService.findById(1);
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getEstado()).isEqualTo(EstadoCita.PENDIENTE);
@@ -69,7 +69,7 @@ class CitaServiceImplTest {
     void obtenerPorId_NoExiste() {
         when(citaRepository.findById(99)).thenReturn(Optional.empty());
 
-        Optional<Cita> resultado = citaService.obtenerPorId(99);
+        Optional<Cita> resultado = citaService.findById(99);
 
         assertThat(resultado).isEmpty();
         verify(citaRepository).findById(99);

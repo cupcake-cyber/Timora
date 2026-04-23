@@ -1,6 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Usuario;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.RolUsuario;
 import com.timora.app.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
@@ -56,14 +57,20 @@ class UsuarioServiceImplTest {
     }
 
     @Test
-    void borrar_DebeLlamarAlRepositorySiExiste() {
+    void borrar_DebeDesactivarUsuarioSiExiste() {
         Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(id);
+        usuario.setEstado(EstadoUsuario.ACTIVO);
+
         when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
 
         usuarioService.borrar(id);
 
-        verify(usuarioRepository).delete(usuario);
+        assertEquals(EstadoUsuario.INACTIVO, usuario.getEstado());
+
+        verify(usuarioRepository).save(usuario);
+
+        verify(usuarioRepository, never()).delete(any());
     }
 }

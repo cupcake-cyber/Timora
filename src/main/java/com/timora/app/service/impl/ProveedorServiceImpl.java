@@ -1,10 +1,14 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Proveedor;
+import com.timora.app.models.Usuario;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.repository.ProveedorRepository;
 import com.timora.app.service.ProveedorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Implementación del servicio de Proveedor.
@@ -25,6 +29,24 @@ public class ProveedorServiceImpl implements ProveedorService {
         this.proveedorRepository = proveedorRepository;
     }
 
+    /**
+     * Obtiene todos los proveedores registrados.
+     *
+     * @return lista de usuarios
+     */
+    @Override
+    public List<Proveedor> findAll() {
+        return proveedorRepository.findAll();
+    }
+    /**
+     * Obtiene todos los proveedores registrados activos.
+     *
+     * @return lista de usuarios
+     */
+    @Override
+    public List<Proveedor> findActivos() {
+        return proveedorRepository.findByUsuario_Estado(EstadoUsuario.ACTIVO);
+    }
     /**
      * Guarda un proveedor en la base de datos.
      *

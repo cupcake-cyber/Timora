@@ -21,13 +21,13 @@ public class CitaController {
 
     @GetMapping
     public ResponseEntity<List<Cita>> listarTodas() {
-        return ResponseEntity.ok(citaService.listarTodas());
+        return ResponseEntity.ok(citaService.findAll());
     }
 
 
     @GetMapping("/{id}")
     public ResponseEntity<Cita> obtenerPorId(@PathVariable Integer id) {
-        return citaService.obtenerPorId(id)
+        return citaService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

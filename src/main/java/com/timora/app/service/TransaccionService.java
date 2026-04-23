@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransaccionService {
-    List<Transaccion> listarTodas();
+    List<Transaccion> findAll();
 
-    Optional<Transaccion> obtenerPorId(Long id);
+    Optional<Transaccion> findById(Long id);
 
     Transaccion guardar(Transaccion transaccion);
 

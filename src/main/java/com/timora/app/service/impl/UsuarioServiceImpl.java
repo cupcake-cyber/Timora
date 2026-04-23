@@ -1,6 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Usuario;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.repository.UsuarioRepository;
 import com.timora.app.service.UsuarioService;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,15 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
+    }
+    /**
+     * Obtiene todos los usuarios registrados activos.
+     *
+     * @return lista de usuarios
+     */
+    @Override
+    public List<Usuario> findActivos() {
+        return usuarioRepository.findByEstado(EstadoUsuario.ACTIVO);
     }
 
     /**
@@ -96,6 +106,8 @@ public class UsuarioServiceImpl implements UsuarioService {
      */
     @Override
     public void borrar(Long id) {
-        usuarioRepository.delete(findById(id));
+        Usuario usuario = findById(id);
+        usuario.setEstado(EstadoUsuario.INACTIVO);
+        usuarioRepository.save(usuario);
     }
 }

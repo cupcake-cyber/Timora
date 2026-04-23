@@ -19,12 +19,12 @@ public class CitaServiceImpl implements CitaService {
     }
 
     @Override
-    public List<Cita> listarTodas() {
+    public List<Cita> findAll() {
         return citaRepository.findAll();
     }
 
     @Override
-    public Optional<Cita> obtenerPorId(Integer id) {
+    public Optional<Cita> findById(Integer id) {
         return citaRepository.findById(id);
     }
 

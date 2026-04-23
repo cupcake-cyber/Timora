@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +52,7 @@ class CitaControllerTest {
         Cita cita = new Cita();
         cita.setEstado(EstadoCita.PENDIENTE);
 
-        when(citaService.listarTodas()).thenReturn(List.of(cita));
+        when(citaService.findAll()).thenReturn(List.of(cita));
 
         ResponseEntity<List<Cita>> response = citaController.listarTodas();
 
@@ -69,7 +68,7 @@ class CitaControllerTest {
         cita.setId(1L);
         cita.setEstado(EstadoCita.CONFIRMADA);
 
-        when(citaService.obtenerPorId(1)).thenReturn(Optional.of(cita));
+        when(citaService.findById(1)).thenReturn(Optional.of(cita));
 
         ResponseEntity<Cita> response = citaController.obtenerPorId(1);
 
@@ -81,7 +80,7 @@ class CitaControllerTest {
     @Test
     void obtenerPorId_NoExiste() {
 
-        when(citaService.obtenerPorId(1)).thenReturn(Optional.empty());
+        when(citaService.findById(1)).thenReturn(Optional.empty());
 
         ResponseEntity<Cita> response = citaController.obtenerPorId(1);
 

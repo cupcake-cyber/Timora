@@ -8,6 +8,8 @@ public interface UsuarioService {
 
     List<Usuario> findAll();
 
+    List<Usuario> findActivos();
+
     Usuario findById(Long id);
 
     Usuario findByEmail(String email);

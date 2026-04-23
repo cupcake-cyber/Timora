@@ -23,6 +23,11 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.findAll());
     }
 
+    @GetMapping("/activos")
+    public ResponseEntity<List<Usuario>> getActivos() {
+        return ResponseEntity.ok(usuarioService.findActivos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> getById(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.findById(id));

@@ -1,10 +1,14 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Cliente;
+import com.timora.app.models.Proveedor;
+import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.repository.ClienteRepository;
 import com.timora.app.service.ClienteService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Implementación del servicio de Cliente.
@@ -23,6 +27,25 @@ public class ClienteServiceImpl implements ClienteService {
      */
     public ClienteServiceImpl(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
+    }
+
+    /**
+     * Obtiene todos los usuarios registrados.
+     *
+     * @return lista de usuarios
+     */
+    @Override
+    public List<Cliente> findAll() {
+        return clienteRepository.findAll();
+    }
+    /**
+     * Obtiene todos los proveedores registrados activos.
+     *
+     * @return lista de usuarios
+     */
+    @Override
+    public List<Proveedor> findActivos() {
+        return clienteRepository.findByUsuario_Estado(EstadoUsuario.ACTIVO);
     }
 
     /**

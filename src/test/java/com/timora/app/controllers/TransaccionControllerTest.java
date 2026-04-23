@@ -2,7 +2,6 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Transaccion;
 import com.timora.app.service.TransaccionService;
-import com.timora.app.service.impl.TransaccionServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,13 +26,13 @@ class TransaccionControllerTest {
 
     @Test
     void listar_DebeRetornarLista() {
-        when(service.listarTodas()).thenReturn(List.of(new Transaccion()));
+        when(service.findAll()).thenReturn(List.of(new Transaccion()));
 
         List<Transaccion> resultado = controller.listar();
 
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
-        verify(service).listarTodas();
+        verify(service).findAll();
     }
 
     @Test
@@ -41,12 +40,12 @@ class TransaccionControllerTest {
         Long id = 1L;
         Transaccion t = new Transaccion();
 
-        when(service.obtenerPorId(id)).thenReturn(Optional.of(t));
+        when(service.findById(id)).thenReturn(Optional.of(t));
 
         Transaccion resultado = controller.obtener(id);
 
         assertNotNull(resultado);
-        verify(service).obtenerPorId(id);
+        verify(service).findById(id);
     }
 
     @Test

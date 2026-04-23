@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CitaService {
-    List<Cita> listarTodas();
 
-    Optional<Cita> obtenerPorId(Integer id);
+    List<Cita> findAll();
+
+    Optional<Cita> findById(Integer id);
 
     Cita guardar(Cita cita);
 
