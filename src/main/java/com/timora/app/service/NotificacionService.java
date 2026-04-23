@@ -16,6 +16,6 @@ public interface NotificacionService {
     Notificacion guardar(Notificacion notificacion);
 
     Notificacion actualizar(Long id, Notificacion notificacion);
-
+    Notificacion marcarComoLeida(Long id);
     void borrar(Long id);
 }

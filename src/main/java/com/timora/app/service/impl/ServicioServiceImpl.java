@@ -41,10 +41,15 @@ public class ServicioServiceImpl implements ServicioService {
     public List<Servicio> findByEstado(EstadoServicio estado) {
         return servicioRepository.findByEstado(estado);
     }
-    
+
     @Override
     public Servicio guardar(Servicio servicio) {
-        servicio.setId(null);
+        servicio.setIdServicio(null);
+
+        if (servicio.getEstado() == null) {
+            servicio.setEstado(EstadoServicio.APROBADO);
+        }
+
         return servicioRepository.save(servicio);
     }
 

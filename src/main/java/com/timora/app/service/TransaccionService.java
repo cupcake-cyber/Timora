@@ -13,6 +13,6 @@ public interface TransaccionService {
     Transaccion guardar(Transaccion transaccion);
 
     Transaccion actualizar(Long id, Transaccion transaccion);
-
+    List<Transaccion> findByCita(Long idCita);
     void eliminar(Long id);
 }

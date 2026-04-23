@@ -42,4 +42,9 @@ public class TransaccionController {
     public void eliminar(@PathVariable Long id) {
         service.eliminar(id);
     }
+
+    @GetMapping("/cita/{idCita}")
+    public List<Transaccion> porCita(@PathVariable Long idCita) {
+        return service.findByCita(idCita);
+    }
 }

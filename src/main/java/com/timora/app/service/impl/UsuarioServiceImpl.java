@@ -75,6 +75,7 @@ public class UsuarioServiceImpl implements UsuarioService {
      */
     @Override
     public Usuario guardar(Usuario usuario) {
+        usuario.setEstado(EstadoUsuario.ACTIVO);
         return usuarioRepository.save(usuario);
     }
 

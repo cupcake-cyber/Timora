@@ -8,12 +8,12 @@ import java.util.Optional;
 public interface CitaService {
 
     List<Cita> findAll();
-
-    Optional<Cita> findById(Integer id);
-
+    Cita cancelar(Long id);
+    Optional<Cita> findById(Long id);
+    Cita confirmar(Long id);
     Cita guardar(Cita cita);
-
-    Cita actualizar(Integer id, Cita cita);
-
-    void eliminar(Integer id);
+    List<Cita> findByProveedor(Long idProveedor);
+    Cita actualizar(Long id, Cita cita);
+    List<Cita> findByCliente(Long idCliente);
+    void eliminar(Long id);
 }

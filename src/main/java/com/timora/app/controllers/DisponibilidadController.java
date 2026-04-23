@@ -2,6 +2,7 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Disponibilidad;
 import com.timora.app.service.DisponibilidadService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class DisponibilidadController {
     }
 
     @PostMapping
-    public ResponseEntity<Disponibilidad> crear(@RequestBody Disponibilidad disponibilidad) {
+    public ResponseEntity<Disponibilidad> crear(@Valid @RequestBody Disponibilidad disponibilidad) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(disponibilidadService.guardar(disponibilidad));
     }

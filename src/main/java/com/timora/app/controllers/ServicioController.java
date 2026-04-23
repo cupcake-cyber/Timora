@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/servicio")
+@RequestMapping("/api/servicios")
 public class ServicioController {
 
     private final ServicioService servicioService;
@@ -43,7 +43,7 @@ public class ServicioController {
     @PostMapping
     public ResponseEntity<Servicio> guardar(@RequestBody Servicio servicio) {
         Servicio creado = servicioService.guardar(servicio);
-        return ResponseEntity.created(URI.create("/api/servicio/" + creado.getId())).body(creado);
+        return ResponseEntity.created(URI.create("/api/servicio/" + creado.getIdServicio())).body(creado);
     }
 
     @PutMapping("/{id}")

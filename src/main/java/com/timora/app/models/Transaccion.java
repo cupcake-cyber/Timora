@@ -37,7 +37,7 @@ public class Transaccion {
     @Enumerated(EnumType.STRING)
     private MetodoTransaccion metodo;
 
-    private LocalDateTime fecha;
+    private LocalDateTime  fecha;
 
     public Transaccion() {}
 }

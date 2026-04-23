@@ -68,9 +68,9 @@ class CitaControllerTest {
         cita.setId(1L);
         cita.setEstado(EstadoCita.CONFIRMADA);
 
-        when(citaService.findById(1)).thenReturn(Optional.of(cita));
+        when(citaService.findById(1L)).thenReturn(Optional.of(cita));
 
-        ResponseEntity<Cita> response = citaController.obtenerPorId(1);
+        ResponseEntity<Cita> response = citaController.obtenerPorId(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(EstadoCita.CONFIRMADA, response.getBody().getEstado());
@@ -80,9 +80,9 @@ class CitaControllerTest {
     @Test
     void obtenerPorId_NoExiste() {
 
-        when(citaService.findById(1)).thenReturn(Optional.empty());
+        when(citaService.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<Cita> response = citaController.obtenerPorId(1);
+        ResponseEntity<Cita> response = citaController.obtenerPorId(1L);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -91,11 +91,11 @@ class CitaControllerTest {
     @Test
     void eliminar_DebeRetornarNoContent() {
 
-        doNothing().when(citaService).eliminar(1);
+        doNothing().when(citaService).eliminar(1L);
 
-        ResponseEntity<Void> response = citaController.eliminar(1);
+        ResponseEntity<Void> response = citaController.eliminar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(citaService).eliminar(1);
+        verify(citaService).eliminar(1L);
     }
 }

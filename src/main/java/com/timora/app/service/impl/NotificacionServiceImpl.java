@@ -58,4 +58,15 @@ public class NotificacionServiceImpl implements NotificacionService {
     public void borrar(Long id) {
         notificacionRepository.delete(findById(id));
     }
+
+    @Override
+    public Notificacion marcarComoLeida(Long id) {
+        Notificacion notificacion = findById(id);
+
+        notificacion.setEstado(
+                com.timora.app.models.enums.EstadoNotificacion.LEIDA
+        );
+
+        return notificacionRepository.save(notificacion);
+    }
 }

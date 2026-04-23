@@ -48,4 +48,8 @@ public class TransaccionServiceImpl implements TransaccionService {
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
+    @Override
+    public List<Transaccion> findByCita(Long idCita) {
+        return repository.findByCitaIdCita(idCita);
+    }
 }

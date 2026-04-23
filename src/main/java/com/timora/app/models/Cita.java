@@ -1,5 +1,6 @@
 package com.timora.app.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.timora.app.models.enums.EstadoCita;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,12 +18,13 @@ public class Cita {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_cita")
-    private Long id;
+    private Long idCita;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_servicio", nullable = false)
     private Servicio servicio;

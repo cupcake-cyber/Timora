@@ -1,6 +1,8 @@
 package com.timora.app.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,11 +22,12 @@ public class Disponibilidad {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Proveedor proveedor;
-
+    @NotNull
     @Column(name = "fecha_inicio", nullable = false)
     private LocalDate fechaInicio;
-
+    @NotNull
     @Column(name = "fecha_fin", nullable = false)
     private LocalDate fechaFin;
 

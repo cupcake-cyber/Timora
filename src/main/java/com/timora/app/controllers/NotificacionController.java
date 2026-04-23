@@ -53,4 +53,9 @@ public class NotificacionController {
     public void eliminar(@PathVariable Long id) {
         notificacionService.borrar(id);
     }
+
+    @PutMapping("/{id}/leer")
+    public Notificacion marcarComoLeida(@PathVariable Long id) {
+        return notificacionService.marcarComoLeida(id);
+    }
 }
