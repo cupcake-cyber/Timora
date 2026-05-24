@@ -1,11 +1,11 @@
 package com.timora.app.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.timora.app.models.enums.AvailabilityRecurring;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+
 import lombok.*;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
