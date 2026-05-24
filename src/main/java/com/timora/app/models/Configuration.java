@@ -2,17 +2,14 @@ package com.timora.app.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.apache.catalina.User;
-
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "configuration")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Configuration {
@@ -21,12 +18,10 @@ public class Configuration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // RELACIÓN 1:1 CON USER
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    // CAMPOS
     @Column(name = "actives")
     private Boolean actives;
 
