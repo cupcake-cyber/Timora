@@ -2,15 +2,16 @@ package com.timora.app.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Customer {
 
     @Id
@@ -21,12 +22,14 @@ public class Customer {
     @Column(name = "company_id", nullable = false)
     private Long companyId;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @Column(name = "person_id", nullable = false)
     private Long personId;
 
+    @Column(name = "notes", nullable = true)
     private String notes;
 
-    @Column(name = "created_id")
-    private LocalDate createdId;
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
