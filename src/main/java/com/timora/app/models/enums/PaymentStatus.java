@@ -1,6 +1,6 @@
 package com.timora.app.models.enums;
 
-public enum TipoTransaccion {
+public enum PaymentStatus {
     PAGO_RESERVA,
     PAGO_TOTAL,
     ANTICIPO,

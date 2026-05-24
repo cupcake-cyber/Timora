@@ -1,0 +1,21 @@
+package com.timora.app.service;
+
+import com.timora.app.models.Payment;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface PaymentService {
+
+    List<Payment> findAll();
+
+    Optional<Payment> findById(Long id);
+
+    Payment save(Payment payment);
+
+    Payment update(Long id, Payment payment);
+
+    List<Payment> findByAppointment(Long appointmentId);
+
+    void delete(Long id);
+}
