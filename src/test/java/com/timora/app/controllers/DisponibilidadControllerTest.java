@@ -65,7 +65,7 @@ class DisponibilidadControllerTest {
 
         ResponseEntity<Disponibilidad> response = disponibilidadController.getById(1L);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getIdDisponibilidad());
         verify(disponibilidadService, times(1)).findById(1L);
