@@ -42,6 +42,8 @@ public class ClienteController {
 
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<Customer> getByUsuario(@PathVariable Long idUsuario) {
+        clienteService.findAll()
         return ResponseEntity.ok(clienteService.findByUsuario(idUsuario));
+
     }
 }

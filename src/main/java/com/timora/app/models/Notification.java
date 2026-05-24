@@ -3,7 +3,6 @@ package com.timora.app.models;
 import com.timora.app.models.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.catalina.User;
@@ -15,11 +14,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,9 +28,11 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
+    @Column(name = "message")
     private String message;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
 
     @Column(name = "shipping_date")
     private LocalDateTime shippingDate;
