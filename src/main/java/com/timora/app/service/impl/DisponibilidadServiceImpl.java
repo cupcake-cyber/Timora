@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Implementación del servicio de disponibilidades.
+ */
 @Service
 public class DisponibilidadServiceImpl implements DisponibilidadService {
 
@@ -16,27 +19,58 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
         this.disponibilidadRepository = disponibilidadRepository;
     }
 
+    /**
+     * Obtiene todas las disponibilidades registradas.
+     *
+     * @return lista de disponibilidades
+     */
     @Override
     public List<Disponibilidad> findAll() {
         return disponibilidadRepository.findAll();
     }
 
+    /**
+     * Busca una disponibilidad por su ID.
+     *
+     * @param id identificador de la disponibilidad
+     * @return disponibilidad encontrada
+     * @throws RuntimeException si no existe
+     */
     @Override
     public Disponibilidad findById(Long id) {
         return disponibilidadRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Disponibilidad no encontrada con id: " + id));
     }
 
+    /**
+     * Obtiene las disponibilidades de un proveedor.
+     *
+     * @param idProveedor identificador del proveedor
+     * @return lista de disponibilidades del proveedor
+     */
     @Override
     public List<Disponibilidad> findByProveedor(Long idProveedor) {
         return disponibilidadRepository.findByProveedorIdProveedor(idProveedor);
     }
 
+    /**
+     * Guarda una nueva disponibilidad en la base de datos.
+     *
+     * @param disponibilidad objeto disponibilidad a guardar
+     * @return disponibilidad guardada
+     */
     @Override
     public Disponibilidad guardar(Disponibilidad disponibilidad) {
         return disponibilidadRepository.save(disponibilidad);
     }
 
+    /**
+     * Actualiza una disponibilidad existente.
+     *
+     * @param id identificador de la disponibilidad
+     * @param disponibilidad datos nuevos de la disponibilidad
+     * @return disponibilidad actualizada
+     */
     @Override
     public Disponibilidad actualizar(Long id, Disponibilidad disponibilidad) {
         Disponibilidad existente = disponibilidadRepository.findById(id)
@@ -52,6 +86,11 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
         return disponibilidadRepository.save(existente);
     }
 
+    /**
+     * Elimina una disponibilidad por su ID.
+     *
+     * @param id identificador de la disponibilidad
+     */
     @Override
     public void borrar(Long id) {
         disponibilidadRepository.deleteById(id);
