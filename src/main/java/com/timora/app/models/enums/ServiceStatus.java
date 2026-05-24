@@ -1,6 +1,6 @@
 package com.timora.app.models.enums;
 
-public enum EstadoServicio {
+public enum ServiceStatus {
     APROBADO,
     INACTIVO,
     PAUSADO

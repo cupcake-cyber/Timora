@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Servicio;
-import com.timora.app.models.enums.EstadoServicio;
+import com.timora.app.models.enums.ServiceStatus;
 import com.timora.app.repository.ServicioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,8 +28,8 @@ class ServicioServiceImplTest {
     @Test
     void findAllServRepositoryData() {
         List<Servicio> esperadoServicios = List.of(
-                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO),
-                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, EstadoServicio.APROBADO)
+                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO),
+                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, ServiceStatus.APROBADO)
         );
 
         when(servicioRepository.findAll()).thenReturn(esperadoServicios);
@@ -43,7 +43,7 @@ class ServicioServiceImplTest {
     @Test
     void findByIdServWhenExists() {
         Long id = 1L;
-        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicio.setIdServicio(id);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));
@@ -71,7 +71,7 @@ class ServicioServiceImplTest {
     @Test
     void findByNombreServWhenExists() {
         String nombre = "Limpieza facial";
-        Servicio servicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
 
         when(servicioRepository.findByNombre(nombre)).thenReturn(Optional.of(servicio));
 
@@ -96,7 +96,7 @@ class ServicioServiceImplTest {
 
     @Test
     void findByEstadoServWhenExists() {
-        EstadoServicio estado = EstadoServicio.APROBADO;
+        ServiceStatus estado = ServiceStatus.APROBADO;
         List<Servicio> esperadoServicios = List.of(
                 new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, estado),
                 new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, estado)
@@ -113,7 +113,7 @@ class ServicioServiceImplTest {
 
     @Test
     void findByEstadoServWhenNotExists() {
-        EstadoServicio estado = EstadoServicio.PAUSADO;
+        ServiceStatus estado = ServiceStatus.PAUSADO;
         when(servicioRepository.findByEstado(estado)).thenReturn(List.of());
 
         List<Servicio> result = servicioService.findByEstado(estado);
@@ -125,8 +125,8 @@ class ServicioServiceImplTest {
 
     @Test
     void saveServForcesNullIdBeforePersist() {
-        Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        Servicio servicioGuardado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicioNuevo = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
+        Servicio servicioGuardado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicioGuardado.setIdServicio(10L);
 
         when(servicioRepository.save(servicioNuevo)).thenReturn(servicioGuardado);
@@ -141,10 +141,10 @@ class ServicioServiceImplTest {
     @Test
     void updateServChangesFieldsAndPersist() {
         Long id = 1L;
-        Servicio servicioExistente = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicioExistente = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicioExistente.setIdServicio(id);
 
-        Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, EstadoServicio.PAUSADO);
+        Servicio servicioNuevo = new Servicio(null, "Nuevo nombre", "Nueva desc", 2, 50.00, ServiceStatus.PAUSADO);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicioExistente));
         when(servicioRepository.save(servicioExistente)).thenReturn(servicioExistente);
@@ -152,7 +152,7 @@ class ServicioServiceImplTest {
         Servicio result = servicioService.actualizar(id, servicioNuevo);
 
         assertEquals("Nuevo nombre", result.getNombre());
-        assertEquals(EstadoServicio.PAUSADO, result.getEstado());
+        assertEquals(ServiceStatus.PAUSADO, result.getEstado());
         verify(servicioRepository).save(servicioExistente);
     }
 
@@ -170,7 +170,7 @@ class ServicioServiceImplTest {
     @Test
     void deleteServWhenExists() {
         Long id = 1L;
-        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicio.setIdServicio(id);
 
         when(servicioRepository.findById(id)).thenReturn(Optional.of(servicio));

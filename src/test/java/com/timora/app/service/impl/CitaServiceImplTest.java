@@ -3,7 +3,7 @@ package com.timora.app.service.impl;
 import com.timora.app.models.Cita;
 import com.timora.app.models.Cliente;
 import com.timora.app.models.Servicio;
-import com.timora.app.models.enums.EstadoCita;
+import com.timora.app.models.enums.AppointmentStatus;
 import com.timora.app.repository.CitaRepository;
 import com.timora.app.repository.ClienteRepository;
 import com.timora.app.repository.ServicioRepository;
@@ -45,7 +45,7 @@ class CitaServiceImplTest {
         cita.setIdCita(1L);
         cita.setHoraInicio(LocalTime.of(10, 0));
         cita.setHoraFin(LocalTime.of(11, 0));
-        cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setEstado(AppointmentStatus.PENDIENTE);
         cita.setFechaCreacion(LocalDateTime.now());
     }
 
@@ -68,7 +68,7 @@ class CitaServiceImplTest {
         Optional<Cita> resultado = citaService.findById(1L);
 
         assertThat(resultado).isPresent();
-        assertThat(resultado.get().getEstado()).isEqualTo(EstadoCita.PENDIENTE);
+        assertThat(resultado.get().getEstado()).isEqualTo(AppointmentStatus.PENDIENTE);
 
         verify(citaRepository).findById(1L);
     }
@@ -104,7 +104,7 @@ class CitaServiceImplTest {
         Cita nueva = new Cita();
         nueva.setHoraInicio(LocalTime.of(12, 0));
         nueva.setHoraFin(LocalTime.of(13, 0));
-        nueva.setEstado(EstadoCita.CONFIRMADA);
+        nueva.setEstado(AppointmentStatus.CONFIRMADA);
         nueva.setDescripcion("Actualizada");
 
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
@@ -112,7 +112,7 @@ class CitaServiceImplTest {
 
         Cita resultado = citaService.actualizar(1L, nueva);
 
-        assertThat(resultado.getEstado()).isEqualTo(EstadoCita.CONFIRMADA);
+        assertThat(resultado.getEstado()).isEqualTo(AppointmentStatus.CONFIRMADA);
 
         verify(citaRepository).findById(1L);
         verify(citaRepository).save(any(Cita.class));

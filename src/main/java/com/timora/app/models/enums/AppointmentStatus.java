@@ -1,6 +1,6 @@
 package com.timora.app.models.enums;
 
-public enum EstadoCita {
+public enum AppointmentStatus {
     PENDIENTE,
     CONFIRMADA,
     CANCELADA,

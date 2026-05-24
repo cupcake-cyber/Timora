@@ -1,9 +1,8 @@
 package com.timora.app.controllers;
 
 import com.timora.app.models.Servicio;
-import com.timora.app.models.enums.EstadoServicio;
+import com.timora.app.models.enums.ServiceStatus;
 import com.timora.app.service.ServicioService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +35,7 @@ public class ServicioController {
     }
 
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<Servicio>> getByEstado(@PathVariable EstadoServicio estado) {
+    public ResponseEntity<List<Servicio>> getByEstado(@PathVariable ServiceStatus estado) {
         return ResponseEntity.ok(servicioService.findByEstado(estado));
     }
 

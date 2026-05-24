@@ -1,7 +1,7 @@
 package com.timora.app.controllers;
 
 import com.timora.app.models.Servicio;
-import com.timora.app.models.enums.EstadoServicio;
+import com.timora.app.models.enums.ServiceStatus;
 import com.timora.app.service.ServicioService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,8 +30,8 @@ class ServicioControllerTest {
     @Test
     void getAllServ() {
         List<Servicio> esperadoServicios = List.of(
-                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO),
-                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, EstadoServicio.APROBADO)
+                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO),
+                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, ServiceStatus.APROBADO)
         );
 
         when(servicioService.findAll()).thenReturn(esperadoServicios);
@@ -46,7 +46,7 @@ class ServicioControllerTest {
     @Test
     void getById() {
         Long id = 1L;
-        Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         esperadoServicio.setIdServicio(id);
 
         when(servicioService.findById(id)).thenReturn(esperadoServicio);
@@ -61,7 +61,7 @@ class ServicioControllerTest {
     @Test
     void getByNombre() {
         String nombre = "Limpieza facial";
-        Servicio esperadoServicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio esperadoServicio = new Servicio(null, nombre, "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         esperadoServicio.setIdServicio(1L);
 
         when(servicioService.findByNombre(nombre)).thenReturn(esperadoServicio);
@@ -75,7 +75,7 @@ class ServicioControllerTest {
 
     @Test
     void getByEstado() {
-        EstadoServicio estado = EstadoServicio.APROBADO;
+        ServiceStatus estado = ServiceStatus.APROBADO;
         Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, estado);
         esperadoServicio.setIdServicio(1L);
 
@@ -93,8 +93,8 @@ class ServicioControllerTest {
 
     @Test
     void createServ() {
-        Servicio servicioPorCrear = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        Servicio servicioCreado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicioPorCrear = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
+        Servicio servicioCreado = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicioCreado.setIdServicio(1L);
 
         when(servicioService.guardar(servicioPorCrear)).thenReturn(servicioCreado);
@@ -111,8 +111,8 @@ class ServicioControllerTest {
     @Test
     void updateServ() {
         Long id = 1L;
-        Servicio servicioPorActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
-        Servicio servicioActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, EstadoServicio.APROBADO);
+        Servicio servicioPorActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
+        Servicio servicioActu = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
         servicioActu.setIdServicio(id);
 
         when(servicioService.actualizar(id, servicioPorActu)).thenReturn(servicioActu);

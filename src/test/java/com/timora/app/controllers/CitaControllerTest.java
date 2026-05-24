@@ -1,7 +1,7 @@
 package com.timora.app.controllers;
 
 import com.timora.app.models.Cita;
-import com.timora.app.models.enums.EstadoCita;
+import com.timora.app.models.enums.AppointmentStatus;
 import com.timora.app.service.CitaService;
 
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class CitaControllerTest {
     void crear_DebeRetornarOk() {
 
         Cita cita = new Cita();
-        cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setEstado(AppointmentStatus.PENDIENTE);
 
         when(citaService.guardar(any(Cita.class))).thenReturn(cita);
 
@@ -50,7 +50,7 @@ class CitaControllerTest {
     void listarTodas_DebeRetornarLista() {
 
         Cita cita = new Cita();
-        cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setEstado(AppointmentStatus.PENDIENTE);
 
         when(citaService.findAll()).thenReturn(List.of(cita));
 
@@ -66,14 +66,14 @@ class CitaControllerTest {
 
         Cita cita = new Cita();
         cita.setIdCita(1L);
-        cita.setEstado(EstadoCita.CONFIRMADA);
+        cita.setEstado(AppointmentStatus.CONFIRMADA);
 
         when(citaService.findById(1L)).thenReturn(Optional.of(cita));
 
         ResponseEntity<Cita> response = citaController.obtenerPorId(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(EstadoCita.CONFIRMADA, response.getBody().getEstado());
+        assertEquals(AppointmentStatus.CONFIRMADA, response.getBody().getEstado());
     }
 
 
