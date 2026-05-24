@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Cliente;
+import com.timora.app.models.Customer;
 import com.timora.app.models.Usuario;
 import com.timora.app.repository.ClienteRepository;
 import org.junit.jupiter.api.Test;
@@ -26,11 +26,11 @@ class ClienteServiceImplTest {
     @Test
     void guardar_DebeRetornarClienteGuardado() {
         // Arrange
-        Cliente cliente = new Cliente();
+        Customer cliente = new Customer();
         when(clienteRepository.save(cliente)).thenReturn(cliente);
 
         // Act
-        Cliente resultado = clienteService.guardar(cliente);
+        Customer resultado = clienteService.guardar(cliente);
 
         // Assert
         assertNotNull(resultado);
@@ -44,13 +44,13 @@ class ClienteServiceImplTest {
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
 
-        Cliente cliente = new Cliente();
+        Customer cliente = new Customer();
         cliente.setIdCliente(100L);
         cliente.setUsuario(usuario);
 
         when(clienteRepository.findByUsuario_IdUsuario(idUsuario)).thenReturn(Optional.of(cliente));
 
-        Cliente resultado = clienteService.findByUsuario(idUsuario);
+        Customer resultado = clienteService.findByUsuario(idUsuario);
 
         assertEquals(100, resultado.getIdCliente());
         assertEquals(idUsuario, resultado.getUsuario().getIdUsuario());

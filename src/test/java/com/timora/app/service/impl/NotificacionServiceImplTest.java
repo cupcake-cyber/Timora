@@ -1,9 +1,8 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Notificacion;
+import com.timora.app.models.Notification;
 import com.timora.app.models.enums.EstadoNotificacion;
-import com.timora.app.models.enums.EstadoUsuario;
-import com.timora.app.models.enums.TipoNotificacion;
+import com.timora.app.models.enums.NotificationType;
 import com.timora.app.repository.NotificacionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,9 +29,9 @@ class NotificacionServiceImplTest {
     @Test
     void findAll_DebeRetornarLista() {
         when(notificacionRepository.findAll())
-                .thenReturn(List.of(new Notificacion(), new Notificacion()));
+                .thenReturn(List.of(new Notification(), new Notification()));
 
-        List<Notificacion> resultado = notificacionService.findAll();
+        List<Notification> resultado = notificacionService.findAll();
 
         assertEquals(2, resultado.size());
         verify(notificacionRepository).findAll();
@@ -42,25 +41,25 @@ class NotificacionServiceImplTest {
     void actualizar_DebeModificarNotificacion() {
         Long id = 1L;
 
-        Notificacion existente = new Notificacion();
+        Notification existente = new Notification();
         existente.setIdNotificacion(id);
         existente.setMensaje("Viejo");
 
-        Notificacion nuevosDatos = new Notificacion();
+        Notification nuevosDatos = new Notification();
         nuevosDatos.setMensaje("Nuevo");
-        nuevosDatos.setTipo(TipoNotificacion.RESERVA);
+        nuevosDatos.setTipo(NotificationType.RESERVA);
         nuevosDatos.setEstado(EstadoNotificacion.LEIDA);
         nuevosDatos.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionRepository.findById(id))
                 .thenReturn(Optional.of(existente));
-        when(notificacionRepository.save(any(Notificacion.class)))
+        when(notificacionRepository.save(any(Notification.class)))
                 .thenAnswer(i -> i.getArguments()[0]);
 
-        Notificacion actualizado = notificacionService.actualizar(id, nuevosDatos);
+        Notification actualizado = notificacionService.actualizar(id, nuevosDatos);
 
         assertEquals("Nuevo", actualizado.getMensaje());
-        assertEquals(TipoNotificacion.RESERVA, actualizado.getTipo());
+        assertEquals(NotificationType.RESERVA, actualizado.getTipo());
         verify(notificacionRepository).save(existente);
     }
 
@@ -68,7 +67,7 @@ class NotificacionServiceImplTest {
     void borrar_DebeEliminarSiExiste() {
         Long id = 1L;
 
-        Notificacion noti = new Notificacion();
+        Notification noti = new Notification();
         noti.setIdNotificacion(id);
 
         when(notificacionRepository.findById(id))
