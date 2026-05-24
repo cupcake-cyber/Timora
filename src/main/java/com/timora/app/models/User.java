@@ -1,18 +1,19 @@
 package com.timora.app.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.timora.app.models.enums.UserStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payment")
+@Table(name = "user")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payment {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,20 +24,18 @@ public class Payment {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne
-    @JoinColumn(name = "appointment_id", nullable = false)
-    private Appointment appointment;
+    @Column(name = "login_email", nullable = false, unique = true)
+    private String loginEmail;
 
-    @Column(name = "amount", nullable = false)
-    private Double amount;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private PaymentStatus status;
+    private UserStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "method")
-    private PaymentMethod method;
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp

@@ -1,18 +1,19 @@
 package com.timora.app.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "payment")
+@Table(name = "role")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payment {
+public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,22 +24,16 @@ public class Payment {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne
-    @JoinColumn(name = "appointment_id", nullable = false)
-    private Appointment appointment;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(name = "amount", nullable = false)
-    private Double amount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PaymentStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "method")
-    private PaymentMethod method;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private List<RolePermission> rolePermissions;
 }

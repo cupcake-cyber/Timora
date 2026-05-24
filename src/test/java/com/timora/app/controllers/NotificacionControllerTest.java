@@ -1,10 +1,9 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Notificacion;
+import com.timora.app.models.Notification;
 import com.timora.app.models.Usuario;
 import com.timora.app.models.enums.EstadoNotificacion;
-import com.timora.app.models.enums.EstadoUsuario;
-import com.timora.app.models.enums.TipoNotificacion;
+import com.timora.app.models.enums.NotificationType;
 import com.timora.app.service.NotificacionService;
 import com.timora.app.service.UsuarioService;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ class NotificacionControllerTest {
     void listar_DebeRetornarStatusOk() {
         when(notificacionService.findAll()).thenReturn(Collections.emptyList());
 
-        List<Notificacion> response = notificacionController.listar();
+        List<Notification> response = notificacionController.listar();
 
         assertNotNull(response);
         verify(notificacionService).findAll();
@@ -44,12 +43,12 @@ class NotificacionControllerTest {
 
     @Test
     void obtener_DebeRetornarNotificacion() {
-        Notificacion noti = new Notificacion();
+        Notification noti = new Notification();
         noti.setIdNotificacion(1L);
 
         when(notificacionService.findById(1L)).thenReturn(noti);
 
-        Notificacion response = notificacionController.obtener(1L);
+        Notification response = notificacionController.obtener(1L);
 
         assertEquals(1, response.getIdNotificacion());
     }
@@ -64,7 +63,7 @@ class NotificacionControllerTest {
         when(notificacionService.findByUsuario(usuario))
                 .thenReturn(Collections.emptyList());
 
-        List<Notificacion> response = notificacionController.porUsuario(idUsuario);
+        List<Notification> response = notificacionController.porUsuario(idUsuario);
 
         assertNotNull(response);
         verify(notificacionService).findByUsuario(usuario);
@@ -72,15 +71,15 @@ class NotificacionControllerTest {
 
     @Test
     void crear_DebeGuardarNotificacion() {
-        Notificacion noti = new Notificacion();
+        Notification noti = new Notification();
         noti.setMensaje("Test");
-        noti.setTipo(TipoNotificacion.PAGO);
+        noti.setTipo(NotificationType.PAGO);
         noti.setEstado(EstadoNotificacion.NO_LEIDA);
         noti.setFechaEnvio(LocalDateTime.now());
 
         when(notificacionService.guardar(noti)).thenReturn(noti);
 
-        Notificacion response = notificacionController.crear(noti);
+        Notification response = notificacionController.crear(noti);
 
         assertEquals("Test", response.getMensaje());
     }
@@ -88,12 +87,12 @@ class NotificacionControllerTest {
     @Test
     void actualizar_DebeRetornarNotificacionActualizada() {
         Long id = 1L;
-        Notificacion noti = new Notificacion();
+        Notification noti = new Notification();
         noti.setMensaje("Actualizado");
 
         when(notificacionService.actualizar(id, noti)).thenReturn(noti);
 
-        Notificacion response = notificacionController.actualizar(id, noti);
+        Notification response = notificacionController.actualizar(id, noti);
 
         assertEquals("Actualizado", response.getMensaje());
     }

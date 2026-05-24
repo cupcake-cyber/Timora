@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Disponibilidad;
-import com.timora.app.models.Proveedor;
+import com.timora.app.models.Availability;
+import com.timora.app.models.Supplier;
 import com.timora.app.repository.DisponibilidadRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,15 +28,15 @@ class DisponibilidadServiceImplTest {
     @InjectMocks
     private DisponibilidadServiceImpl disponibilidadService;
 
-    private Disponibilidad disponibilidad;
-    private Proveedor proveedor;
+    private Availability disponibilidad;
+    private Supplier proveedor;
 
     @BeforeEach
     void setUp() {
-        proveedor = new Proveedor();
+        proveedor = new Supplier();
         proveedor.setIdProveedor(1L);
 
-        disponibilidad = Disponibilidad.builder()
+        disponibilidad = Availability.builder()
                 .idDisponibilidad(1L)
                 .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 1, 1))
@@ -51,7 +51,7 @@ class DisponibilidadServiceImplTest {
     void findAll_debeRetornarListaDeDisponibilidades() {
         when(disponibilidadRepository.findAll()).thenReturn(List.of(disponibilidad));
 
-        List<Disponibilidad> resultado = disponibilidadService.findAll();
+        List<Availability> resultado = disponibilidadService.findAll();
 
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
@@ -62,7 +62,7 @@ class DisponibilidadServiceImplTest {
     void findById_debeRetornarDisponibilidadCuandoExiste() {
         when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disponibilidad));
 
-        Disponibilidad resultado = disponibilidadService.findById(1L);
+        Availability resultado = disponibilidadService.findById(1L);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.getIdDisponibilidad());
@@ -76,14 +76,14 @@ class DisponibilidadServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> disponibilidadService.findById(99L));
 
-        assertEquals("Disponibilidad no encontrada con id: 99", ex.getMessage());
+        assertEquals("Availability no encontrada con id: 99", ex.getMessage());
     }
 
     @Test
     void guardar_debeGuardarYRetornarDisponibilidad() {
         when(disponibilidadRepository.save(disponibilidad)).thenReturn(disponibilidad);
 
-        Disponibilidad resultado = disponibilidadService.guardar(disponibilidad);
+        Availability resultado = disponibilidadService.guardar(disponibilidad);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.getIdDisponibilidad());
@@ -92,7 +92,7 @@ class DisponibilidadServiceImplTest {
 
     @Test
     void actualizar_debeActualizarCamposCorrectamente() {
-        Disponibilidad actualizado = Disponibilidad.builder()
+        Availability actualizado = Availability.builder()
                 .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 2, 1))
                 .fechaFin(LocalDate.of(2025, 2, 28))
@@ -102,12 +102,12 @@ class DisponibilidadServiceImplTest {
                 .build();
 
         when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disponibilidad));
-        when(disponibilidadRepository.save(any(Disponibilidad.class))).thenReturn(disponibilidad);
+        when(disponibilidadRepository.save(any(Availability.class))).thenReturn(disponibilidad);
 
-        Disponibilidad resultado = disponibilidadService.actualizar(1L, actualizado);
+        Availability resultado = disponibilidadService.actualizar(1L, actualizado);
 
         assertNotNull(resultado);
-        verify(disponibilidadRepository, times(1)).save(any(Disponibilidad.class));
+        verify(disponibilidadRepository, times(1)).save(any(Availability.class));
     }
 
     @Test
@@ -124,7 +124,7 @@ class DisponibilidadServiceImplTest {
         when(disponibilidadRepository.findByProveedorIdProveedor(1L))
                 .thenReturn(List.of(disponibilidad));
 
-        List<Disponibilidad> resultado = disponibilidadService.findByProveedor(1L);
+        List<Availability> resultado = disponibilidadService.findByProveedor(1L);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.size());

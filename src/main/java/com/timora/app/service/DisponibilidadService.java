@@ -1,20 +1,20 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Disponibilidad;
+import com.timora.app.models.Availability;
 
 import java.util.List;
 
 public interface DisponibilidadService {
 
-    List<Disponibilidad> findAll();
+    List<Availability> findAll();
 
-    Disponibilidad findById(Long id);
+    Availability findById(Long id);
 
-    List<Disponibilidad> findByProveedor(Long idProveedor);
+    List<Availability> findByProveedor(Long idProveedor);
 
-    Disponibilidad guardar(Disponibilidad disponibilidad);
+    Availability guardar(Availability disponibilidad);
 
-    Disponibilidad actualizar(Long id, Disponibilidad disponibilidad);
+    Availability actualizar(Long id, Availability disponibilidad);
 
     void borrar(Long id);
 }

@@ -1,7 +1,6 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Proveedor;
-import com.timora.app.models.Usuario;
+import com.timora.app.models.Supplier;
 import com.timora.app.service.ProveedorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,28 +19,28 @@ public class ProveedorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Proveedor>> getAll() {
+    public ResponseEntity<List<Supplier>> getAll() {
         return ResponseEntity.ok(proveedorService.findAll());
     }
 
     @GetMapping("/activos")
-    public ResponseEntity<List<Proveedor>> getActivos() {
+    public ResponseEntity<List<Supplier>> getActivos() {
         return ResponseEntity.ok(proveedorService.findActivos());
     }
 
     @PostMapping
-    public ResponseEntity<Proveedor> crear(@RequestBody Proveedor proveedor) {
+    public ResponseEntity<Supplier> crear(@RequestBody Supplier proveedor) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(proveedorService.guardar(proveedor));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Proveedor> getById(@PathVariable Long id) {
+    public ResponseEntity<Supplier> getById(@PathVariable Long id) {
         return ResponseEntity.ok(proveedorService.findById(id));
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<Proveedor> getByUsuario(@PathVariable Long idUsuario) {
+    public ResponseEntity<Supplier> getByUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(proveedorService.findByUsuario(idUsuario));
     }
 }

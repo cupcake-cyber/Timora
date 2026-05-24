@@ -1,19 +1,18 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Cita;
-import com.timora.app.models.Proveedor;
+import com.timora.app.models.Supplier;
 
 import java.util.List;
 
 public interface ProveedorService {
 
-    List<Proveedor> findAll();
+    List<Supplier> findAll();
 
-    List<Proveedor> findActivos();
+    List<Supplier> findActivos();
 
-    Proveedor guardar(Proveedor proveedor);
+    Supplier guardar(Supplier proveedor);
 
-    Proveedor findById(Long id);
+    Supplier findById(Long id);
 
-    Proveedor findByUsuario(Long idUsuario);
+    Supplier findByUsuario(Long idUsuario);
 }
