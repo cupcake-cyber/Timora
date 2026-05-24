@@ -1,5 +1,6 @@
 package com.timora.app.models;
 
+import com.timora.app.models.enums.NotificationStatus;
 import com.timora.app.models.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
