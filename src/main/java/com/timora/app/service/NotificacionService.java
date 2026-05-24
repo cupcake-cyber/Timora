@@ -1,21 +1,21 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Notificacion;
+import com.timora.app.models.Notification;
 import com.timora.app.models.Usuario;
 
 import java.util.List;
 
 public interface NotificacionService {
 
-    List<Notificacion> findAll();
+    List<Notification> findAll();
 
-    Notificacion findById(Long id);
+    Notification findById(Long id);
 
-    List<Notificacion> findByUsuario(Usuario usuario);
+    List<Notification> findByUsuario(Usuario usuario);
 
-    Notificacion guardar(Notificacion notificacion);
+    Notification guardar(Notification notificacion);
 
-    Notificacion actualizar(Long id, Notificacion notificacion);
-    Notificacion marcarComoLeida(Long id);
+    Notification actualizar(Long id, Notification notificacion);
+    Notification marcarComoLeida(Long id);
     void borrar(Long id);
 }

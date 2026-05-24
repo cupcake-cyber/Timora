@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.timora.app.models.enums.EstadoServicio;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +23,7 @@ public class Servicio {
 
     @ManyToOne
     @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
+    private Supplier proveedor;
 
     @Column(nullable = false)
     private String nombre;
@@ -46,7 +45,7 @@ public class Servicio {
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<Cita> citas = new ArrayList<>();
 
-    public Servicio(Proveedor proveedor, String nombre, String descripcion, Integer duracion, Double precio, EstadoServicio estado) {
+    public Servicio(Supplier proveedor, String nombre, String descripcion, Integer duracion, Double precio, EstadoServicio estado) {
         this.proveedor = proveedor;
         this.nombre = nombre;
         this.descripcion = descripcion;

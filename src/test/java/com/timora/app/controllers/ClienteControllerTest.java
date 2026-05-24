@@ -1,6 +1,6 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Cliente;
+import com.timora.app.models.Customer;
 import com.timora.app.models.Usuario;
 import com.timora.app.service.ClienteService;
 import org.junit.jupiter.api.Test;
@@ -25,10 +25,10 @@ class ClienteControllerTest {
 
     @Test
     void crear_DebeRetornarStatusCreated() {
-        Cliente clienteInput = new Cliente();
-        when(clienteService.guardar(any(Cliente.class))).thenReturn(clienteInput);
+        Customer clienteInput = new Customer();
+        when(clienteService.guardar(any(Customer.class))).thenReturn(clienteInput);
 
-        ResponseEntity<Cliente> response = clienteController.crear(clienteInput);
+        ResponseEntity<Customer> response = clienteController.crear(clienteInput);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         verify(clienteService).guardar(clienteInput);
@@ -39,13 +39,13 @@ class ClienteControllerTest {
         Usuario u = new Usuario();
         u.setIdUsuario(1L);
 
-        Cliente c = new Cliente();
+        Customer c = new Customer();
         c.setIdCliente(50L);
         c.setUsuario(u);
 
         when(clienteService.findByUsuario(1L)).thenReturn(c);
 
-        ResponseEntity<Cliente> response = clienteController.getByUsuario(1L);
+        ResponseEntity<Customer> response = clienteController.getByUsuario(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(50, response.getBody().getIdCliente());

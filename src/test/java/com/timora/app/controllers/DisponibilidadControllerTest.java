@@ -1,7 +1,7 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Disponibilidad;
-import com.timora.app.models.Proveedor;
+import com.timora.app.models.Availability;
+import com.timora.app.models.Supplier;
 import com.timora.app.service.DisponibilidadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,14 +29,14 @@ class DisponibilidadControllerTest {
     @InjectMocks
     private DisponibilidadController disponibilidadController;
 
-    private Disponibilidad disponibilidad;
+    private Availability disponibilidad;
 
     @BeforeEach
     void setUp() {
-        Proveedor proveedor = new Proveedor();
+        Supplier proveedor = new Supplier();
         proveedor.setIdProveedor(1L);
 
-        disponibilidad = Disponibilidad.builder()
+        disponibilidad = Availability.builder()
                 .idDisponibilidad(1L)
                 .proveedor(proveedor)
                 .fechaInicio(LocalDate.of(2025, 1, 1))
@@ -51,7 +51,7 @@ class DisponibilidadControllerTest {
     void getAll_retornaListaConEstado200() {
         when(disponibilidadService.findAll()).thenReturn(List.of(disponibilidad));
 
-        ResponseEntity<List<Disponibilidad>> response = disponibilidadController.getAll();
+        ResponseEntity<List<Availability>> response = disponibilidadController.getAll();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -63,7 +63,7 @@ class DisponibilidadControllerTest {
     void getById_retornaDisponibilidadConEstado200() {
         when(disponibilidadService.findById(1L)).thenReturn(disponibilidad);
 
-        ResponseEntity<Disponibilidad> response = disponibilidadController.getById(1L);
+        ResponseEntity<Availability> response = disponibilidadController.getById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -73,26 +73,26 @@ class DisponibilidadControllerTest {
 
     @Test
     void crear_retornaDisponibilidadConEstado201() {
-        when(disponibilidadService.guardar(any(Disponibilidad.class))).thenReturn(disponibilidad);
+        when(disponibilidadService.guardar(any(Availability.class))).thenReturn(disponibilidad);
 
-        ResponseEntity<Disponibilidad> response = disponibilidadController.crear(disponibilidad);
+        ResponseEntity<Availability> response = disponibilidadController.crear(disponibilidad);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getIdDisponibilidad());
-        verify(disponibilidadService, times(1)).guardar(any(Disponibilidad.class));
+        verify(disponibilidadService, times(1)).guardar(any(Availability.class));
     }
 
     @Test
     void actualizar_retornaDisponibilidadActualizada() {
-        when(disponibilidadService.actualizar(any(Long.class), any(Disponibilidad.class)))
+        when(disponibilidadService.actualizar(any(Long.class), any(Availability.class)))
                 .thenReturn(disponibilidad);
 
-        ResponseEntity<Disponibilidad> response = disponibilidadController.actualizar(1L, disponibilidad);
+        ResponseEntity<Availability> response = disponibilidadController.actualizar(1L, disponibilidad);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(disponibilidadService, times(1)).actualizar(any(Long.class), any(Disponibilidad.class));
+        verify(disponibilidadService, times(1)).actualizar(any(Long.class), any(Availability.class));
     }
 
     @Test

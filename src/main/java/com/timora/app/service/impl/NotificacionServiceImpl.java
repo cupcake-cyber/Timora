@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Notificacion;
+import com.timora.app.models.Notification;
 import com.timora.app.models.Usuario;
 import com.timora.app.repository.NotificacionRepository;
 import com.timora.app.service.NotificacionService;
@@ -28,7 +28,7 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @return lista de notificaciones
      */
     @Override
-    public List<Notificacion> findAll() {
+    public List<Notification> findAll() {
         return notificacionRepository.findAll();
     }
 
@@ -40,7 +40,7 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @throws IllegalArgumentException si no existe
      */
     @Override
-    public Notificacion findById(Long id) {
+    public Notification findById(Long id) {
         return notificacionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Notificación no encontrada"));
     }
@@ -52,7 +52,7 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @return lista de notificaciones del usuario
      */
     @Override
-    public List<Notificacion> findByUsuario(Usuario usuario) {
+    public List<Notification> findByUsuario(Usuario usuario) {
         return notificacionRepository.findByUsuario(usuario);
     }
 
@@ -63,7 +63,7 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @return notificación guardada
      */
     @Override
-    public Notificacion guardar(Notificacion notificacion) {
+    public Notification guardar(Notification notificacion) {
         return notificacionRepository.save(notificacion);
     }
 
@@ -75,8 +75,8 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @return notificación actualizada
      */
     @Override
-    public Notificacion actualizar(Long id, Notificacion notificacion) {
-        Notificacion existente = findById(id);
+    public Notification actualizar(Long id, Notification notificacion) {
+        Notification existente = findById(id);
 
         existente.setUsuario(notificacion.getUsuario());
         existente.setTipo(notificacion.getTipo());
@@ -105,8 +105,8 @@ public class NotificacionServiceImpl implements NotificacionService {
      * @return notificación actualizada
      */
     @Override
-    public Notificacion marcarComoLeida(Long id) {
-        Notificacion notificacion = findById(id);
+    public Notification marcarComoLeida(Long id) {
+        Notification notificacion = findById(id);
 
         notificacion.setEstado(
                 com.timora.app.models.enums.EstadoNotificacion.LEIDA

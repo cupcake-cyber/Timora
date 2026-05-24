@@ -67,7 +67,7 @@ public class CitaServiceImpl implements CitaService {
         Long idServicio = cita.getServicio().getIdServicio();
 
         cita.setCliente(clienteRepository.findById(idCliente)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado")));
+                .orElseThrow(() -> new RuntimeException("Customer no encontrado")));
 
         cita.setServicio(servicioRepository.findById(idServicio)
                 .orElseThrow(() -> new RuntimeException("Servicio no encontrado")));

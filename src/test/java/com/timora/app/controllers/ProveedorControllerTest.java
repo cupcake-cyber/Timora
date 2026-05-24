@@ -1,6 +1,6 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Proveedor;
+import com.timora.app.models.Supplier;
 import com.timora.app.service.ProveedorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,12 +24,12 @@ class ProveedorControllerTest {
 
     @Test
     void crear_DebeRetornarStatusCreatedYBody() {
-        Proveedor proveedor = new Proveedor();
+        Supplier proveedor = new Supplier();
         proveedor.setNombreNegocio("Distribuidora X");
 
-        when(proveedorService.guardar(any(Proveedor.class))).thenReturn(proveedor);
+        when(proveedorService.guardar(any(Supplier.class))).thenReturn(proveedor);
 
-        ResponseEntity<Proveedor> response = proveedorController.crear(proveedor);
+        ResponseEntity<Supplier> response = proveedorController.crear(proveedor);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -39,13 +39,13 @@ class ProveedorControllerTest {
     @Test
     void getById_DebeRetornarProveedor() {
 
-        Proveedor p = new Proveedor();
+        Supplier p = new Supplier();
         p.setIdProveedor(1L);
         p.setNombreNegocio("Insumos Pro");
 
         when(proveedorService.findById(1L)).thenReturn(p);
 
-        ResponseEntity<Proveedor> response = proveedorController.getById(1L);
+        ResponseEntity<Supplier> response = proveedorController.getById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Insumos Pro", response.getBody().getNombreNegocio());

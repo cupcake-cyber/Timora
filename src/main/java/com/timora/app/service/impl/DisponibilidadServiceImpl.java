@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Disponibilidad;
+import com.timora.app.models.Availability;
 import com.timora.app.repository.DisponibilidadRepository;
 import com.timora.app.service.DisponibilidadService;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
      * @return lista de disponibilidades
      */
     @Override
-    public List<Disponibilidad> findAll() {
+    public List<Availability> findAll() {
         return disponibilidadRepository.findAll();
     }
 
@@ -37,9 +37,9 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
      * @throws RuntimeException si no existe
      */
     @Override
-    public Disponibilidad findById(Long id) {
+    public Availability findById(Long id) {
         return disponibilidadRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Disponibilidad no encontrada con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Availability no encontrada con id: " + id));
     }
 
     /**
@@ -49,7 +49,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
      * @return lista de disponibilidades del proveedor
      */
     @Override
-    public List<Disponibilidad> findByProveedor(Long idProveedor) {
+    public List<Availability> findByProveedor(Long idProveedor) {
         return disponibilidadRepository.findByProveedorIdProveedor(idProveedor);
     }
 
@@ -60,7 +60,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
      * @return disponibilidad guardada
      */
     @Override
-    public Disponibilidad guardar(Disponibilidad disponibilidad) {
+    public Availability guardar(Availability disponibilidad) {
         return disponibilidadRepository.save(disponibilidad);
     }
 
@@ -72,9 +72,9 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
      * @return disponibilidad actualizada
      */
     @Override
-    public Disponibilidad actualizar(Long id, Disponibilidad disponibilidad) {
-        Disponibilidad existente = disponibilidadRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Disponibilidad no encontrada con id: " + id));
+    public Availability actualizar(Long id, Availability disponibilidad) {
+        Availability existente = disponibilidadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Availability no encontrada con id: " + id));
 
         existente.setFechaInicio(disponibilidad.getFechaInicio());
         existente.setFechaFin(disponibilidad.getFechaFin());
