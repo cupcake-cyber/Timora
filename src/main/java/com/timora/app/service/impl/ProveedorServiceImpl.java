@@ -1,7 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Proveedor;
-import com.timora.app.models.Usuario;
+import com.timora.app.models.Supplier;
 import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.repository.ProveedorRepository;
 import com.timora.app.service.ProveedorService;
@@ -11,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Implementación del servicio de Proveedor.
+ * Implementación del servicio de Supplier.
  * Contiene la lógica de negocio relacionada a proveedores.
  */
 @Service
@@ -23,7 +22,7 @@ public class ProveedorServiceImpl implements ProveedorService {
     /**
      * Constructor con inyección del repositorio de proveedores.
      *
-     * @param proveedorRepository repositorio de acceso a datos de Proveedor
+     * @param proveedorRepository repositorio de acceso a datos de Supplier
      */
     public ProveedorServiceImpl(ProveedorRepository proveedorRepository) {
         this.proveedorRepository = proveedorRepository;
@@ -35,7 +34,7 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @return lista de usuarios
      */
     @Override
-    public List<Proveedor> findAll() {
+    public List<Supplier> findAll() {
         return proveedorRepository.findAll();
     }
     /**
@@ -44,7 +43,7 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @return lista de usuarios
      */
     @Override
-    public List<Proveedor> findActivos() {
+    public List<Supplier> findActivos() {
         return proveedorRepository.findByUsuario_Estado(EstadoUsuario.ACTIVO);
     }
     /**
@@ -54,7 +53,7 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @return proveedor guardado
      */
     @Override
-    public Proveedor guardar(Proveedor proveedor) {
+    public Supplier guardar(Supplier proveedor) {
         return proveedorRepository.save(proveedor);
     }
 
@@ -66,9 +65,9 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @throws IllegalArgumentException si no existe el proveedor
      */
     @Override
-    public Proveedor findById(Long id) {
+    public Supplier findById(Long id) {
         return proveedorRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Supplier no encontrado"));
     }
 
     /**
@@ -79,8 +78,8 @@ public class ProveedorServiceImpl implements ProveedorService {
      * @throws IllegalArgumentException si no existe el proveedor
      */
     @Override
-    public Proveedor findByUsuario(Long idUsuario) {
+    public Supplier findByUsuario(Long idUsuario) {
         return proveedorRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Supplier no encontrado"));
     }
 }

@@ -1,6 +1,6 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Notificacion;
+import com.timora.app.models.Notification;
 import com.timora.app.models.Usuario;
 import com.timora.app.service.NotificacionService;
 import com.timora.app.service.UsuarioService;
@@ -23,29 +23,29 @@ public class NotificacionController {
     }
 
     @GetMapping
-    public List<Notificacion> listar() {
+    public List<Notification> listar() {
         return notificacionService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Notificacion obtener(@PathVariable Long id) {
+    public Notification obtener(@PathVariable Long id) {
         return notificacionService.findById(id);
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public List<Notificacion> porUsuario(@PathVariable Long idUsuario) {
+    public List<Notification> porUsuario(@PathVariable Long idUsuario) {
         Usuario usuario = usuarioService.findById(idUsuario);
         return notificacionService.findByUsuario(usuario);
     }
 
     @PostMapping
-    public Notificacion crear(@RequestBody Notificacion notificacion) {
+    public Notification crear(@RequestBody Notification notificacion) {
         return notificacionService.guardar(notificacion);
     }
 
     @PutMapping("/{id}")
-    public Notificacion actualizar(@PathVariable Long id,
-                                   @RequestBody Notificacion notificacion) {
+    public Notification actualizar(@PathVariable Long id,
+                                   @RequestBody Notification notificacion) {
         return notificacionService.actualizar(id, notificacion);
     }
 
@@ -55,7 +55,7 @@ public class NotificacionController {
     }
 
     @PutMapping("/{id}/leer")
-    public Notificacion marcarComoLeida(@PathVariable Long id) {
+    public Notification marcarComoLeida(@PathVariable Long id) {
         return notificacionService.marcarComoLeida(id);
     }
 }

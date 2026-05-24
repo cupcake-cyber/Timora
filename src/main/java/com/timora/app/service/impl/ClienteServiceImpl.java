@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Cliente;
-import com.timora.app.models.Proveedor;
+import com.timora.app.models.Customer;
+import com.timora.app.models.Supplier;
 import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.repository.ClienteRepository;
 import com.timora.app.service.ClienteService;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Implementación del servicio de Cliente.
+ * Implementación del servicio de Customer.
  * Contiene la lógica de negocio relacionada a clientes.
  */
 @Service
@@ -23,7 +23,7 @@ public class ClienteServiceImpl implements ClienteService {
     /**
      * Constructor con inyección del repositorio de clientes.
      *
-     * @param clienteRepository repositorio de acceso a datos de Cliente
+     * @param clienteRepository repositorio de acceso a datos de Customer
      */
     public ClienteServiceImpl(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
@@ -35,7 +35,7 @@ public class ClienteServiceImpl implements ClienteService {
      * @return lista de usuarios
      */
     @Override
-    public List<Cliente> findAll() {
+    public List<Customer> findAll() {
         return clienteRepository.findAll();
     }
     /**
@@ -44,7 +44,7 @@ public class ClienteServiceImpl implements ClienteService {
      * @return lista de usuarios
      */
     @Override
-    public List<Proveedor> findActivos() {
+    public List<Supplier> findActivos() {
         return clienteRepository.findByUsuario_Estado(EstadoUsuario.ACTIVO);
     }
 
@@ -55,7 +55,7 @@ public class ClienteServiceImpl implements ClienteService {
      * @return cliente guardado
      */
     @Override
-    public Cliente guardar(Cliente cliente) {
+    public Customer guardar(Customer cliente) {
         return clienteRepository.save(cliente);
     }
 
@@ -67,9 +67,9 @@ public class ClienteServiceImpl implements ClienteService {
      * @throws IllegalArgumentException si no existe el cliente
      */
     @Override
-    public Cliente findById(Long id) {
+    public Customer findById(Long id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Customer no encontrado"));
     }
 
     /**
@@ -80,8 +80,8 @@ public class ClienteServiceImpl implements ClienteService {
      * @throws IllegalArgumentException si no existe el cliente
      */
     @Override
-    public Cliente findByUsuario(Long idUsuario) {
+    public Customer findByUsuario(Long idUsuario) {
         return clienteRepository.findByUsuario_IdUsuario(idUsuario)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Customer no encontrado"));
     }
 }

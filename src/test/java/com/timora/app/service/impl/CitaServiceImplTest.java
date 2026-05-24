@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Cita;
-import com.timora.app.models.Cliente;
+import com.timora.app.models.Customer;
 import com.timora.app.models.Servicio;
 import com.timora.app.models.enums.AppointmentStatus;
 import com.timora.app.repository.CitaRepository;
@@ -76,7 +76,7 @@ class CitaServiceImplTest {
     @Test
     void guardarCita() {
 
-        Cliente cliente = new Cliente();
+        Customer cliente = new Customer();
         cliente.setIdCliente(1L);
 
         Servicio servicio = new Servicio();

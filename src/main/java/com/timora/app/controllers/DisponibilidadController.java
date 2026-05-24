@@ -1,6 +1,6 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Disponibilidad;
+import com.timora.app.models.Availability;
 import com.timora.app.service.DisponibilidadService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,29 +20,29 @@ public class DisponibilidadController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Disponibilidad>> getAll() {
+    public ResponseEntity<List<Availability>> getAll() {
         return ResponseEntity.ok(disponibilidadService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Disponibilidad> getById(@PathVariable Long id) {
+    public ResponseEntity<Availability> getById(@PathVariable Long id) {
         return ResponseEntity.ok(disponibilidadService.findById(id));
     }
 
     @GetMapping("/proveedor/{idProveedor}")
-    public ResponseEntity<List<Disponibilidad>> getByProveedor(@PathVariable Long idProveedor) {
+    public ResponseEntity<List<Availability>> getByProveedor(@PathVariable Long idProveedor) {
         return ResponseEntity.ok(disponibilidadService.findByProveedor(idProveedor));
     }
 
     @PostMapping
-    public ResponseEntity<Disponibilidad> crear(@Valid @RequestBody Disponibilidad disponibilidad) {
+    public ResponseEntity<Availability> crear(@Valid @RequestBody Availability disponibilidad) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(disponibilidadService.guardar(disponibilidad));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Disponibilidad> actualizar(@PathVariable Long id,
-                                                     @RequestBody Disponibilidad disponibilidad) {
+    public ResponseEntity<Availability> actualizar(@PathVariable Long id,
+                                                   @RequestBody Availability disponibilidad) {
         return ResponseEntity.ok(disponibilidadService.actualizar(id, disponibilidad));
     }
 

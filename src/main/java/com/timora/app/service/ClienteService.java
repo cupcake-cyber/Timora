@@ -1,20 +1,19 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Cliente;
-import com.timora.app.models.Proveedor;
-import com.timora.app.models.Usuario;
+import com.timora.app.models.Customer;
+import com.timora.app.models.Supplier;
 
 import java.util.List;
 
 public interface ClienteService {
 
-    List<Cliente> findAll();
+    List<Customer> findAll();
 
-    List<Proveedor> findActivos();
+    List<Supplier> findActivos();
 
-    Cliente guardar(Cliente cliente);
+    Customer guardar(Customer cliente);
 
-    Cliente findById(Long id);
+    Customer findById(Long id);
 
-    Cliente findByUsuario(Long idUsuario);
+    Customer findByUsuario(Long idUsuario);
 }
