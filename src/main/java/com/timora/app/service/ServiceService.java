@@ -2,9 +2,9 @@ package com.timora.app.service;
 
 import com.timora.app.models.Service;
 import com.timora.app.models.enums.ServiceStatus;
-import java.util.Optional;
-import java.util.List;
 
+import java.util.List;
+import java.util.Optional;
 
 public interface ServiceService {
 
@@ -18,13 +18,12 @@ public interface ServiceService {
 
     void delete(Long id);
 
-    // Filtros importantes
+    // Filtros
     List<Service> findByCompanyId(Long companyId);
 
     List<Service> findBySupplierId(Long supplierId);
 
     List<Service> findByStatus(ServiceStatus status);
-
 
     Optional<Service> findByName(String name);
 }

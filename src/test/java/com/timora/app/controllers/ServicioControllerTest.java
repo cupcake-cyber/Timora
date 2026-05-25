@@ -30,8 +30,8 @@ class ServicioControllerTest {
     @Test
     void getAllServ() {
         List<Servicio> esperadoServicios = List.of(
-                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO),
-                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, ServiceStatus.APROBADO)
+                new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.ACTIVE),
+                new Servicio(null, "Medicina General", "Consulta médica", 1, 80.00, ServiceStatus.ACTIVE)
         );
 
         when(servicioService.findAll()).thenReturn(esperadoServicios);
@@ -46,7 +46,7 @@ class ServicioControllerTest {
     @Test
     void getById() {
         Long id = 1L;
-        Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.APROBADO);
+        Servicio esperadoServicio = new Servicio(null, "Limpieza facial", "Limpieza de rostro", 3, 120.00, ServiceStatus.ACTIVE);
         esperadoServicio.setIdServicio(id);
 
         when(servicioService.findById(id)).thenReturn(esperadoServicio);
