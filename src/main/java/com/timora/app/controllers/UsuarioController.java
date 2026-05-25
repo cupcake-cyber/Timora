@@ -1,6 +1,5 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Usuario;
 import com.timora.app.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

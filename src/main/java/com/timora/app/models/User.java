@@ -1,18 +1,22 @@
 package com.timora.app.models;
 
+import com.timora.app.models.enums.GlobalRole;
 import com.timora.app.models.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "user")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "user")
 public class User {
 
     @Id
@@ -31,13 +35,17 @@ public class User {
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private UserStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "global_role", nullable = false)
+    private GlobalRole globalRole;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

@@ -3,17 +3,19 @@ package com.timora.app.models;
 import com.timora.app.models.enums.PersonStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "person")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "person")
 public class Person {
 
     @Id
@@ -25,9 +27,9 @@ public class Person {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = true)
-    private Usuario user;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -36,11 +38,11 @@ public class Person {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private PersonStatus status;
 
     @Column(name = "phone")
-    private Integer phone;
+    private String phone;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -48,7 +50,7 @@ public class Person {
     @Column(name = "address")
     private String address;
 
-    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

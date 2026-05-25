@@ -4,17 +4,22 @@ import com.timora.app.models.enums.AvailabilityRecurring;
 import com.timora.app.models.enums.AvailabilityStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-@Entity
-@Table(name = "availability")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "availability")
 public class Availability {
 
     @Id
@@ -30,14 +35,14 @@ public class Availability {
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = true)
+    @Column(name = "day_of_week")
     private DayOfWeek dayOfWeek;
 
     @Column(name = "start_time", nullable = false)
@@ -47,22 +52,23 @@ public class Availability {
     private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recurrence_type")
+    @Column(name = "recurrence_type", nullable = false)
     private AvailabilityRecurring recurrenceType;
 
-    @Column(name = "slot_duration")
-    private Integer slotDuration;
+    @Column(name = "slot_duration_minutes", nullable = false)
+    private Integer slotDurationMinutes;
 
-    @Column(name = "capacity")
+    @Column(name = "capacity", nullable = false)
     private Integer capacity;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private AvailabilityStatus status;
 
-    @Column(name = "notes", nullable = true)
+    @Column(name = "notes")
     private String notes;
 
+    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

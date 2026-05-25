@@ -1,7 +1,6 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.Notification;
-import com.timora.app.models.Usuario;
 import com.timora.app.repository.NotificacionRepository;
 import com.timora.app.service.NotificacionService;
 import org.springframework.stereotype.Service;

@@ -3,8 +3,7 @@ package com.timora.app.models.enums;
 public enum BookingStatus {
     PENDING,
     CONFIRMED,
-    CANCELLED,
     COMPLETED,
-    RESCHEDULED,
+    CANCELLED,
     NO_SHOW
 }

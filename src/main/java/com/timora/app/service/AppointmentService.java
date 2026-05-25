@@ -1,31 +1,31 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Appointment;
+import com.timora.app.models.Availability;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface AppointmentService {
 
-    List<Appointment> findAll();
+    List<Availability> findAll();
 
-    Optional<Appointment> findById(Long id);
+    Optional<Availability> findById(Long id);
 
-    Appointment save(Appointment appointment);
+    Availability save(Availability appointment);
 
-    Appointment update(Long id, Appointment appointment);
+    Availability update(Long id, Availability appointment);
 
     void delete(Long id);
 
     // Cambios de estado
-    Appointment confirm(Long id);
+    Availability confirm(Long id);
 
-    Appointment cancel(Long id);
+    Availability cancel(Long id);
 
 
-    List<Appointment> findByCustomerId(Long customerId);
+    List<Availability> findByCustomerId(Long customerId);
 
-    List<Appointment> findByServiceId(Long serviceId);
+    List<Availability> findByServiceId(Long serviceId);
 
-    List<Appointment> findByCompanyId(Long companyId);
+    List<Availability> findByCompanyId(Long companyId);
 }

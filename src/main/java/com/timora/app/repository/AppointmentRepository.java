@@ -1,6 +1,5 @@
 package com.timora.app.repository;
 
-import com.timora.app.models.Cita;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
