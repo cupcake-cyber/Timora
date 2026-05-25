@@ -2,16 +2,19 @@ package com.timora.app.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "supplier")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "supplier")
 public class Supplier {
 
     @Id
@@ -23,17 +26,17 @@ public class Supplier {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne
-    @JoinColumn(name = "person_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false, unique = true)
     private Person person;
 
-    @Column(name = "specialty",nullable = true)
+    @Column(name = "specialty")
     private String specialty;
 
-    @Column(name = "notes", nullable = true)
+    @Column(name = "notes")
     private String notes;
 
-    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

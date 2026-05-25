@@ -1,6 +1,5 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Cita;
 import com.timora.app.models.Customer;
 import com.timora.app.models.Servicio;
 import com.timora.app.models.enums.AppointmentStatus;

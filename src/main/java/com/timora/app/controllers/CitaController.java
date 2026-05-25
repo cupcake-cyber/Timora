@@ -1,6 +1,5 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.Cita;
 import com.timora.app.service.CitaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

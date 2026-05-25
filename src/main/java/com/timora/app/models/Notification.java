@@ -4,17 +4,18 @@ import com.timora.app.models.enums.NotificationStatus;
 import com.timora.app.models.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.catalina.User;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "notificacion")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "notification")
 public class Notification {
 
     @Id
@@ -27,17 +28,19 @@ public class Notification {
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "message")
+    @Column(name = "message", nullable = false)
     private String message;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private NotificationStatus status;
 
-    @Column(name = "shipping_date")
-    private LocalDateTime shippingDate;
+    @Column(name = "sent_at")
+    private LocalDateTime sentAt;
 
+    @Column(name = "target")
     private String target;
-
 }

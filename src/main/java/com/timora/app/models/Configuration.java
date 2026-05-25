@@ -2,16 +2,18 @@ package com.timora.app.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.catalina.User;
+import lombok.Setter;
+
 import java.time.LocalTime;
 
-@Entity
-@Table(name = "configuration")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "configuration")
 public class Configuration {
 
     @Id
@@ -22,26 +24,26 @@ public class Configuration {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "actives")
-    private Boolean actives;
+    @Column(name = "notify_appointments")
+    private Boolean notifyAppointments;
 
-    @Column(name = "reservations")
-    private Boolean reservations;
+    @Column(name = "notify_reservations")
+    private Boolean notifyReservations;
 
-    @Column(name = "cancellations")
-    private Boolean cancellations;
+    @Column(name = "notify_cancellations")
+    private Boolean notifyCancellations;
 
-    @Column(name = "reminders")
-    private Boolean reminders;
+    @Column(name = "notify_reminders")
+    private Boolean notifyReminders;
 
-    @Column(name = "minutes_ahead_reminder")
-    private Integer minutesAheadReminder;
+    @Column(name = "reminder_minutes_before")
+    private Integer reminderMinutesBefore;
 
-    @Column(name = "app_channel")
-    private Boolean appChannel;
+    @Column(name = "app_channel_enabled")
+    private Boolean appChannelEnabled;
 
-    @Column(name = "email_channel")
-    private Boolean emailChannel;
+    @Column(name = "email_channel_enabled")
+    private Boolean emailChannelEnabled;
 
     @Column(name = "start_time_silence")
     private LocalTime startTimeSilence;

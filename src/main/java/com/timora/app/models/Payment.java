@@ -1,17 +1,23 @@
 package com.timora.app.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.timora.app.models.enums.PaymentMethod;
+import com.timora.app.models.enums.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "payment")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "payment")
 public class Payment {
 
     @Id
@@ -23,22 +29,22 @@ public class Payment {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", nullable = false)
     private Appointment appointment;
 
-    @Column(name = "amount", nullable = false)
-    private Double amount;
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private PaymentStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "method")
+    @Column(name = "method", nullable = false)
     private PaymentMethod method;
 
-    @Column(name = "created_at", updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

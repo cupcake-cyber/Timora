@@ -1,7 +1,6 @@
 package com.timora.app.controllers;
 
 import com.timora.app.models.Notification;
-import com.timora.app.models.Usuario;
 import com.timora.app.models.enums.EstadoNotificacion;
 import com.timora.app.models.enums.NotificationType;
 import com.timora.app.service.NotificacionService;

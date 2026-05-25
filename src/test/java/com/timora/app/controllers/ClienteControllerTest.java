@@ -1,7 +1,6 @@
 package com.timora.app.controllers;
 
 import com.timora.app.models.Customer;
-import com.timora.app.models.Usuario;
 import com.timora.app.service.ClienteService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

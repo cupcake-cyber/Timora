@@ -1,6 +1,5 @@
 package com.timora.app.repository;
 
-import com.timora.app.models.Usuario;
 import com.timora.app.models.enums.EstadoUsuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 

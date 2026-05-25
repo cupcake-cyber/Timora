@@ -1,6 +1,5 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Usuario;
 import com.timora.app.models.enums.EstadoUsuario;
 import com.timora.app.models.enums.RolUsuario;
 import com.timora.app.repository.UsuarioRepository;
