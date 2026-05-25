@@ -26,13 +26,13 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     @Override
     public Configuration findById(Long id) {
         return configurationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Configuration not found"));
+                .orElseThrow(() -> new RuntimeException("Configuration not found with id: " + id));
     }
 
     @Override
     public Configuration findByUserId(Long userId) {
         return configurationRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Configuration not found for user"));
+                .orElseThrow(() -> new RuntimeException("Configuration not found for user id: " + userId));
     }
 
     @Override
@@ -41,25 +41,60 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     @Override
-    public Configuration update(Long id, Configuration updated) {
-        Configuration existing = findById(id);
+    public Configuration update(Long id, Configuration updatedConfiguration) {
 
-        existing.setActives(updated.getActives());
-        existing.setReservations(updated.getReservations());
-        existing.setCancellations(updated.getCancellations());
-        existing.setReminders(updated.getReminders());
-        existing.setMinutesAheadReminder(updated.getMinutesAheadReminder());
-        existing.setAppChannel(updated.getAppChannel());
-        existing.setEmailChannel(updated.getEmailChannel());
-        existing.setStartTimeSilence(updated.getStartTimeSilence());
-        existing.setEndTimeSilence(updated.getEndTimeSilence());
-        existing.setDarkMode(updated.getDarkMode());
+        Configuration existingConfiguration = findById(id);
 
-        return configurationRepository.save(existing);
+        existingConfiguration.setUser(updatedConfiguration.getUser());
+
+        existingConfiguration.setNotifyAppointments(
+                updatedConfiguration.getNotifyAppointments()
+        );
+
+        existingConfiguration.setNotifyReservations(
+                updatedConfiguration.getNotifyReservations()
+        );
+
+        existingConfiguration.setNotifyCancellations(
+                updatedConfiguration.getNotifyCancellations()
+        );
+
+        existingConfiguration.setNotifyReminders(
+                updatedConfiguration.getNotifyReminders()
+        );
+
+        existingConfiguration.setReminderMinutesBefore(
+                updatedConfiguration.getReminderMinutesBefore()
+        );
+
+        existingConfiguration.setAppChannelEnabled(
+                updatedConfiguration.getAppChannelEnabled()
+        );
+
+        existingConfiguration.setEmailChannelEnabled(
+                updatedConfiguration.getEmailChannelEnabled()
+        );
+
+        existingConfiguration.setStartTimeSilence(
+                updatedConfiguration.getStartTimeSilence()
+        );
+
+        existingConfiguration.setEndTimeSilence(
+                updatedConfiguration.getEndTimeSilence()
+        );
+
+        existingConfiguration.setDarkMode(
+                updatedConfiguration.getDarkMode()
+        );
+
+        return configurationRepository.save(existingConfiguration);
     }
 
     @Override
     public void delete(Long id) {
-        configurationRepository.deleteById(id);
+
+        Configuration configuration = findById(id);
+
+        configurationRepository.delete(configuration);
     }
 }
