@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Configuration;
+import com.timora.app.model.Configuration;
 
 import java.util.List;
 

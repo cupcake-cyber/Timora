@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Company;
-import com.timora.app.models.enums.CompanyStatus;
+import com.timora.app.model.Company;
+import com.timora.app.model.enums.CompanyStatus;
 import com.timora.app.repository.CompanyRepository;
 import com.timora.app.service.CompanyService;
 import org.springframework.stereotype.Service;

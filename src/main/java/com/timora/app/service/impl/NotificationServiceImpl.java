@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Notification;
+import com.timora.app.model.Notification;
 import com.timora.app.repository.NotificationRepository;
 import com.timora.app.service.NotificationService;
 import lombok.RequiredArgsConstructor;

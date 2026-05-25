@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Person;
-import com.timora.app.models.enums.PersonStatus;
+import com.timora.app.model.Person;
+import com.timora.app.model.enums.PersonStatus;
 import com.timora.app.repository.PersonRepository;
 import com.timora.app.service.PersonService;
 import org.springframework.stereotype.Service;

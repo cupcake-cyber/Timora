@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.UserSupplierRole;
-import com.timora.app.models.UserSupplierRoleId;
+import com.timora.app.model.UserSupplierRole;
+import com.timora.app.model.UserSupplierRoleId;
 import com.timora.app.repository.UserSupplierRoleRepository;
 import com.timora.app.service.UserSupplierRoleService;
 import org.springframework.stereotype.Service;

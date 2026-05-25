@@ -1,7 +1,7 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Service;
-import com.timora.app.models.enums.ServiceStatus;
+import com.timora.app.model.Service;
+import com.timora.app.model.enums.ServiceStatus;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,7 +1,7 @@
 package com.timora.app.repository;
 
-import com.timora.app.models.Configuration;
-import com.timora.app.models.User;
+import com.timora.app.model.Configuration;
+import com.timora.app.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

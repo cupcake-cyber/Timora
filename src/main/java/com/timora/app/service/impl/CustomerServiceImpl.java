@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Customer;
+import com.timora.app.model.Customer;
 import com.timora.app.repository.CustomerRepository;
 import com.timora.app.service.CustomerService;
 import lombok.RequiredArgsConstructor;

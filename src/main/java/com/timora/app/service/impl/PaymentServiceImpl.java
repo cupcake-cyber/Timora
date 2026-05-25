@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
 import java.time.LocalDateTime;
-import com.timora.app.models.Payment;
+import com.timora.app.model.Payment;
 import com.timora.app.repository.PaymentRepository;
 import com.timora.app.service.PaymentService;
 import org.springframework.stereotype.Service;
@@ -41,8 +41,6 @@ public class PaymentServiceImpl implements PaymentService {
             existing.setAmount(newPayment.getAmount());
             existing.setStatus(newPayment.getStatus());
             existing.setMethod(newPayment.getMethod());
-
-            // 🔥 CORREGIDO
             existing.setBooking(newPayment.getBooking());
             existing.setCompany(newPayment.getCompany());
 

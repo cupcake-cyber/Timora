@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Configuration;
+import com.timora.app.model.Configuration;
 import com.timora.app.repository.ConfigurationRepository;
 import com.timora.app.service.ConfigurationService;
 import org.springframework.stereotype.Service;

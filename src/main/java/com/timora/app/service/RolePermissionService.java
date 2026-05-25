@@ -1,7 +1,7 @@
 package com.timora.app.service;
 
-import com.timora.app.models.RolePermission;
-import com.timora.app.models.RolePermissionId;
+import com.timora.app.model.RolePermission;
+import com.timora.app.model.RolePermissionId;
 
 import java.util.List;
 

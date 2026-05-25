@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.RolePermission;
-import com.timora.app.models.RolePermissionId;
+import com.timora.app.model.RolePermission;
+import com.timora.app.model.RolePermissionId;
 import com.timora.app.repository.RolePermissionRepository;
 import com.timora.app.service.RolePermissionService;
 import org.springframework.stereotype.Service;

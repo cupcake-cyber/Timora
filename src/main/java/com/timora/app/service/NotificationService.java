@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Notification;
+import com.timora.app.model.Notification;
 
 import java.util.List;
 import java.util.Optional;

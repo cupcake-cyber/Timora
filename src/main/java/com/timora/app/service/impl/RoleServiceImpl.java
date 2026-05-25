@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Role;
+import com.timora.app.model.Role;
 import com.timora.app.repository.RoleRepository;
 import com.timora.app.service.RoleService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Customer;
+import com.timora.app.model.Customer;
 
 import java.util.List;
 import java.util.Optional;

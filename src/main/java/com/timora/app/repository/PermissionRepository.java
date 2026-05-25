@@ -1,6 +1,6 @@
 package com.timora.app.repository;
 
-import com.timora.app.models.Permission;
+import com.timora.app.model.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

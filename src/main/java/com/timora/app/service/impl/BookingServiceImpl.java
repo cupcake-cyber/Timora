@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Booking;
-import com.timora.app.models.enums.BookingStatus;
+import com.timora.app.model.Booking;
+import com.timora.app.model.enums.BookingStatus;
 import com.timora.app.repository.BookingRepository;
 import com.timora.app.service.BookingService;
 import org.springframework.stereotype.Service;
@@ -39,13 +39,11 @@ public class BookingServiceImpl implements BookingService {
     public Booking update(Long id, Booking updated) {
         return bookingRepository.findById(id).map(booking -> {
 
-            // 🔥 RELACIONES (NO IDs)
             booking.setCompany(updated.getCompany());
             booking.setService(updated.getService());
             booking.setCustomer(updated.getCustomer());
             booking.setCreatedByUser(updated.getCreatedByUser());
 
-            // 🔥 CAMPOS
             booking.setStartTime(updated.getStartTime());
             booking.setEndTime(updated.getEndTime());
             booking.setStatus(updated.getStatus());

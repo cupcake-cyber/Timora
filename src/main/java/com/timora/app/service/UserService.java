@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.User;
+import com.timora.app.model.User;
 
 import java.util.List;
 

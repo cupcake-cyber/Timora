@@ -1,6 +1,6 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Availability;
+import com.timora.app.model.Availability;
 import com.timora.app.repository.AvailabilityRepository;
 import com.timora.app.service.AvailabilityService;
 import lombok.RequiredArgsConstructor;

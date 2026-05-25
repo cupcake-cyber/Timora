@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Permission;
+import com.timora.app.model.Permission;
 
 import java.util.List;
 import java.util.Optional;

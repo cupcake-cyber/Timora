@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.Service;
-import com.timora.app.models.enums.ServiceStatus;
+import com.timora.app.model.Service;
+import com.timora.app.model.enums.ServiceStatus;
 import com.timora.app.repository.ServiceRepository;
 import com.timora.app.service.ServiceService;
 import org.springframework.transaction.annotation.Transactional;

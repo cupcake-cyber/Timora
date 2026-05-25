@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Role;
+import com.timora.app.model.Role;
 
 import java.util.List;
 import java.util.Optional;

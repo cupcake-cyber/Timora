@@ -1,7 +1,7 @@
 package com.timora.app.service;
 
-import com.timora.app.models.UserSupplierRole;
-import com.timora.app.models.UserSupplierRoleId;
+import com.timora.app.model.UserSupplierRole;
+import com.timora.app.model.UserSupplierRoleId;
 
 import java.util.List;
 

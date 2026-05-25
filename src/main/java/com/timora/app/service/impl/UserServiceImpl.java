@@ -1,8 +1,8 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.models.User;
-import com.timora.app.models.enums.GlobalRole;
-import com.timora.app.models.enums.UserStatus;
+import com.timora.app.model.User;
+import com.timora.app.model.enums.GlobalRole;
+import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.UserRepository;
 import com.timora.app.service.UserService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

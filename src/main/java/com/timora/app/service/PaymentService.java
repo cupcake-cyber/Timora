@@ -1,6 +1,6 @@
 package com.timora.app.service;
 
-import com.timora.app.models.Payment;
+import com.timora.app.model.Payment;
 
 import java.util.List;
 import java.util.Optional;

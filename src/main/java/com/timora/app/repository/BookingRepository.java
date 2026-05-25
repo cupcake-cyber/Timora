@@ -1,7 +1,7 @@
 package com.timora.app.repository;
 
-import com.timora.app.models.Booking;
-import com.timora.app.models.enums.BookingStatus;
+import com.timora.app.model.Booking;
+import com.timora.app.model.enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
