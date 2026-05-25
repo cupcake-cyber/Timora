@@ -2,7 +2,7 @@ package com.timora.app.service.impl;
 
 import com.timora.app.models.Notification;
 import com.timora.app.models.enums.NotificationType;
-import com.timora.app.repository.NotificacionRepository;
+import com.timora.app.repository.NotificationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,23 +17,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NotificacionServiceImplTest {
+class NotificationServiceImplTest {
 
     @Mock
-    private NotificacionRepository notificacionRepository;
+    private NotificationRepository notificationRepository;
 
     @InjectMocks
-    private NotificacionServiceImpl notificacionService;
+    private NotificationServiceImpl notificacionService;
 
     @Test
     void findAll_DebeRetornarLista() {
-        when(notificacionRepository.findAll())
+        when(notificationRepository.findAll())
                 .thenReturn(List.of(new Notification(), new Notification()));
 
         List<Notification> resultado = notificacionService.findAll();
 
         assertEquals(2, resultado.size());
-        verify(notificacionRepository).findAll();
+        verify(notificationRepository).findAll();
     }
 
     @Test
@@ -50,16 +50,16 @@ class NotificacionServiceImplTest {
         nuevosDatos.setEstado(EstadoNotificacion.LEIDA);
         nuevosDatos.setFechaEnvio(LocalDateTime.now());
 
-        when(notificacionRepository.findById(id))
+        when(notificationRepository.findById(id))
                 .thenReturn(Optional.of(existente));
-        when(notificacionRepository.save(any(Notification.class)))
+        when(notificationRepository.save(any(Notification.class)))
                 .thenAnswer(i -> i.getArguments()[0]);
 
         Notification actualizado = notificacionService.actualizar(id, nuevosDatos);
 
         assertEquals("Nuevo", actualizado.getMensaje());
         assertEquals(NotificationType.RESERVA, actualizado.getTipo());
-        verify(notificacionRepository).save(existente);
+        verify(notificationRepository).save(existente);
     }
 
     @Test
@@ -69,11 +69,11 @@ class NotificacionServiceImplTest {
         Notification noti = new Notification();
         noti.setIdNotificacion(id);
 
-        when(notificacionRepository.findById(id))
+        when(notificationRepository.findById(id))
                 .thenReturn(Optional.of(noti));
 
         notificacionService.borrar(id);
 
-        verify(notificacionRepository).delete(noti);
+        verify(notificationRepository).delete(noti);
     }
 }

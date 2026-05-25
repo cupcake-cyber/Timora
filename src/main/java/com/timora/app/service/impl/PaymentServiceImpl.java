@@ -37,12 +37,17 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment update(Long id, Payment newPayment) {
         return repository.findById(id).map(existing -> {
+
             existing.setAmount(newPayment.getAmount());
             existing.setStatus(newPayment.getStatus());
             existing.setMethod(newPayment.getMethod());
-            existing.setAppointment(newPayment.getAppointment());
+
+            // 🔥 CORREGIDO
+            existing.setBooking(newPayment.getBooking());
             existing.setCompany(newPayment.getCompany());
+
             return repository.save(existing);
+
         }).orElseThrow(() -> new RuntimeException("Payment no encontrado"));
     }
 
@@ -52,7 +57,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<Payment> findByAppointment(Long appointmentId) {
-        return repository.findByAppointmentId(appointmentId);
+    public List<Payment> findByBooking(Long bookingId) {
+        return repository.findByBookingId(bookingId);
     }
 }

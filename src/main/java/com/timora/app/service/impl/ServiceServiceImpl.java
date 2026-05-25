@@ -38,8 +38,9 @@ public class ServiceServiceImpl implements ServiceService {
         service.setId(null);
         service.setCreatedAt(LocalDateTime.now());
 
+        // 🔥 CORRECTO (enum en inglés)
         if (service.getStatus() == null) {
-            service.setStatus(ServiceStatus.APROBADO);
+            service.setStatus(ServiceStatus.ACTIVE);
         }
 
         return serviceRepository.save(service);
@@ -49,11 +50,11 @@ public class ServiceServiceImpl implements ServiceService {
     public Service update(Long id, Service updated) {
         return serviceRepository.findById(id).map(service -> {
 
-
+            // Relaciones
             service.setCompany(updated.getCompany());
             service.setSupplier(updated.getSupplier());
 
-
+            // Campos normales
             service.setName(updated.getName());
             service.setDescription(updated.getDescription());
             service.setPrice(updated.getPrice());

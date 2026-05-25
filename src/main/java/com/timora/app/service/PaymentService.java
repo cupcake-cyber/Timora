@@ -15,7 +15,7 @@ public interface PaymentService {
 
     Payment update(Long id, Payment payment);
 
-    List<Payment> findByAppointment(Long appointmentId);
+    List<Payment> findByBooking(Long bookingId);
 
     void delete(Long id);
 }

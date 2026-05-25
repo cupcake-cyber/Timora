@@ -2,7 +2,7 @@ package com.timora.app.controllers;
 
 import com.timora.app.models.Notification;
 import com.timora.app.models.enums.NotificationType;
-import com.timora.app.service.NotificacionService;
+import com.timora.app.service.NotificationService;
 import com.timora.app.service.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,25 +18,25 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NotificacionControllerTest {
+class NotificationControllerTest {
 
     @Mock
-    private NotificacionService notificacionService;
+    private NotificationService notificationService;
 
     @Mock
     private UsuarioService usuarioService;
 
     @InjectMocks
-    private NotificacionController notificacionController;
+    private NotificationController notificationController;
 
     @Test
     void listar_DebeRetornarStatusOk() {
-        when(notificacionService.findAll()).thenReturn(Collections.emptyList());
+        when(notificationService.findAll()).thenReturn(Collections.emptyList());
 
-        List<Notification> response = notificacionController.listar();
+        List<Notification> response = notificationController.listar();
 
         assertNotNull(response);
-        verify(notificacionService).findAll();
+        verify(notificationService).findAll();
     }
 
     @Test
@@ -44,9 +44,9 @@ class NotificacionControllerTest {
         Notification noti = new Notification();
         noti.setIdNotificacion(1L);
 
-        when(notificacionService.findById(1L)).thenReturn(noti);
+        when(notificationService.findById(1L)).thenReturn(noti);
 
-        Notification response = notificacionController.obtener(1L);
+        Notification response = notificationController.obtener(1L);
 
         assertEquals(1, response.getIdNotificacion());
     }
@@ -58,13 +58,13 @@ class NotificacionControllerTest {
         usuario.setIdUsuario(idUsuario);
 
         when(usuarioService.findById(idUsuario)).thenReturn(usuario);
-        when(notificacionService.findByUsuario(usuario))
+        when(notificationService.findByUsuario(usuario))
                 .thenReturn(Collections.emptyList());
 
-        List<Notification> response = notificacionController.porUsuario(idUsuario);
+        List<Notification> response = notificationController.porUsuario(idUsuario);
 
         assertNotNull(response);
-        verify(notificacionService).findByUsuario(usuario);
+        verify(notificationService).findByUsuario(usuario);
     }
 
     @Test
@@ -75,9 +75,9 @@ class NotificacionControllerTest {
         noti.setEstado(EstadoNotificacion.NO_LEIDA);
         noti.setFechaEnvio(LocalDateTime.now());
 
-        when(notificacionService.guardar(noti)).thenReturn(noti);
+        when(notificationService.guardar(noti)).thenReturn(noti);
 
-        Notification response = notificacionController.crear(noti);
+        Notification response = notificationController.crear(noti);
 
         assertEquals("Test", response.getMensaje());
     }
@@ -88,17 +88,17 @@ class NotificacionControllerTest {
         Notification noti = new Notification();
         noti.setMensaje("Actualizado");
 
-        when(notificacionService.actualizar(id, noti)).thenReturn(noti);
+        when(notificationService.actualizar(id, noti)).thenReturn(noti);
 
-        Notification response = notificacionController.actualizar(id, noti);
+        Notification response = notificationController.actualizar(id, noti);
 
         assertEquals("Actualizado", response.getMensaje());
     }
 
     @Test
     void eliminar_DebeLlamarService() {
-        notificacionController.eliminar(1L);
+        notificationController.eliminar(1L);
 
-        verify(notificacionService).borrar(1L);
+        verify(notificationService).borrar(1L);
     }
 }

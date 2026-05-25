@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    // Buscar pagos por appointment
-    List<Payment> findByAppointmentId(Long appointmentId);
+    List<Payment> findByBookingId(Long bookingId);
+
 }
