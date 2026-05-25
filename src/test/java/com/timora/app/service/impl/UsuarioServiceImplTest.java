@@ -1,7 +1,6 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.models.enums.EstadoUsuario;
-import com.timora.app.models.enums.RolUsuario;
 import com.timora.app.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

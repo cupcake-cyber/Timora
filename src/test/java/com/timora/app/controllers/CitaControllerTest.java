@@ -1,6 +1,5 @@
 package com.timora.app.controllers;
 
-import com.timora.app.models.enums.AppointmentStatus;
 import com.timora.app.service.CitaService;
 
 import org.junit.jupiter.api.Test;

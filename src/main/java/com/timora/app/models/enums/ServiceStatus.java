@@ -1,7 +1,8 @@
 package com.timora.app.models.enums;
 
 public enum ServiceStatus {
-    APROBADO,
-    INACTIVO,
-    PAUSADO
+    ACTIVE,
+    INACTIVE,
+    TEMPORARILY_UNAVAILABLE,
+    ARCHIVED
 }

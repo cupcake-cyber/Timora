@@ -1,7 +1,7 @@
 package com.timora.app.models;
 
-import com.timora.app.models.enums.AvailabilityRecurring;
-import com.timora.app.models.enums.AvailabilityStatus;
+import com.timora.app.models.enums.BookingStatus;
+import com.timora.app.models.enums.BookingType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,17 +9,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "booking")
+@Table(name = "appointment")
 public class Booking {
 
     @Id
@@ -32,41 +29,36 @@ public class Booking {
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplier_id", nullable = false)
-    private Supplier supplier;
+    @JoinColumn(name = "service_id", nullable = false)
+    private Service service;
 
-    @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week")
-    private DayOfWeek dayOfWeek;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdByUser;
 
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
+    private LocalDateTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "recurrence_type", nullable = false)
-    private AvailabilityRecurring recurrenceType;
-
-    @Column(name = "slot_duration_minutes", nullable = false)
-    private Integer slotDurationMinutes;
-
-    @Column(name = "capacity", nullable = false)
-    private Integer capacity;
+    private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private AvailabilityStatus status;
+    private BookingStatus status;
 
-    @Column(name = "notes")
-    private String notes;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private BookingType type;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

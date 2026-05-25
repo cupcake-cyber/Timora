@@ -1,8 +1,6 @@
 package com.timora.app.service.impl;
-import com.timora.app.models.Appointment;
-import com.timora.app.models.enums.AppointmentStatus;
+import com.timora.app.models.Availability;
 import com.timora.app.repository.AppointmentRepository;
-import com.timora.app.repository.ServiceRepository;
 import com.timora.app.service.AppointmentService;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +18,17 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<Appointment> findAll() {
+    public List<Availability> findAll() {
         return appointmentRepository.findAll();
     }
 
     @Override
-    public Optional<Appointment> findById(Long id) {
+    public Optional<Availability> findById(Long id) {
         return appointmentRepository.findById(id);
     }
 
     @Override
-    public Appointment save(Appointment appointment) {
+    public Availability save(Availability appointment) {
 
         // Solo seteas la fecha (ya no validas entidades externas aquí)
         appointment.setCreatedAt(LocalDateTime.now());
@@ -39,7 +37,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment update(Long id, Appointment updated) {
+    public Availability update(Long id, Availability updated) {
         return appointmentRepository.findById(id).map(appointment -> {
 
             appointment.setCompanyId(updated.getCompanyId());
@@ -65,7 +63,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment confirm(Long id) {
+    public Availability confirm(Long id) {
         return appointmentRepository.findById(id).map(appointment -> {
             appointment.setStatus(AppointmentStatus.CONFIRMED);
             return appointmentRepository.save(appointment);
@@ -73,7 +71,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment cancel(Long id) {
+    public Availability cancel(Long id) {
         return appointmentRepository.findById(id).map(appointment -> {
             appointment.setStatus(AppointmentStatus.CANCELLED);
             return appointmentRepository.save(appointment);
@@ -81,17 +79,17 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<Appointment> findByCustomerId(Long customerId) {
+    public List<Availability> findByCustomerId(Long customerId) {
         return appointmentRepository.findByCustomerId(customerId);
     }
 
     @Override
-    public List<Appointment> findByServiceId(Long serviceId) {
+    public List<Availability> findByServiceId(Long serviceId) {
         return appointmentRepository.findByServiceId(serviceId);
     }
 
     @Override
-    public List<Appointment> findByCompanyId(Long companyId) {
+    public List<Availability> findByCompanyId(Long companyId) {
         return appointmentRepository.findByCompanyId(companyId);
     }
 }

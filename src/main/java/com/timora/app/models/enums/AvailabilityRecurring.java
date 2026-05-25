@@ -4,5 +4,7 @@ public enum AvailabilityRecurring {
     NONE,
     DAILY,
     WEEKLY,
-    MONTHLY
+    MONTHLY,
+    YEARLY,
+    CUSTOM
 }
