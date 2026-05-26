@@ -1,9 +1,15 @@
 package com.timora.app.model.enums;
 
 public enum GlobalRole {
-    PLATFORM_OWNER,
-    PLATFORM_ADMIN,
-    COMPANY_OWNER,
-    COMPANY_ADMIN,
-    USER
+
+    OWNER,          // Control total de la empresa/tenant
+
+    COMPANY_ADMIN,  // Administración organizacional general
+
+    STAFF,          // Usuario interno estándar sin autoridad organizacional
+
+    SUPPORT,        // Soporte técnico u operacional interno
+
+    AUDITOR         // Solo lectura/reportes/auditoría
+
 }

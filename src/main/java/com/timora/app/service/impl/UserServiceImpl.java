@@ -5,7 +5,7 @@ import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.UserRepository;
 import com.timora.app.service.UserService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,9 +14,9 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
         );
 
         user.setStatus(UserStatus.ACTIVE);
-        user.setGlobalRole(GlobalRole.USER);
+        user.setGlobalRole(GlobalRole.STAFF);
         return userRepository.save(user);
     }
 

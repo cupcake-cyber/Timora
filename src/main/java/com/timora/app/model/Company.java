@@ -26,7 +26,7 @@ public class Company {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "ruc", nullable =false, unique = true)
+    @Column(name = "ruc")
     private String ruc;
 
     @Column(name = "address")
