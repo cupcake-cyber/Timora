@@ -30,12 +30,21 @@ public class Notification {
     @Column(name = "type", nullable = false)
     private NotificationType type;
 
+    @Column(name = "title", nullable = false)
+    private String title;
+
     @Column(name = "message", nullable = false)
     private String message;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private NotificationStatus status;
+
+    @Column(name = "is_read")
+    private Boolean isRead = false;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
