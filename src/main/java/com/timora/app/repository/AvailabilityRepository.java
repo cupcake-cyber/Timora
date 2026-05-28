@@ -45,15 +45,6 @@ public interface AvailabilityRepository extends JpaRepository<Availability, Long
             AvailabilityStatus status
     );
 
-    // =========================
-    // DTO REMOVED (IMPORTANT FIX)
-    // =========================
-    // ❌ ELIMINADO: findDTOs()
-    // (causa principal del crash en startup)
-
-    // =========================
-    // OVERLAP CHECK (OK)
-    // =========================
     @Query("""
         SELECT a
         FROM Availability a

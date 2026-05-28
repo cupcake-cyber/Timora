@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AvailabilityService {
-    List<AvailabilityDTO> findAll();
+
+    List<AvailabilityDTO> getMyAvailabilities();
 
     List<AvailabilityDTO> getAvailabilityBySupplier(Long supplierId);
 

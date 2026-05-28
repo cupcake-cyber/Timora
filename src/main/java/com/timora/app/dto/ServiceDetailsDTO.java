@@ -1,6 +1,7 @@
 package com.timora.app.dto;
 
 import com.timora.app.model.enums.ServiceStatus;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class ServiceDetailsDTO {
     private Long id;
     private Long companyId;

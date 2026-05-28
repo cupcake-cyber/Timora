@@ -3,6 +3,7 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.AvailabilityCreateDTO;
 import com.timora.app.dto.AvailabilityDTO;
+import com.timora.app.exception.ForbiddenException;
 import com.timora.app.model.Availability;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
@@ -14,287 +15,216 @@ import com.timora.app.repository.SupplierRepository;
 import com.timora.app.repository.UserRepository;
 import com.timora.app.service.AvailabilityService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AvailabilityServiceImpl implements AvailabilityService {
 
     private final AvailabilityRepository availabilityRepository;
     private final SupplierRepository supplierRepository;
     private final UserRepository userRepository;
 
-    public AvailabilityServiceImpl(
-            AvailabilityRepository availabilityRepository,
-            SupplierRepository supplierRepository,
-            UserRepository userRepository
-    ) {
-        this.availabilityRepository = availabilityRepository;
-        this.supplierRepository = supplierRepository;
-        this.userRepository = userRepository;
+    // =========================
+    // GET CURRENT USER
+    // =========================
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
-    @Override
-    public List<AvailabilityDTO> findAll() {
+    // =========================
+    // GET SUPPLIER FROM USER
+    // =========================
+    private Supplier getCurrentSupplier(User user) {
 
-        User currentUser = getCurrentUser();
-        Long companyId = currentUser.getCompany().getId();
+        return supplierRepository
+                .findByUserIdAndCompanyId(
+                        user.getId(),
+                        user.getCompany().getId()
+                )
+                .orElseThrow(() ->
+                        new ForbiddenException("User is not a supplier")
+                );
+    }
 
-        if (currentUser.getGlobalRole() == GlobalRole.OWNER || currentUser.getGlobalRole() == GlobalRole.COMPANY_ADMIN) {
-            return availabilityRepository.findByCompanyId(companyId)
-                    .stream()
-                    .map(this::mapToDTO)
-                    .toList();
+    // =========================
+    // CHECK OWNERSHIP
+    // =========================
+    private void checkOwnership(User user, Availability availability) {
+
+        Supplier supplier = getCurrentSupplier(user);
+
+        if (!availability.getSupplier().getId().equals(supplier.getId())) {
+            throw new ForbiddenException("Not your availability");
         }
-
-        Long supplierId = obtenerSupplierIdDesdeUser(currentUser);
-
-        return availabilityRepository.findByCompanyIdAndSupplierId(companyId, supplierId)
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
     }
 
+    // =========================
+    // READ (ONLY MINE)
+    // =========================
     @Override
-    public List<AvailabilityDTO> getAvailabilityBySupplier(
-            Long supplierId
-    ) {
+    public List<AvailabilityDTO> getMyAvailabilities() {
 
-        Long companyId = getCurrentUser().getCompany().getId();
-
-        validateSupplierOwnership(supplierId, companyId);
+        User user = getCurrentUser();
+        Supplier supplier = getCurrentSupplier(user);
 
         return availabilityRepository
                 .findByCompanyIdAndSupplierId(
-                        companyId,
-                        supplierId
+                        user.getCompany().getId(),
+                        supplier.getId()
                 )
                 .stream()
                 .map(this::mapToDTO)
                 .toList();
     }
 
+    // =========================
+    // CREATE
+    // =========================
     @Override
-    public AvailabilityDTO createAvailability(
-            AvailabilityCreateDTO dto
-    ) {
+    public AvailabilityDTO createAvailability(AvailabilityCreateDTO dto) {
 
         User user = getCurrentUser();
+        Supplier supplier = getCurrentSupplier(user);
 
-        Long companyId = user.getCompany().getId();
-
-        Supplier supplier =
-                validateSupplierOwnership(
-                        dto.getSupplierId(),
-                        companyId
-                );
-
-        validateBusinessRules(dto, companyId);
+        validateBusinessRules(dto, user.getCompany().getId());
 
         Availability availability = new Availability();
 
         availability.setCompany(user.getCompany());
         availability.setSupplier(supplier);
+
         availability.setStartDate(dto.getStartDate());
         availability.setEndDate(dto.getEndDate());
         availability.setDayOfWeek(dto.getDayOfWeek());
         availability.setStartTime(dto.getStartTime());
         availability.setEndTime(dto.getEndTime());
-        availability.setRecurrenceType(
-                dto.getRecurrenceType()
-        );
-        availability.setSlotDurationMinutes(
-                dto.getSlotDurationMinutes()
-        );
+        availability.setRecurrenceType(dto.getRecurrenceType());
+        availability.setSlotDurationMinutes(dto.getSlotDurationMinutes());
         availability.setCapacity(dto.getCapacity());
         availability.setNotes(dto.getNotes());
-        availability.setStatus(
-                AvailabilityStatus.ACTIVE
-        );
+        availability.setStatus(AvailabilityStatus.ACTIVE);
 
-        availabilityRepository.save(availability);
-
-        return mapToDTO(availability);
+        return mapToDTO(availabilityRepository.save(availability));
     }
 
+    // =========================
+    // UPDATE STATUS (PATCH)
+    // =========================
     @Override
     public void updateStatus(Long id, String status) {
 
-        Long companyId = getCurrentUser()
-                .getCompany()
-                .getId();
+        User user = getCurrentUser();
 
-        Availability availability =
-                availabilityRepository
-                        .findByIdAndCompanyId(
-                                id,
-                                companyId
-                        )
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "Availability not found"
-                                ));
+        Availability availability = availabilityRepository
+                .findByIdAndCompanyId(id, user.getCompany().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Availability not found"));
+
+        checkOwnership(user, availability);
 
         availability.setStatus(
-                AvailabilityStatus.valueOf(
-                        status.toUpperCase()
-                )
+                AvailabilityStatus.valueOf(status.toUpperCase())
         );
 
         availabilityRepository.save(availability);
     }
 
+    // =========================
+    // DELETE (SOFT DELETE)
+    // =========================
     @Override
     public void delete(Long id) {
 
-        updateStatus(id, "INACTIVE");
+        User user = getCurrentUser();
+
+        Availability availability = availabilityRepository
+                .findByIdAndCompanyId(id, user.getCompany().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Availability not found"));
+
+        checkOwnership(user, availability);
+
+        availability.setStatus(AvailabilityStatus.INACTIVE);
+
+        availabilityRepository.save(availability);
     }
 
-    private void validateBusinessRules(
-            AvailabilityCreateDTO dto,
-            Long companyId
-    ) {
+    // =========================
+    // MAPPER
+    // =========================
+    private AvailabilityDTO mapToDTO(Availability availability) {
 
-        if (!dto.getStartTime()
-                .isBefore(dto.getEndTime())) {
-
-            throw new IllegalArgumentException(
-                    "Start time must be before end time"
-            );
-        }
-
-        if (dto.getEndDate()
-                .isBefore(dto.getStartDate())) {
-
-            throw new IllegalArgumentException(
-                    "Invalid date range"
-            );
-        }
-
-        if (dto.getRecurrenceType()
-                == AvailabilityRecurring.WEEKLY
-                && dto.getDayOfWeek() == null) {
-
-            throw new IllegalArgumentException(
-                    "Weekly recurrence requires dayOfWeek"
-            );
-        }
-
-        if ((dto.getRecurrenceType()
-                == AvailabilityRecurring.NONE
-                || dto.getRecurrenceType()
-                == AvailabilityRecurring.DAILY)
-                && dto.getDayOfWeek() != null) {
-
-            throw new IllegalArgumentException(
-                    "dayOfWeek not allowed"
-            );
-        }
-
-        List<Availability> overlaps =
-                availabilityRepository
-                        .findOverlappingAvailabilities(
-                                companyId,
-                                dto.getSupplierId(),
-                                dto.getStartDate(),
-                                dto.getEndDate(),
-                                dto.getDayOfWeek(),
-                                dto.getStartTime(),
-                                dto.getEndTime()
-                        );
-
-        if (!overlaps.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Availability overlap detected"
-            );
-        }
-    }
-
-    private Supplier validateSupplierOwnership(
-            Long supplierId,
-            Long companyId
-    ) {
-
-        return supplierRepository
-                .findByIdAndCompanyId(
-                        supplierId,
-                        companyId
-                )
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Supplier not found"
-                        ));
-    }
-
-    private User getCurrentUser() {
-
-        String email =
-                org.springframework.security.core.context
-                        .SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getName();
-
-        return userRepository.findByLoginEmail(email)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "User not found"
-                        ));
-    }
-
-    private AvailabilityDTO mapToDTO(
-            Availability availability
-    ) {
-
-        AvailabilityDTO dto =
-                new AvailabilityDTO();
+        AvailabilityDTO dto = new AvailabilityDTO();
 
         dto.setId(availability.getId());
-        dto.setSupplierId(
-                availability.getSupplier().getId()
-        );
-        dto.setStartDate(
-                availability.getStartDate()
-        );
-        dto.setEndDate(
-                availability.getEndDate()
-        );
-        dto.setDayOfWeek(
-                availability.getDayOfWeek()
-        );
-        dto.setStartTime(
-                availability.getStartTime()
-        );
-        dto.setEndTime(
-                availability.getEndTime()
-        );
-        dto.setRecurrenceType(
-                availability.getRecurrenceType()
-        );
-        dto.setSlotDurationMinutes(
-                availability.getSlotDurationMinutes()
-        );
-        dto.setCapacity(
-                availability.getCapacity()
-        );
-        dto.setStatus(
-                availability.getStatus()
-        );
-        dto.setNotes(
-                availability.getNotes()
-        );
+        dto.setSupplierId(availability.getSupplier().getId());
+        dto.setStartDate(availability.getStartDate());
+        dto.setEndDate(availability.getEndDate());
+        dto.setDayOfWeek(availability.getDayOfWeek());
+        dto.setStartTime(availability.getStartTime());
+        dto.setEndTime(availability.getEndTime());
+        dto.setRecurrenceType(availability.getRecurrenceType());
+        dto.setSlotDurationMinutes(availability.getSlotDurationMinutes());
+        dto.setCapacity(availability.getCapacity());
+        dto.setStatus(availability.getStatus());
+        dto.setNotes(availability.getNotes());
 
         return dto;
     }
 
-    private Long obtenerSupplierIdDesdeUser(User currentUser) {
-        return supplierRepository.findByUserIdAndCompanyId(currentUser.getId(), currentUser.getCompany().getId())
-                .orElseThrow(() -> new RuntimeException(
-                        "El usuario actual no tiene un perfil de proveedor activo asignado en esta empresa."
-                ))
-                .getId();
+    // =========================
+    // BUSINESS RULES
+    // =========================
+    private void validateBusinessRules(AvailabilityCreateDTO dto, Long companyId) {
+
+        if (!dto.getStartTime().isBefore(dto.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time");
+        }
+
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new IllegalArgumentException("Invalid date range");
+        }
+
+        List<Availability> overlaps =
+                availabilityRepository.findOverlappingAvailabilities(
+                        companyId,
+                        null, // no supplier filter here (you can refine later)
+                        dto.getStartDate(),
+                        dto.getEndDate(),
+                        dto.getDayOfWeek(),
+                        dto.getStartTime(),
+                        dto.getEndTime()
+                );
+
+        if (!overlaps.isEmpty()) {
+            throw new IllegalArgumentException("Availability overlap detected");
+        }
+    }
+    @Override
+    public List<AvailabilityDTO> getAvailabilityBySupplier(Long supplierId) {
+
+        User user = getCurrentUser();
+
+        Supplier supplier = supplierRepository
+                .findByIdAndCompanyId(supplierId, user.getCompany().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Supplier not found"));
+
+        return availabilityRepository
+                .findByCompanyIdAndSupplierId(
+                        user.getCompany().getId(),
+                        supplier.getId()
+                )
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 }
-
