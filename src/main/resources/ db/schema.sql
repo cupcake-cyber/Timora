@@ -226,9 +226,8 @@ CREATE TABLE notification (
     type VARCHAR(20),
     message TEXT,
     status VARCHAR(20),
-    sent_at DATETIME,
     target VARCHAR(255),
-
+    sent_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
