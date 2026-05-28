@@ -1,73 +1,85 @@
 package com.timora.app.controller;
 
-import com.timora.app.model.Service;
-import com.timora.app.model.enums.ServiceStatus;
+import com.timora.app.dto.*;
 import com.timora.app.service.ServiceService;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/services")
 public class ServiceController {
 
-    private final ServiceService service;
+    private final ServiceService serviceService;
 
-    public ServiceController(ServiceService service) {
-        this.service = service;
+    public ServiceController(ServiceService serviceService) {
+        this.serviceService = serviceService;
     }
 
+    // =========================
+    // GET ALL (company scoped)
+    // =========================
     @GetMapping
-    public ResponseEntity<List<Service>> getAll() {
-        return ResponseEntity.ok(service.findAll());
+    public List<ServiceSummaryDTO> getAll() {
+        return serviceService.findAll();
     }
 
+    // =========================
+    // GET BY ID
+    // =========================
     @GetMapping("/{id}")
-    public ResponseEntity<Service> getById(@PathVariable Long id) {
-        return service.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ServiceDetailsDTO getById(@PathVariable Long id) {
+        return serviceService.getServiceById(id);
     }
 
-    @GetMapping("/name/{name}")
-    public ResponseEntity<Service> getByName(@PathVariable String name) {
-        return service.findByName(name)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Service>> getByStatus(@PathVariable ServiceStatus status) {
-        return ResponseEntity.ok(service.findByStatus(status));
-    }
-
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<Service>> getByCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(service.findByCompanyId(companyId));
-    }
-
+    // =========================
+    // GET BY SUPPLIER
+    // =========================
     @GetMapping("/supplier/{supplierId}")
-    public ResponseEntity<List<Service>> getBySupplier(@PathVariable Long supplierId) {
-        return ResponseEntity.ok(service.findBySupplierId(supplierId));
+    public List<ServiceSummaryDTO> getBySupplier(@PathVariable Long supplierId) {
+        return serviceService.getServicesBySupplier(supplierId);
     }
 
+    // =========================
+    // CREATE SERVICE
+    // =========================
     @PostMapping
-    public ResponseEntity<Service> create(@RequestBody Service serviceBody) {
-        Service created = service.save(serviceBody);
-        return ResponseEntity.created(URI.create("/api/services/" + created.getId()))
-                .body(created);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ServiceDetailsDTO create(@Valid @RequestBody ServiceCreateDTO dto) {
+        return serviceService.createService(dto);
     }
 
+    // =========================
+    // FULL UPDATE (optional admin use)
+    // =========================
     @PutMapping("/{id}")
-    public ResponseEntity<Service> update(@PathVariable Long id, @RequestBody Service serviceBody) {
-        return ResponseEntity.ok(service.update(id, serviceBody));
+    public ServiceDetailsDTO update(
+            @PathVariable Long id,
+            @Valid @RequestBody ServiceUpdateDTO dto
+    ) {
+        return serviceService.updateService(id, dto);
     }
 
+    // =========================
+    // PARTIAL UPDATE (STATUS ONLY)
+    // =========================
+    @PatchMapping("/{id}/status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status
+    ) {
+        serviceService.updateStatus(id, status);
+    }
+
+    // =========================
+    // DELETE (soft delete)
+    // =========================
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        serviceService.delete(id);
     }
 }

@@ -1,18 +1,19 @@
 package com.timora.app.service;
 
+import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface SupplierService {
-    List<Supplier> findAll();
 
-    Optional<Supplier> findById(Long id);
+    Supplier createSupplier(Person person, CreatePersonRequest.SupplierData data);
 
-    Supplier save(Supplier supplier);
+    Supplier updateSupplier(Person person, CreatePersonRequest.SupplierData data);
 
-    Supplier update(Long id, Supplier supplier);
+    void deleteByPersonId(Long personId);
 
-    void delete(Long id);
+    boolean existsByPerson(Long personId);
 }

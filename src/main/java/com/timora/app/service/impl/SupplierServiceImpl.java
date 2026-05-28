@@ -1,8 +1,11 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.repository.SupplierRepository;
 import com.timora.app.service.SupplierService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,40 +13,57 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SupplierServiceImpl implements SupplierService {
+
     private final SupplierRepository supplierRepository;
-    @Override
-    public List<Supplier> findAll() {
-        return supplierRepository.findAll();
-    }
 
     @Override
-    public Optional<Supplier> findById(Long id) {
-        return supplierRepository.findById(id);
-    }
+    public Supplier createSupplier(Person person, CreatePersonRequest.SupplierData data) {
 
-    @Override
-    public Supplier save(Supplier supplier) {
+        if (supplierRepository.existsByPersonId(person.getId())) {
+            throw new IllegalArgumentException("Person already is supplier");
+        }
+
+        Supplier supplier = new Supplier();
+        supplier.setPerson(person);
+        supplier.setCompany(person.getCompany());
+
+        if (data != null) {
+            supplier.setSpecialty(data.getSpecialty());
+            supplier.setNotes(data.getNotes());
+        }
+
         return supplierRepository.save(supplier);
     }
 
     @Override
-    public Supplier update(Long id, Supplier supplier) {
+    public Supplier updateSupplier(Person person, CreatePersonRequest.SupplierData data) {
 
-        Supplier existing = supplierRepository.findById(id)
+        Supplier supplier = supplierRepository.findByPersonId(person.getId())
                 .orElseThrow(() -> new RuntimeException("Supplier not found"));
 
-        existing.setCompany(supplier.getCompany());
-        existing.setPerson(supplier.getPerson());
-        existing.setSpecialty(supplier.getSpecialty());
-        existing.setNotes(supplier.getNotes());
+        if (data != null) {
 
-        return supplierRepository.save(existing);
+            if (data.getSpecialty() != null) {
+                supplier.setSpecialty(data.getSpecialty());
+            }
+
+            if (data.getNotes() != null) {
+                supplier.setNotes(data.getNotes());
+            }
+        }
+
+        return supplierRepository.save(supplier);
     }
 
     @Override
-    public void delete(Long id) {
-        supplierRepository.deleteById(id);
+    public void deleteByPersonId(Long personId) {
+        supplierRepository.deleteByPersonId(personId);
+    }
+
+    @Override
+    public boolean existsByPerson(Long personId) {
+        return supplierRepository.existsByPersonId(personId);
     }
 }

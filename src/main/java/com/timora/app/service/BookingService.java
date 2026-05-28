@@ -1,31 +1,34 @@
 package com.timora.app.service;
 
-import com.timora.app.model.Booking;
+import com.timora.app.dto.BookingCreateDTO;
+import com.timora.app.dto.BookingDetailsDTO;
+import com.timora.app.dto.BookingSummaryDTO;
 
 import java.util.List;
-import java.util.Optional;
+
+
 
 public interface BookingService {
 
-    List<Booking> findAll();
+    // CREATE
+    BookingDetailsDTO create(BookingCreateDTO dto);
 
-    Optional<Booking> findById(Long id);
+    // READ
+    BookingDetailsDTO getById(Long id);
 
-    Booking save(Booking booking);
+    List<BookingSummaryDTO> getMyBookings();
 
-    Booking update(Long id, Booking booking);
+    List<BookingSummaryDTO> getByCompany(Long companyId);
 
+    List<BookingSummaryDTO> getByCustomer(Long customerId);
+
+    // STATE
+    BookingDetailsDTO confirm(Long id);
+
+    BookingDetailsDTO cancel(Long id);
+
+    BookingDetailsDTO complete(Long id);
+
+    // DELETE
     void delete(Long id);
-
-    // Cambios de estado
-    Booking confirm(Long id);
-
-    Booking cancel(Long id);
-
-    // Filtros
-    List<Booking> findByCustomerId(Long customerId);
-
-    List<Booking> findByServiceId(Long serviceId);
-
-    List<Booking> findByCompanyId(Long companyId);
 }

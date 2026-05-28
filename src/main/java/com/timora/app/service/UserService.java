@@ -1,13 +1,20 @@
 package com.timora.app.service;
 
+import com.timora.app.dto.CreatePersonRequest;
+
+import com.timora.app.dto.CurrentUserDTO;
+import com.timora.app.model.Person;
 import com.timora.app.model.User;
 
-import java.util.List;
-
 public interface UserService {
-    User createUser(User user);
-    List<User> getAllUsers(Long companyId);
-    User getUserById(Long id);
-    User updateUser(Long id, User user);
+
+    User findByLoginEmail(String email);
+
+    User createUser(Person person, CreatePersonRequest.UserData data);
+
+    User updateUser(User user, CreatePersonRequest.UserData data);
+
     void deleteUser(Long id);
+
+    CurrentUserDTO buildCurrentUser(User user);
 }

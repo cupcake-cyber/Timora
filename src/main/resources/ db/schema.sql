@@ -1,7 +1,3 @@
--- =========================
--- EJECUTAR SI Y SOLO SI SE
--- DESEA RESETEAR LA BD
--- =========================
 DROP DATABASE timora;
 CREATE DATABASE IF NOT EXISTS timora;
 USE timora;
@@ -226,9 +222,8 @@ CREATE TABLE notification (
     type VARCHAR(20),
     message TEXT,
     status VARCHAR(20),
-    sent_at DATETIME,
     target VARCHAR(255),
-
+    sent_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
 

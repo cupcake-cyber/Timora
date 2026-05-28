@@ -1,7 +1,10 @@
 package com.timora.app.controller;
 
-import com.timora.app.model.Person;
-import com.timora.app.service.PersonService;
+import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.dto.PersonResponseDTO;
+import com.timora.app.dto.UpdatePersonRequest;
+import com.timora.app.service.PersonIdentityService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,42 +12,32 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/persons")
+@AllArgsConstructor
 public class PersonController {
-    private final PersonService personService;
 
-    public PersonController(PersonService personService) {
-        this.personService = personService;
-    }
+    private final PersonIdentityService personIdentityService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Person createPerson(@RequestBody Person person) {
-        return personService.createPerson(person);
+    public PersonResponseDTO create(@RequestBody CreatePersonRequest request) {
+        return personIdentityService.create(request);
     }
-
     @GetMapping
-    public List<Person> getAllPersons(
-            @RequestParam Long companyId
-    ) {
-        return personService.getAllPersons(companyId);
+    public List<PersonResponseDTO> getAll() {
+        return personIdentityService.getAll();
     }
-
     @GetMapping("/{id}")
-    public Person getPersonById(@PathVariable Long id) {
-        return personService.getPersonById(id);
+    public PersonResponseDTO getById(@PathVariable Long id) {
+        return personIdentityService.getById(id);
     }
-
-    @PutMapping("/{id}")
-    public Person updatePerson(
-            @PathVariable Long id,
-            @RequestBody Person person
-    ) {
-        return personService.updatePerson(id, person);
+    @PatchMapping("/{id}")
+    public PersonResponseDTO update(@PathVariable Long id,
+                                    @RequestBody UpdatePersonRequest request) {
+        return personIdentityService.update(id, request);
     }
-
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePerson(@PathVariable Long id) {
-        personService.deletePerson(id);
+    public void delete(@PathVariable Long id) {
+        personIdentityService.delete(id);
     }
 }

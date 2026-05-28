@@ -1,18 +1,19 @@
 package com.timora.app.service;
 
+import com.timora.app.dto.CreatePersonRequest;
 import com.timora.app.model.Customer;
+import com.timora.app.model.Person;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface CustomerService {
-    List<Customer> findAll();
 
-    Optional<Customer> findById(Long id);
+    Customer createCustomer(Person person, CreatePersonRequest.CustomerData data);
 
-    Customer save(Customer customer);
+    Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data);
 
-    Customer update(Long id, Customer customer);
+    void deleteByPersonId(Long personId);
 
-    void delete(Long id);
+    boolean existsByPerson(Long personId);
 }

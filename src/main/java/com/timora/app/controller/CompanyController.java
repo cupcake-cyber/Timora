@@ -10,6 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/companies")
 public class CompanyController {
+
     private final CompanyService companyService;
 
     public CompanyController(CompanyService companyService) {
@@ -32,12 +33,15 @@ public class CompanyController {
         return companyService.getCompanyById(id);
     }
 
-    @PutMapping("/{id}")
-    public Company updateCompany(
+    // =========================
+    // PATCH (UPDATED)
+    // =========================
+    @PatchMapping("/{id}")
+    public Company patchCompany(
             @PathVariable Long id,
             @RequestBody Company company
     ) {
-        return companyService.updateCompany(id, company);
+        return companyService.patchCompany(id, company);
     }
 
     @DeleteMapping("/{id}")

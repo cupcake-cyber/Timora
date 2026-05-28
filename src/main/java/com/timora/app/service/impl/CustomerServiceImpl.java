@@ -1,8 +1,11 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.CreatePersonRequest;
 import com.timora.app.model.Customer;
+import com.timora.app.model.Person;
 import com.timora.app.repository.CustomerRepository;
 import com.timora.app.service.CustomerService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,40 +13,49 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
+
     private final CustomerRepository customerRepository;
-    @Override
-    public List<Customer> findAll() {
-        return customerRepository.findAll();
-    }
 
     @Override
-    public Optional<Customer> findById(Long id) {
-        return customerRepository.findById(id);
-    }
+    public Customer createCustomer(Person person, CreatePersonRequest.CustomerData data) {
 
-    @Override
-    public Customer save(Customer customer) {
+        if (customerRepository.existsByPersonId(person.getId())) {
+            throw new IllegalArgumentException("Person already is customer");
+        }
+
+        Customer customer = new Customer();
+        customer.setPerson(person);
+        customer.setCompany(person.getCompany());
+
+        if (data != null) {
+            customer.setNotes(data.getNotes());
+        }
+
         return customerRepository.save(customer);
     }
 
     @Override
-    public Customer update(Long id, Customer customer) {
+    public Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data) {
 
-        Customer existing = customerRepository.findById(id)
+        Customer customer = customerRepository.findByPersonId(person.getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        existing.setCompany(customer.getCompany());
-        existing.setPerson(customer.getPerson());
-        existing.setNotes(customer.getNotes());
+        if (data != null && data.getNotes() != null) {
+            customer.setNotes(data.getNotes());
+        }
 
-        return customerRepository.save(existing);
+        return customerRepository.save(customer);
     }
 
     @Override
-    public void delete(Long id) {
-        customerRepository.deleteById(id);
+    public void deleteByPersonId(Long personId) {
+        customerRepository.deleteByPersonId(personId);
     }
 
+    @Override
+    public boolean existsByPerson(Long personId) {
+        return customerRepository.existsByPersonId(personId);
+    }
 }

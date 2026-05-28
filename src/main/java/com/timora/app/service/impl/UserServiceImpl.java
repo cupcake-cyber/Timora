@@ -1,77 +1,119 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.dto.CurrentUserDTO;
+import com.timora.app.dto.UserSummaryDTO;
+import com.timora.app.model.Person;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
+import com.timora.app.repository.PersonRepository;
 import com.timora.app.repository.UserRepository;
+import com.timora.app.repository.UserSupplierRoleRepository;
+import com.timora.app.service.AuthorizationService;
 import com.timora.app.service.UserService;
+import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    @Override
+    public User findByLoginEmail(String email) {
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
-    public User createUser(User user){
-        if (userRepository.existsByLoginEmail(user.getLoginEmail())) {
-            throw new IllegalArgumentException("El email ya existe.");
-        }
+    public User createUser(Person person, CreatePersonRequest.UserData data) {
 
-        user.setPasswordHash(
-                passwordEncoder.encode(user.getPasswordHash())
-        );
-
+        User user = new User();
+        user.setPerson(person);
+        user.setCompany(person.getCompany());
+        user.setLoginEmail(data.getLoginEmail());
+        user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
         user.setStatus(UserStatus.ACTIVE);
-        user.setGlobalRole(GlobalRole.STAFF);
+
+        user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
+
         return userRepository.save(user);
     }
 
     @Override
-    public List<User> getAllUsers(Long companyId) {
-        return userRepository.findByCompanyId(companyId);
-    }
+    public User updateUser(User user, CreatePersonRequest.UserData data) {
 
-    @Override
-    public User getUserById(Long id){
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("El id de usuario no existe."));
-    }
-
-    @Override
-    public User updateUser(Long id, User updatedUser){
-        User existingUser = getUserById(id);
-
-        if (!existingUser.getLoginEmail().equals(updatedUser.getLoginEmail())
-                && userRepository.existsByLoginEmail(updatedUser.getLoginEmail())) {
-            throw new IllegalArgumentException("El email ya está registrado.");
+        if (data.getLoginEmail() != null) {
+            user.setLoginEmail(data.getLoginEmail());
         }
 
-        existingUser.setLoginEmail(updatedUser.getLoginEmail());
-
-        if (updatedUser.getPasswordHash() != null &&
-                !updatedUser.getPasswordHash().isBlank()) {
-            existingUser.setPasswordHash(
-                    passwordEncoder.encode(updatedUser.getPasswordHash())
-            );
+        if (data.getGlobalRole() != null) {
+            user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
         }
 
-        return userRepository.save(existingUser);
+        if (data.getPassword() != null) {
+            user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
+        }
+
+        return userRepository.save(user);
     }
 
     @Override
-    public void deleteUser(Long id){
-        User user = getUserById(id);
-        user.setStatus(UserStatus.INACTIVE);
-        userRepository.save(user);
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public CurrentUserDTO buildCurrentUser(User user) {
+
+        CurrentUserDTO dto = new CurrentUserDTO();
+
+        dto.setId(user.getId());
+        dto.setEmail(user.getLoginEmail());
+
+        String fullName = user.getPerson() != null
+                ? user.getPerson().getFirstName() + " " + user.getPerson().getLastName()
+                : null;
+
+        dto.setFullName(fullName);
+
+        dto.setGlobalRole(user.getGlobalRole());
+        dto.setActive(user.getStatus() != null && user.getStatus().name().equals("ACTIVE"));
+
+        dto.setCompanyId(user.getCompany().getId());
+        dto.setStatus(user.getStatus().name());
+
+        // =========================
+        // FLAGS (ajústalos a tu negocio real)
+        // =========================
+
+        dto.setCompanyAdmin(user.getGlobalRole().name().equals("OWNER")
+                || user.getGlobalRole().name().equals("ADMIN"));
+
+        dto.setSupplierUser(user.getPerson() != null && user.getPerson().getSupplier() != null);
+
+        // supplierIds (si tienes relación real)
+        if (user.getPerson() != null && user.getPerson().getSupplier() != null) {
+            dto.setSupplierIds(List.of(user.getPerson().getSupplier().getId()));
+        } else {
+            dto.setSupplierIds(List.of());
+        }
+
+        // permisos (placeholder por ahora)
+        dto.setSupplierPermissions(Map.of());
+
+        return dto;
     }
 }

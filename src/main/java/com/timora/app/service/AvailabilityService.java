@@ -1,18 +1,23 @@
 package com.timora.app.service;
 
+
+
+import com.timora.app.dto.AvailabilityCreateDTO;
+import com.timora.app.dto.AvailabilityDTO;
 import com.timora.app.model.Availability;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface AvailabilityService {
-    List<Availability> findAll();
 
-    Optional<Availability> findById(Long id);
+    List<AvailabilityDTO> getMyAvailabilities();
 
-    Availability save(Availability availability);
+    List<AvailabilityDTO> getAvailabilityBySupplier(Long supplierId);
 
-    Availability update(Long id, Availability availability);
+    AvailabilityDTO createAvailability(AvailabilityCreateDTO dto);
+
+    void updateStatus(Long id, String status);
 
     void delete(Long id);
 }

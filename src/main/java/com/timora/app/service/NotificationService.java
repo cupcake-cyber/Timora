@@ -1,19 +1,33 @@
 package com.timora.app.service;
 
-import com.timora.app.model.Notification;
+import com.timora.app.dto.NotificationDTO;
+import com.timora.app.model.enums.NotificationType;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface NotificationService {
 
-    List<Notification> findAll();
+    // =========================
+    // READ DTO
+    // =========================
+    List<NotificationDTO> findAllDTO();
 
-    Optional<Notification> findById(Long id);
+    NotificationDTO findByIdDTO(Long id);
 
-    Notification save(Notification notification);
+    List<NotificationDTO> findByUserDTO(Long userId);
 
-    Notification update(Long id, Notification notification);
+    List<NotificationDTO> findUnreadByUserDTO(Long userId);
+
+    List<NotificationDTO> findByUserAndTypeDTO(Long userId, NotificationType type);
+
+    // =========================
+    // ACTIONS
+    // =========================
+    NotificationDTO sendNotification(Long userId, String message, NotificationType type);
+
+    NotificationDTO update(Long id, NotificationDTO dto);
+
+    NotificationDTO markAsRead(Long id);
 
     void delete(Long id);
 }

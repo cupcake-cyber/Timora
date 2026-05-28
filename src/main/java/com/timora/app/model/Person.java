@@ -2,10 +2,10 @@ package com.timora.app.model;
 
 import com.timora.app.model.enums.PersonStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -20,9 +20,9 @@ public class Person {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
@@ -31,12 +31,21 @@ public class Person {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @OneToOne(mappedBy = "person")
+    private Customer customer;
+
+    @OneToOne(mappedBy = "person")
+    private Supplier supplier;
+
+    @NotBlank
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
+    @NotBlank
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private PersonStatus status;
@@ -44,6 +53,8 @@ public class Person {
     @Column(name = "phone")
     private String phone;
 
+    @NotBlank
+    @Email
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
