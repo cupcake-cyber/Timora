@@ -1,5 +1,7 @@
 package com.timora.app.controller;
 
+import com.timora.app.dto.BookingDetailsDTO;
+import com.timora.app.dto.BookingSummaryDTO;
 import com.timora.app.model.Booking;
 import com.timora.app.service.BookingService;
 import org.springframework.http.ResponseEntity;
@@ -19,69 +21,70 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // 🔹 Crear booking
+    // =========================
+    // CREATE (ENTITY IN)
+    // =========================
     @PostMapping
     public ResponseEntity<Booking> create(@RequestBody Booking booking) {
         return ResponseEntity.ok(bookingService.create(booking));
     }
 
-    // 🔹 Obtener por ID
+    // =========================
+    // READ (DTO OUT)
+    // =========================
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getById(@PathVariable Long id) {
+    public ResponseEntity<BookingDetailsDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.getById(id));
     }
 
-    // 🔹 Por empresa
     @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<Booking>> getByCompany(@PathVariable Long companyId) {
+    public ResponseEntity<List<BookingSummaryDTO>> getByCompany(@PathVariable Long companyId) {
         return ResponseEntity.ok(bookingService.getByCompany(companyId));
     }
 
-    // 🔹 Por cliente
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Booking>> getByCustomer(@PathVariable Long customerId) {
+    public ResponseEntity<List<BookingSummaryDTO>> getByCustomer(@PathVariable Long customerId) {
         return ResponseEntity.ok(bookingService.getByCustomer(customerId));
     }
 
-    // 🔹 Por supplier
     @GetMapping("/supplier/{supplierId}")
-    public ResponseEntity<List<Booking>> getBySupplier(@PathVariable Long supplierId) {
+    public ResponseEntity<List<BookingSummaryDTO>> getBySupplier(@PathVariable Long supplierId) {
         return ResponseEntity.ok(bookingService.getBySupplier(supplierId));
     }
 
-    // 🔹 Por estado
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Booking>> getByStatus(@PathVariable String status) {
+    public ResponseEntity<List<BookingSummaryDTO>> getByStatus(@PathVariable String status) {
         return ResponseEntity.ok(bookingService.getByStatus(status));
     }
 
-    // 🔹 Por rango de fechas
     @GetMapping("/between")
-    public ResponseEntity<List<Booking>> getBetweenDates(
+    public ResponseEntity<List<BookingSummaryDTO>> getBetweenDates(
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end) {
         return ResponseEntity.ok(bookingService.getBetweenDates(start, end));
     }
 
-    // 🔹 Confirmar
+    // =========================
+    // STATE CHANGES (ENTITY OUT)
+    // =========================
     @PutMapping("/{id}/confirm")
     public ResponseEntity<Booking> confirm(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.confirm(id));
     }
 
-    // 🔹 Cancelar
     @PutMapping("/{id}/cancel")
     public ResponseEntity<Booking> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.cancel(id));
     }
 
-    // 🔹 Completar
     @PutMapping("/{id}/complete")
     public ResponseEntity<Booking> complete(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.complete(id));
     }
 
-    // 🔹 Eliminar
+    // =========================
+    // DELETE
+    // =========================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         bookingService.delete(id);
