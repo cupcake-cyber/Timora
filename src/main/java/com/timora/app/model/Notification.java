@@ -3,10 +3,7 @@ package com.timora.app.model;
 import com.timora.app.model.enums.NotificationStatus;
 import com.timora.app.model.enums.NotificationType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -30,25 +27,29 @@ public class Notification {
     @Column(name = "type", nullable = false)
     private NotificationType type;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
-    @Column(name = "message", nullable = false)
+    @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private NotificationStatus status;
 
-    @Column(name = "is_read")
+    @Column(name = "target")
+    private String target;
+
+    @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
-    @Column(name = "target")
-    private String target;
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        if (this.status == null) this.status = NotificationStatus.PENDING;
+        if (this.isRead == null) this.isRead = false;
+    }
 }
