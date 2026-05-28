@@ -15,35 +15,60 @@ import java.util.Optional;
 
 @Repository
 public interface AvailabilityRepository extends JpaRepository<Availability, Long> {
-    List<Availability> findByCompanyId(Long companyId);
-    List<Availability> findByCompanyIdAndSupplierId(Long companyId, Long supplierId);
-    Optional<Availability> findByIdAndCompanyId(Long id, Long companyId);
-    Optional<Availability> findByIdAndCompanyIdAndSupplierId(Long id, Long companyId, Long supplierId);
-    List<Availability> findByCompanyIdAndSupplierIdAndStatus(Long companyId, Long supplierId, AvailabilityStatus status);
-    List<Availability> findByCompanyIdAndSupplierIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            Long companyId, Long supplierId, AvailabilityStatus status, LocalDate currentDate, LocalDate currentDate2);
-    List<Availability> findByCompanyIdAndSupplierIdAndDayOfWeekAndStatus(
-            Long companyId, Long supplierId, DayOfWeek dayOfWeek, AvailabilityStatus status);
 
+    List<Availability> findByCompanyId(Long companyId);
+
+    List<Availability> findByCompanyIdAndSupplierId(Long companyId, Long supplierId);
+
+    Optional<Availability> findByIdAndCompanyId(Long id, Long companyId);
+
+    Optional<Availability> findByIdAndCompanyIdAndSupplierId(Long id, Long companyId, Long supplierId);
+
+    List<Availability> findByCompanyIdAndSupplierIdAndStatus(
+            Long companyId,
+            Long supplierId,
+            AvailabilityStatus status
+    );
+
+    List<Availability> findByCompanyIdAndSupplierIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Long companyId,
+            Long supplierId,
+            AvailabilityStatus status,
+            LocalDate endDate,
+            LocalDate startDate
+    );
+
+    List<Availability> findByCompanyIdAndSupplierIdAndDayOfWeekAndStatus(
+            Long companyId,
+            Long supplierId,
+            DayOfWeek dayOfWeek,
+            AvailabilityStatus status
+    );
+
+    // =========================
+    // DTO REMOVED (IMPORTANT FIX)
+    // =========================
+    // ❌ ELIMINADO: findDTOs()
+    // (causa principal del crash en startup)
+
+    // =========================
+    // OVERLAP CHECK (OK)
+    // =========================
     @Query("""
-    SELECT a
-    FROM Availability a
-    WHERE a.company.id = :companyId
-      AND a.supplier.id = :supplierId
-      AND a.status <> 'INACTIVE'
-      AND (
-            a.startDate <= :endDate
-            AND a.endDate >= :startDate
-      )
-      AND (
-            a.dayOfWeek = :dayOfWeek
-            OR a.dayOfWeek IS NULL
-      )
-      AND (
-            a.startTime < :endTime
-            AND a.endTime > :startTime
-      )
-""")
+        SELECT a
+        FROM Availability a
+        WHERE a.company.id = :companyId
+          AND a.supplier.id = :supplierId
+          AND a.status <> com.timora.app.model.enums.AvailabilityStatus.INACTIVE
+          AND a.startDate <= :endDate
+          AND a.endDate >= :startDate
+          AND (
+                a.dayOfWeek = :dayOfWeek
+                OR a.dayOfWeek IS NULL
+          )
+          AND a.startTime < :endTime
+          AND a.endTime > :startTime
+    """)
     List<Availability> findOverlappingAvailabilities(
             @Param("companyId") Long companyId,
             @Param("supplierId") Long supplierId,
