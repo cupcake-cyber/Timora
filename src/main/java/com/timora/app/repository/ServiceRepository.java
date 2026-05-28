@@ -44,7 +44,7 @@ public interface ServiceRepository extends JpaRepository<com.timora.app.model.Se
             Long supplierId,
             String name
     );
-
+    List<com.timora.app.model.Service> findBySupplierId(Long supplierId);
     // =========================
     // SUMMARY (ADMIN / COMPANY)
     // =========================
