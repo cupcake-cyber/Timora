@@ -1,53 +1,54 @@
 package com.timora.app.controller;
 
-import com.timora.app.model.Availability;
+import com.timora.app.dto.AvailabilityCreateDTO;
+import com.timora.app.dto.AvailabilityDTO;
 import com.timora.app.service.AvailabilityService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/availabilities")
-@RequiredArgsConstructor
+@RequestMapping("/api/availability")
 public class AvailabilityController {
     private final AvailabilityService availabilityService;
 
+    public AvailabilityController(AvailabilityService availabilityService) {
+        this.availabilityService = availabilityService;
+    }
+
+    // GET /api/availability
     @GetMapping
-    public List<Availability> getAll() {
+    public List<AvailabilityDTO> getAllAvailability() {
         return availabilityService.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Availability> getById(@PathVariable Long id) {
-
-        return availabilityService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    // GET /api/availability/supplier/1
+    @GetMapping("/supplier/{supplierId}")
+    public List<AvailabilityDTO>
+    getAvailabilityBySupplier(@PathVariable Long supplierId) {
+        return availabilityService.getAvailabilityBySupplier(supplierId);
     }
 
+    // POST /api/availability
     @PostMapping
-    public Availability create(@RequestBody Availability availability) {
-        return availabilityService.save(availability);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AvailabilityDTO createAvailability(@Valid @RequestBody AvailabilityCreateDTO dto) {
+        return availabilityService.createAvailability(dto);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Availability> update(
-            @PathVariable Long id,
-            @RequestBody Availability availability
-    ) {
-
-        return ResponseEntity.ok(
-                availabilityService.update(id, availability)
-        );
+    // PATCH /api/availability/1/status?status=BLOCKED
+    @PatchMapping("/{id}/status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateStatus(@PathVariable Long id, @RequestParam String status) {
+        availabilityService.updateStatus(id, status);
     }
 
+    // DELETE /api/availability/1
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAvailability(@PathVariable Long id) {
         availabilityService.delete(id);
-
-        return ResponseEntity.noContent().build();
     }
 }

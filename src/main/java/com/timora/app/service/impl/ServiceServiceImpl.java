@@ -1,93 +1,237 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.model.Service;
+import com.timora.app.dto.ServiceCreateDTO;
+import com.timora.app.dto.ServiceDetailsDTO;
+import com.timora.app.dto.ServiceSummaryDTO;
+import com.timora.app.dto.ServiceUpdateDTO;
+import com.timora.app.model.Supplier;
+import com.timora.app.model.User;
 import com.timora.app.model.enums.ServiceStatus;
 import com.timora.app.repository.ServiceRepository;
+import com.timora.app.repository.SupplierRepository;
+import com.timora.app.repository.UserRepository;
 import com.timora.app.service.ServiceService;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-@org.springframework.stereotype.Service
-@Transactional
+@Service
 public class ServiceServiceImpl implements ServiceService {
 
     private final ServiceRepository serviceRepository;
+    private final SupplierRepository supplierRepository;
+    private final UserRepository userRepository;
 
-    public ServiceServiceImpl(ServiceRepository serviceRepository) {
+    public ServiceServiceImpl(
+            ServiceRepository serviceRepository,
+            SupplierRepository supplierRepository,
+            UserRepository userRepository
+    ) {
         this.serviceRepository = serviceRepository;
+        this.supplierRepository = supplierRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Service> findAll() {
-        return serviceRepository.findAll();
+    public List<ServiceSummaryDTO> findAll() {
+
+        Long companyId = getCurrentUser().getCompany().getId();
+
+        return serviceRepository.findByCompanyId(companyId)
+                .stream()
+                .map(this::mapToSummaryDTO)
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Service> findById(Long id) {
-        return serviceRepository.findById(id);
+    public List<ServiceSummaryDTO> getServicesBySupplier(Long supplierId) {
+
+        Long companyId = getCurrentUser().getCompany().getId();
+
+        validateSupplierOwnership(supplierId, companyId);
+
+        return serviceRepository
+                .findByCompanyIdAndSupplierId(companyId, supplierId)
+                .stream()
+                .map(this::mapToSummaryDTO)
+                .toList();
     }
 
     @Override
-    public Service save(Service service) {
+    public ServiceDetailsDTO getServiceById(Long id) {
 
-        service.setId(null);
-        service.setCreatedAt(LocalDateTime.now());
+        Long companyId = getCurrentUser().getCompany().getId();
 
-        // 🔥 CORRECTO (enum en inglés)
-        if (service.getStatus() == null) {
-            service.setStatus(ServiceStatus.ACTIVE);
+        com.timora.app.model.Service service =
+                serviceRepository.findByIdAndCompanyId(id, companyId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Servicio no encontrado"));
+
+        return mapToDetailsDTO(service);
+    }
+
+    @Override
+    public ServiceDetailsDTO createService(ServiceCreateDTO dto) {
+
+        User currentUser = getCurrentUser();
+        Long companyId = currentUser.getCompany().getId();
+
+        Supplier supplier = validateSupplierOwnership(
+                dto.getSupplierId(),
+                companyId
+        );
+
+        boolean exists =
+                serviceRepository.existsByCompanyIdAndSupplierIdAndNameIgnoreCase(
+                        companyId,
+                        dto.getSupplierId(),
+                        dto.getName()
+                );
+
+        if (exists) {
+            throw new IllegalArgumentException(
+                    "Ya existe un servicio con ese nombre."
+            );
         }
 
-        return serviceRepository.save(service);
+        com.timora.app.model.Service service =
+                new com.timora.app.model.Service();
+
+        service.setCompany(currentUser.getCompany());
+        service.setSupplier(supplier);
+        service.setName(dto.getName());
+        service.setDescription(dto.getDescription());
+        service.setPrice(dto.getPrice());
+        service.setDuration(dto.getDuration());
+        service.setStatus(ServiceStatus.ACTIVE);
+
+        serviceRepository.save(service);
+
+        return mapToDetailsDTO(service);
     }
 
     @Override
-    public Service update(Long id, Service updated) {
-        return serviceRepository.findById(id).map(service -> {
+    public ServiceDetailsDTO updateService(
+            Long id,
+            ServiceUpdateDTO dto
+    ) {
 
-            // Relaciones
-            service.setCompany(updated.getCompany());
-            service.setSupplier(updated.getSupplier());
+        Long companyId = getCurrentUser().getCompany().getId();
 
-            // Campos normales
-            service.setName(updated.getName());
-            service.setDescription(updated.getDescription());
-            service.setPrice(updated.getPrice());
-            service.setDuration(updated.getDuration());
-            service.setStatus(updated.getStatus());
+        com.timora.app.model.Service service =
+                serviceRepository.findByIdAndCompanyId(id, companyId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Servicio no encontrado"));
 
-            return serviceRepository.save(service);
+        service.setName(dto.getName());
+        service.setDescription(dto.getDescription());
+        service.setPrice(dto.getPrice());
+        service.setDuration(dto.getDuration());
 
-        }).orElseThrow(() -> new RuntimeException("Service no encontrado con id: " + id));
+        serviceRepository.save(service);
+
+        return mapToDetailsDTO(service);
+    }
+
+    @Override
+    public void updateStatus(Long id, String status) {
+
+        Long companyId = getCurrentUser().getCompany().getId();
+
+        com.timora.app.model.Service service =
+                serviceRepository.findByIdAndCompanyId(id, companyId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Servicio no encontrado"));
+
+        service.setStatus(ServiceStatus.valueOf(status.toUpperCase()));
+
+        serviceRepository.save(service);
     }
 
     @Override
     public void delete(Long id) {
-        serviceRepository.deleteById(id);
+
+        Long companyId = getCurrentUser().getCompany().getId();
+
+        com.timora.app.model.Service service =
+                serviceRepository.findByIdAndCompanyId(id, companyId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Servicio no encontrado"));
+
+        service.setStatus(ServiceStatus.ARCHIVED);
+
+        serviceRepository.save(service);
     }
 
-    @Override
-    public List<Service> findByCompanyId(Long companyId) {
-        return serviceRepository.findByCompanyId(companyId);
+    private Supplier validateSupplierOwnership(
+            Long supplierId,
+            Long companyId
+    ) {
+
+        return supplierRepository
+                .findByIdAndCompanyId(supplierId, companyId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Proveedor no encontrado en la empresa actual"
+                        ));
     }
 
-    @Override
-    public List<Service> findBySupplierId(Long supplierId) {
-        return serviceRepository.findBySupplierId(supplierId);
+    private User getCurrentUser() {
+
+        String email =
+                org.springframework.security.core.context.SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+                        .getName();
+
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Usuario no encontrado"));
     }
 
-    @Override
-    public List<Service> findByStatus(ServiceStatus status) {
-        return serviceRepository.findByStatus(status);
+    private ServiceSummaryDTO mapToSummaryDTO(
+            com.timora.app.model.Service service
+    ) {
+
+        ServiceSummaryDTO dto = new ServiceSummaryDTO();
+
+        dto.setId(service.getId());
+        dto.setName(service.getName());
+        dto.setPrice(service.getPrice());
+        dto.setDuration(service.getDuration());
+        dto.setStatus(service.getStatus());
+        dto.setSupplierId(service.getSupplier().getId());
+        dto.setSupplierName(
+                service.getSupplier()
+                        .getPerson()
+                        .getFirstName()
+        );
+
+        return dto;
     }
 
-    @Override
-    public Optional<Service> findByName(String name) {
-        return serviceRepository.findByName(name);
+    private ServiceDetailsDTO mapToDetailsDTO(
+            com.timora.app.model.Service service
+    ) {
+
+        ServiceDetailsDTO dto = new ServiceDetailsDTO();
+
+        dto.setId(service.getId());
+        dto.setCompanyId(service.getCompany().getId());
+        dto.setSupplierId(service.getSupplier().getId());
+        dto.setSupplierName(
+                service.getSupplier()
+                        .getPerson()
+                        .getFirstName()
+        );
+        dto.setName(service.getName());
+        dto.setDescription(service.getDescription());
+        dto.setPrice(service.getPrice());
+        dto.setDuration(service.getDuration());
+        dto.setStatus(service.getStatus());
+        dto.setCreatedAt(service.getCreatedAt());
+
+        return dto;
     }
 }
