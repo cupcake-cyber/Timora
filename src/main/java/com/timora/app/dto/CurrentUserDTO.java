@@ -5,9 +5,13 @@ import lombok.Getter;
 import lombok.Setter;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CurrentUserDTO {
 
     private Long id;
@@ -27,6 +31,8 @@ public class CurrentUserDTO {
     private Long companyId;
 
     private List<Long> supplierIds;
+
+    private String status;
 
     private Map<Long, List<String>> supplierPermissions;
 }

@@ -1,4 +1,99 @@
+USE timora;
+
 -- =========================
--- Aqui se añadira la
--- informacion para testeos
+-- COMPANY
 -- =========================
+INSERT INTO company (name, ruc, address, phone, email, status, created_at) VALUES
+('Timora', '11111111111', 'HQ', '999999999', 'timora@timora.com', 'ACTIVE', NOW()),
+('Company A', '22222222222', 'Address A', '999111111', 'a@company.com', 'ACTIVE', NOW()),
+('Company B', '33333333333', 'Address B', '999222222', 'b@company.com', 'ACTIVE', NOW());
+
+-- =========================
+-- USERS (ONLY USERS TABLE FIRST)
+-- =========================
+INSERT INTO user (company_id, login_email, password_hash, status, global_role, created_at) VALUES
+-- Timora OWNER
+(1, 'owner@timora.com', '{noop}admin', 'ACTIVE', 'OWNER', NOW()),
+
+-- Company A
+(2, 'admin@a.com', '{noop}admin', 'ACTIVE', 'ADMIN', NOW()),
+(2, 'supplier@a.com', '{noop}admin', 'ACTIVE', 'USER', NOW()),
+(2, 'customer@a.com', '{noop}admin', 'ACTIVE', 'USER', NOW()),
+
+-- Company B
+(3, 'admin@b.com', '{noop}admin', 'ACTIVE', 'ADMIN', NOW()),
+(3, 'supplier@b.com', '{noop}admin', 'ACTIVE', 'USER', NOW()),
+(3, 'customer@b.com', '{noop}admin', 'ACTIVE', 'USER', NOW());
+
+-- =========================
+-- PERSON (MATCH USER IDS ORDER)
+-- =========================
+INSERT INTO person (company_id, user_id, first_name, last_name, status, phone, email, address, created_at) VALUES
+-- Timora owner (user_id = 1)
+(1, 1, 'Owner', 'Timora', 'ACTIVE', '999999999', 'owner@timora.com', 'HQ', NOW()),
+
+-- Company A users
+(2, 2, 'Admin', 'A', 'ACTIVE', '999111111', 'admin@a.com', 'Address A', NOW()),
+(2, 3, 'Supplier', 'A', 'ACTIVE', '999111112', 'supplier@a.com', 'Address A', NOW()),
+(2, 4, 'Customer', 'A', 'ACTIVE', '999111113', 'customer@a.com', 'Address A', NOW()),
+
+-- Company B users
+(3, 5, 'Admin', 'B', 'ACTIVE', '999222111', 'admin@b.com', 'Address B', NOW()),
+(3, 6, 'Supplier', 'B', 'ACTIVE', '999222112', 'supplier@b.com', 'Address B', NOW()),
+(3, 7, 'Customer', 'B', 'ACTIVE', '999222113', 'customer@b.com', 'Address B', NOW());
+
+-- =========================
+-- CUSTOMER (ONLY CUSTOMER TYPE)
+-- =========================
+INSERT INTO customer (company_id, person_id, notes, created_at) VALUES
+(2, 4, 'Customer A', NOW()),
+(3, 7, 'Customer B', NOW());
+
+-- =========================
+-- SUPPLIER (ONLY SUPPLIER TYPE)
+-- =========================
+INSERT INTO supplier (company_id, person_id, specialty, notes, created_at) VALUES
+(2, 3, 'Barber A', 'Supplier A main', NOW()),
+(3, 6, 'Barber B', 'Supplier B main', NOW());
+
+-- =========================
+-- ROLES
+-- =========================
+INSERT INTO role (company_id, name, description, created_at) VALUES
+(1, 'OWNER_ROLE', 'Owner role', NOW()),
+(2, 'ADMIN', 'Admin role', NOW()),
+(2, 'SUPPLIER_ADMIN', 'Supplier admin', NOW()),
+(3, 'ADMIN', 'Admin role', NOW()),
+(3, 'SUPPLIER_ADMIN', 'Supplier admin', NOW());
+
+-- =========================
+-- PERMISSIONS
+-- =========================
+INSERT INTO permission (code, description) VALUES
+('BOOKING_VIEW', 'Can view bookings'),
+('BOOKING_EDIT', 'Can edit bookings'),
+('BOOKING_CANCEL', 'Can cancel bookings'),
+('SERVICE_EDIT', 'Can edit services'),
+('AVAILABILITY_EDIT', 'Can edit availability');
+
+-- =========================
+-- ROLE PERMISSIONS (MINIMAL)
+-- =========================
+INSERT INTO role_permission (role_id, permission_id) VALUES
+-- ADMIN (assume role_id 2,4)
+(2,1),(2,2),(2,3),(2,4),(2,5),
+(4,1),(4,2),(4,3),(4,4),(4,5),
+
+-- SUPPLIER_ADMIN (assume role_id 3,5)
+(3,1),(3,3),(3,5),
+(5,1),(5,3),(5,5);
+
+-- =========================
+-- USER SUPPLIER ROLE
+-- =========================
+INSERT INTO user_supplier_role (user_id, supplier_id, role_id, assigned_by_user_id, created_at) VALUES
+-- Company A
+(3, 1, 3, 2, NOW()),
+
+-- Company B
+(6, 2, 5, 5, NOW());

@@ -3,10 +3,10 @@ package com.timora.app.model;
 import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -21,9 +21,9 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
@@ -31,16 +31,21 @@ public class User {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Person person;
 
+    @NotBlank
+    @Email
     @Column(name = "login_email", nullable = false, unique = true)
     private String loginEmail;
 
+    @NotBlank
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "global_role", nullable = false)
     private GlobalRole globalRole;

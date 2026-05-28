@@ -1,7 +1,9 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.CreatePersonRequest;
 import com.timora.app.dto.CurrentUserDTO;
 import com.timora.app.dto.UserSummaryDTO;
+import com.timora.app.model.Person;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
@@ -23,195 +25,94 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Transactional
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PersonRepository personRepository;
-    private final AuthorizationService authorizationService;
-    private final UserSupplierRoleRepository userSupplierRoleRepository;
 
     @Override
-    public User createUser(User user){
-        if (userRepository.existsByLoginEmail(user.getLoginEmail())) {
-            throw new IllegalArgumentException("El email ya existe.");
-        }
+    public User findByLoginEmail(String email) {
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 
-        user.setPasswordHash(
-                passwordEncoder.encode(user.getPasswordHash())
-        );
+    @Override
+    public User createUser(Person person, CreatePersonRequest.UserData data) {
 
+        User user = new User();
+        user.setPerson(person);
+        user.setCompany(person.getCompany());
+        user.setLoginEmail(data.getLoginEmail());
+        user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
         user.setStatus(UserStatus.ACTIVE);
-        user.setGlobalRole(GlobalRole.USER);
+
+        user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
+
         return userRepository.save(user);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<UserSummaryDTO> getAllUsers() {
+    public User updateUser(User user, CreatePersonRequest.UserData data) {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        User currentUser =
-                findByEmail(authentication.getName());
-
-        List<User> users;
-
-        if (currentUser.getGlobalRole() == GlobalRole.OWNER) {
-
-            users = userRepository.findAll();
-
-        } else if (currentUser.getGlobalRole() == GlobalRole.ADMIN) {
-
-            users = userRepository.findByCompanyId(
-                    currentUser.getCompany().getId()
-            );
-
-        } else {
-
-            throw new AccessDeniedException(
-                    "No autorizado"
-            );
+        if (data.getLoginEmail() != null) {
+            user.setLoginEmail(data.getLoginEmail());
         }
 
-        return users.stream()
-                .map(user -> {
-
-                    UserSummaryDTO dto =
-                            new UserSummaryDTO();
-
-                    dto.setId(user.getId());
-                    dto.setEmail(user.getLoginEmail());
-                    dto.setGlobalRole(
-                            user.getGlobalRole().name()
-                    );
-
-                    return dto;
-                })
-                .toList();
-    }
-
-    @Override
-    public User getUserById(Long id){
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("El id de usuario no existe."));
-    }
-
-    @Override
-    public User updateUser(Long id, User updatedUser){
-        User existingUser = getUserById(id);
-
-        if (!existingUser.getLoginEmail().equals(updatedUser.getLoginEmail())
-                && userRepository.existsByLoginEmail(updatedUser.getLoginEmail())) {
-            throw new IllegalArgumentException("El email ya está registrado.");
+        if (data.getGlobalRole() != null) {
+            user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
         }
 
-        existingUser.setLoginEmail(updatedUser.getLoginEmail());
-
-        if (updatedUser.getPasswordHash() != null &&
-                !updatedUser.getPasswordHash().isBlank()) {
-            existingUser.setPasswordHash(
-                    passwordEncoder.encode(updatedUser.getPasswordHash())
-            );
+        if (data.getPassword() != null) {
+            user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
         }
 
-        return userRepository.save(existingUser);
+        return userRepository.save(user);
     }
 
     @Override
-    public void deleteUser(Long id){
-        User user = getUserById(id);
-        user.setStatus(UserStatus.INACTIVE);
-        userRepository.save(user);
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public User findByEmail(String email) {
-
-        return userRepository.findByEmailAndStatus(
-                email,
-                UserStatus.ACTIVE
-        ).orElseThrow(() ->
-                new IllegalArgumentException(
-                        "Usuario no encontrado."
-                )
-        );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public CurrentUserDTO buildCurrentUser(User user) {
 
         CurrentUserDTO dto = new CurrentUserDTO();
 
         dto.setId(user.getId());
-
         dto.setEmail(user.getLoginEmail());
 
+        String fullName = user.getPerson() != null
+                ? user.getPerson().getFirstName() + " " + user.getPerson().getLastName()
+                : null;
+
+        dto.setFullName(fullName);
+
         dto.setGlobalRole(user.getGlobalRole());
+        dto.setActive(user.getStatus() != null && user.getStatus().name().equals("ACTIVE"));
 
-        dto.setActive(
-                user.getStatus() == UserStatus.ACTIVE
-        );
+        dto.setCompanyId(user.getCompany().getId());
+        dto.setStatus(user.getStatus().name());
 
-        dto.setCompanyId(
-                user.getCompany().getId()
-        );
+        // =========================
+        // FLAGS (ajústalos a tu negocio real)
+        // =========================
 
-        personRepository.findByUserId(user.getId())
-                .ifPresent(person -> {
+        dto.setCompanyAdmin(user.getGlobalRole().name().equals("OWNER")
+                || user.getGlobalRole().name().equals("ADMIN"));
 
-                    String fullName =
-                            person.getFirstName()
-                                    + " "
-                                    + person.getLastName();
+        dto.setSupplierUser(user.getPerson() != null && user.getPerson().getSupplier() != null);
 
-                    dto.setFullName(fullName);
-                });
-
-        List<Long> supplierIds =
-                userSupplierRoleRepository
-                        .findSupplierIdsByUserId(
-                                user.getId()
-                        );
-
-        dto.setSupplierIds(supplierIds);
-
-        dto.setSupplierUser(
-                !supplierIds.isEmpty()
-        );
-
-        dto.setCompanyAdmin(
-                user.getGlobalRole() == GlobalRole.ADMIN
-                        || user.getGlobalRole() == GlobalRole.OWNER
-        );
-
-        Map<Long, List<String>> supplierPermissions =
-                new HashMap<>();
-
-        for (Long supplierId : supplierIds) {
-
-            List<String> permissions =
-                    authorizationService.getPermissions(
-                            user.getId(),
-                            supplierId
-                    );
-
-            supplierPermissions.put(
-                    supplierId,
-                    permissions
-            );
+        // supplierIds (si tienes relación real)
+        if (user.getPerson() != null && user.getPerson().getSupplier() != null) {
+            dto.setSupplierIds(List.of(user.getPerson().getSupplier().getId()));
+        } else {
+            dto.setSupplierIds(List.of());
         }
 
-        dto.setSupplierPermissions(
-                supplierPermissions
-        );
+        // permisos (placeholder por ahora)
+        dto.setSupplierPermissions(Map.of());
 
         return dto;
     }

@@ -1,7 +1,3 @@
--- =========================
--- EJECUTAR SI Y SOLO SI SE
--- DESEA RESETEAR LA BD
--- =========================
 DROP DATABASE timora;
 CREATE DATABASE IF NOT EXISTS timora;
 USE timora;
