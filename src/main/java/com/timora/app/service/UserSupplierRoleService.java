@@ -20,4 +20,5 @@ public interface UserSupplierRoleService {
     UserSupplierRole save(UserSupplierRole userSupplierRole);
 
     void delete(UserSupplierRoleId id);
+    public List<Long> findSupplierIdsByUserId(Long userId);
 }

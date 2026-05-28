@@ -1,5 +1,6 @@
 package com.timora.app.controller;
 
+import com.timora.app.dto.UserSummaryDTO;
 import com.timora.app.model.User;
 import com.timora.app.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -23,10 +24,9 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers(
-            @RequestParam Long companyId
-    ) {
-        return userService.getAllUsers(companyId);
+    public List<UserSummaryDTO> getAllUsers() {
+
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")

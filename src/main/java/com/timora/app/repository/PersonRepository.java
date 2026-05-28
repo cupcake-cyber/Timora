@@ -2,6 +2,8 @@ package com.timora.app.repository;
 
 import com.timora.app.model.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,4 +12,13 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     Optional<Person> findByEmail(String email);
     List<Person> findByCompanyId(Long companyId);
     boolean existsByEmail(String email);
+    @Query("""
+        SELECT p
+        FROM Person p
+        WHERE p.user.id = :userId
+    """)
+    Optional<Person> findByUserId(
+            @Param("userId") Long userId
+    );
+
 }

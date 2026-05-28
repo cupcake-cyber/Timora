@@ -1,8 +1,11 @@
 package com.timora.app.controller;
 
+import com.timora.app.dto.AuthResponseDTO;
+import com.timora.app.dto.CurrentUserDTO;
 import com.timora.app.dto.LoginRequest;
-import com.timora.app.dto.LoginResponse;
+import com.timora.app.model.User;
 import com.timora.app.security.jwt.JwtUtil;
+import com.timora.app.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,15 +17,22 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    public AuthController(AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil) {
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            UserService userService
+    ) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public AuthResponseDTO login(
+            @RequestBody LoginRequest request
+    ) {
 
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -31,8 +41,17 @@ public class AuthController {
                 )
         );
 
-        String token = jwtUtil.generateToken(request.getEmail());
+        User user = userService.findByEmail(request.getEmail());
 
-        return new LoginResponse(token);
+        String token = jwtUtil.generateToken(user.getLoginEmail());
+
+        CurrentUserDTO currentUser =
+                userService.buildCurrentUser(user);
+
+        return new AuthResponseDTO(
+                token,
+                "Bearer",
+                currentUser
+        );
     }
 }

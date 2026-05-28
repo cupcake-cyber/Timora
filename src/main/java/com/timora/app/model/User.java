@@ -28,6 +28,9 @@ public class User {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Person person;
+
     @Column(name = "login_email", nullable = false, unique = true)
     private String loginEmail;
 

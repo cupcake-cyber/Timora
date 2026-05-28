@@ -23,12 +23,14 @@ public class UserSupplierRoleServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserSupplierRole> findAll() {
 
         return userSupplierRoleRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserSupplierRole findById(UserSupplierRoleId id) {
 
         return userSupplierRoleRepository.findById(id)
@@ -40,21 +42,27 @@ public class UserSupplierRoleServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserSupplierRole> findByUserId(Long userId) {
 
-        return userSupplierRoleRepository.findByUserId(userId);
+        return userSupplierRoleRepository
+                .findByUser_Id(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserSupplierRole> findBySupplierId(Long supplierId) {
 
-        return userSupplierRoleRepository.findBySupplierId(supplierId);
+        return userSupplierRoleRepository
+                .findBySupplier_Id(supplierId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserSupplierRole> findByRoleId(Long roleId) {
 
-        return userSupplierRoleRepository.findByRoleId(roleId);
+        return userSupplierRoleRepository
+                .findByRole_Id(roleId);
     }
 
     @Override
@@ -62,15 +70,23 @@ public class UserSupplierRoleServiceImpl
             UserSupplierRole userSupplierRole
     ) {
 
-        return userSupplierRoleRepository.save(userSupplierRole);
+        return userSupplierRoleRepository
+                .save(userSupplierRole);
     }
 
     @Override
     public void delete(UserSupplierRoleId id) {
 
-        UserSupplierRole existing =
-                findById(id);
+        UserSupplierRole existing = findById(id);
 
         userSupplierRoleRepository.delete(existing);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> findSupplierIdsByUserId(Long userId) {
+
+        return userSupplierRoleRepository
+                .findSupplierIdsByUserId(userId);
     }
 }
