@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -68,5 +69,38 @@ public interface AvailabilityRepository extends JpaRepository<Availability, Long
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime
+    );
+    @Query("""
+        SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END
+        FROM Booking b
+        WHERE b.service.supplier.id = :supplierId
+          AND b.status <> com.timora.app.model.enums.BookingStatus.CANCELLED
+          AND b.startTime < :end
+          AND b.endTime > :start
+    """)
+        boolean existsOverlap(
+                @Param("supplierId") Long supplierId,
+                @Param("start") LocalDateTime start,
+                @Param("end") LocalDateTime end
+        );
+    @Query("""
+    SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+    FROM Availability a
+    WHERE a.supplier.id = :supplierId
+      AND a.status = com.timora.app.model.enums.AvailabilityStatus.ACTIVE
+      AND a.startDate <= :date
+      AND a.endDate >= :date
+      AND (
+            a.dayOfWeek IS NULL
+            OR a.dayOfWeek = FUNCTION('DAYOFWEEK', :date)
+      )
+      AND a.startTime <= :startTime
+      AND a.endTime >= :endTime
+""")
+    boolean existsValidSlot(
+            @Param("supplierId") Long supplierId,
+            @Param("date") LocalDateTime date,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime
     );
 }

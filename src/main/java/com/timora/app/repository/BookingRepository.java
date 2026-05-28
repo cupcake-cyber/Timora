@@ -13,10 +13,9 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // =========================
-    // 🔥 FETCH COMPLETO (DTO DETAIL)
-    // =========================
-
+    // =========================================================
+    // FETCH FULL DETAIL
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         JOIN FETCH b.service s
@@ -29,10 +28,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     Optional<Booking> findByIdFull(@Param("id") Long id);
 
-    // =========================
-    // 🔹 COMPANY BOOKINGS
-    // =========================
-
+    // =========================================================
+    // COMPANY BOOKINGS
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         JOIN FETCH b.service s
@@ -42,10 +40,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findByCompany(@Param("companyId") Long companyId);
 
-    // =========================
-    // 🔹 CUSTOMER BOOKINGS
-    // =========================
-
+    // =========================================================
+    // CUSTOMER BOOKINGS
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         JOIN FETCH b.service s
@@ -55,10 +52,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findByCustomer(@Param("customerId") Long customerId);
 
-    // =========================
-    // 🔹 SUPPLIER BOOKINGS
-    // =========================
-
+    // =========================================================
+    // SUPPLIER BOOKINGS
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         JOIN FETCH b.service s
@@ -68,20 +64,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findBySupplier(@Param("supplierId") Long supplierId);
 
-    // =========================
-    // 🔹 STATUS
-    // =========================
+    // 👉 FIX PARA TU SERVICE
+    List<Booking> findByServiceSupplierId(Long supplierId);
 
+    // =========================================================
+    // STATUS
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         WHERE b.status = :status
     """)
     List<Booking> findByStatus(@Param("status") BookingStatus status);
 
-    // =========================
-    // 🔹 DATE RANGE
-    // =========================
-
+    // =========================================================
+    // DATE RANGE
+    // =========================================================
     @Query("""
         SELECT b FROM Booking b
         WHERE b.startTime BETWEEN :start AND :end
@@ -91,6 +88,26 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("end") LocalDateTime end
     );
 
+    // =========================================================
+    // OVERLAP CHECK (CRÍTICO)
+    // =========================================================
+    @Query("""
+        SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END
+        FROM Booking b
+        WHERE b.service.supplier.id = :supplierId
+          AND b.status <> com.timora.app.model.enums.BookingStatus.CANCELLED
+          AND b.startTime < :end
+          AND b.endTime > :start
+    """)
+    boolean existsOverlap(
+            @Param("supplierId") Long supplierId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    // =========================================================
+    // ENTITY GRAPH (OPTIONAL OPTIMIZED FETCH)
+    // =========================================================
     @EntityGraph(attributePaths = {
             "service",
             "service.supplier",
@@ -101,4 +118,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     })
     @Query("SELECT b FROM Booking b WHERE b.id = :id")
     Optional<Booking> findByIdGraph(@Param("id") Long id);
+
+    @Query("""
+    SELECT COUNT(a) > 0
+    FROM Availability a
+    WHERE a.company.id = :companyId
+      AND a.supplier.id = :supplierId
+      AND a.status = com.timora.app.model.enums.AvailabilityStatus.ACTIVE
+      AND a.startDate <= :date
+      AND a.endDate >= :date
+      AND a.startTime <= :startTime
+      AND a.endTime >= :endTime
+""")
+    boolean existsValidSlot(
+            @Param("companyId") Long companyId,
+            @Param("supplierId") Long supplierId,
+            @Param("date") java.time.LocalDate date,
+            @Param("startTime") java.time.LocalTime startTime,
+            @Param("endTime") java.time.LocalTime endTime
+    );
+
+
 }

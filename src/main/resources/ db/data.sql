@@ -97,3 +97,69 @@ INSERT INTO user_supplier_role (user_id, supplier_id, role_id, assigned_by_user_
 
 -- Company B
 (6, 2, 5, 5, NOW());
+
+-- =========================
+-- SERVICE (2 per supplier)
+-- =========================
+INSERT INTO service (
+    company_id,
+    supplier_id,
+    name,
+    description,
+    price,
+    duration,
+    status,
+    created_at
+)
+VALUES
+
+-- =========================
+-- COMPANY A (supplier_id = 1)
+-- =========================
+(2, 1, 'Haircut Basic', 'Basic haircut service', 10.00, 30, 'ACTIVE', NOW()),
+(2, 1, 'Beard Trim', 'Beard shaping and trim', 7.50, 20, 'ACTIVE', NOW()),
+
+-- =========================
+-- COMPANY B (supplier_id = 2)
+-- =========================
+(3, 2, 'Haircut Premium', 'Premium haircut with styling', 15.00, 45, 'ACTIVE', NOW()),
+(3, 2, 'Full Grooming', 'Hair + beard + styling package', 25.00, 60, 'ACTIVE', NOW());
+
+-- =========================
+
+INSERT INTO availability (
+    company_id,
+    supplier_id,
+    start_date,
+    end_date,
+    day_of_week,
+    start_time,
+    end_time,
+    recurrence_type,
+    slot_duration_minutes,
+    capacity,
+    status,
+    notes,
+    created_at
+)
+VALUES
+
+-- =========================
+-- BLOQUE MAÑANA (MON-FRI)
+-- =========================
+
+(2, 1, '2026-01-01', '2026-12-31', 'MONDAY',    '09:00:00', '12:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Morning shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'TUESDAY',   '09:00:00', '12:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Morning shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'WEDNESDAY', '09:00:00', '12:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Morning shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'THURSDAY',  '09:00:00', '12:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Morning shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'FRIDAY',    '09:00:00', '12:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Morning shift', NOW()),
+
+-- =========================
+-- BLOQUE TARDE (MON-FRI)
+-- =========================
+
+(2, 1, '2026-01-01', '2026-12-31', 'MONDAY',    '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'TUESDAY',   '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'WEDNESDAY', '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'THURSDAY',  '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
+(2, 1, '2026-01-01', '2026-12-31', 'FRIDAY',    '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW());
