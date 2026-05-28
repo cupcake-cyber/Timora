@@ -5,6 +5,7 @@ import com.timora.app.service.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,80 +19,72 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-
-    @GetMapping
-    public ResponseEntity<List<Booking>> findAll() {
-        return ResponseEntity.ok(bookingService.findAll());
-    }
-
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Booking> findById(@PathVariable Long id) {
-        return bookingService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-
+    // 🔹 Crear booking
     @PostMapping
     public ResponseEntity<Booking> create(@RequestBody Booking booking) {
-        Booking saved = bookingService.save(booking);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(bookingService.create(booking));
     }
 
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Booking> update(@PathVariable Long id, @RequestBody Booking booking) {
-        try {
-            Booking updated = bookingService.update(id, booking);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    // 🔹 Obtener por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Booking> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getById(id));
     }
 
+    // 🔹 Por empresa
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<Booking>> getByCompany(@PathVariable Long companyId) {
+        return ResponseEntity.ok(bookingService.getByCompany(companyId));
+    }
 
+    // 🔹 Por cliente
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Booking>> getByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(bookingService.getByCustomer(customerId));
+    }
+
+    // 🔹 Por supplier
+    @GetMapping("/supplier/{supplierId}")
+    public ResponseEntity<List<Booking>> getBySupplier(@PathVariable Long supplierId) {
+        return ResponseEntity.ok(bookingService.getBySupplier(supplierId));
+    }
+
+    // 🔹 Por estado
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Booking>> getByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(bookingService.getByStatus(status));
+    }
+
+    // 🔹 Por rango de fechas
+    @GetMapping("/between")
+    public ResponseEntity<List<Booking>> getBetweenDates(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end) {
+        return ResponseEntity.ok(bookingService.getBetweenDates(start, end));
+    }
+
+    // 🔹 Confirmar
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<Booking> confirm(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirm(id));
+    }
+
+    // 🔹 Cancelar
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Booking> cancel(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.cancel(id));
+    }
+
+    // 🔹 Completar
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Booking> complete(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.complete(id));
+    }
+
+    // 🔹 Eliminar
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         bookingService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Booking>> findByCustomer(@PathVariable Long customerId) {
-        return ResponseEntity.ok(bookingService.findByCustomerId(customerId));
-    }
-
-
-    @GetMapping("/service/{serviceId}")
-    public ResponseEntity<List<Booking>> findByService(@PathVariable Long serviceId) {
-        return ResponseEntity.ok(bookingService.findByServiceId(serviceId));
-    }
-
-
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<Booking>> findByCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(bookingService.findByCompanyId(companyId));
-    }
-
-
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<Booking> confirm(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(bookingService.confirm(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<Booking> cancel(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(bookingService.cancel(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
     }
 }
