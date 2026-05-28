@@ -1,5 +1,6 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.*;
 import com.timora.app.model.Booking;
 import com.timora.app.model.enums.BookingStatus;
 import com.timora.app.repository.BookingRepository;
@@ -8,87 +9,151 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingRepository bookingRepository;
+    private final BookingRepository repository;
 
-    public BookingServiceImpl(BookingRepository bookingRepository) {
-        this.bookingRepository = bookingRepository;
+    public BookingServiceImpl(BookingRepository repository) {
+        this.repository = repository;
     }
 
-    @Override
-    public List<Booking> findAll() {
-        return bookingRepository.findAll();
-    }
+    // =========================
+    // CREATE
+    // =========================
 
     @Override
-    public Optional<Booking> findById(Long id) {
-        return bookingRepository.findById(id);
-    }
-
-    @Override
-    public Booking save(Booking booking) {
+    public Booking create(Booking booking) {
         booking.setCreatedAt(LocalDateTime.now());
-        return bookingRepository.save(booking);
+        booking.setStatus(BookingStatus.PENDING);
+        return repository.save(booking);
+    }
+
+    // =========================
+    // READ (DTO)
+    // =========================
+
+    @Override
+    public BookingDetailsDTO getById(Long id) {
+
+        Booking booking = repository.findByIdFull(id)
+                .orElseThrow(() -> new RuntimeException("Booking no encontrado"));
+
+        return toDetailsDTO(booking);
     }
 
     @Override
-    public Booking update(Long id, Booking updated) {
-        return bookingRepository.findById(id).map(booking -> {
-
-            booking.setCompany(updated.getCompany());
-            booking.setService(updated.getService());
-            booking.setCustomer(updated.getCustomer());
-            booking.setCreatedByUser(updated.getCreatedByUser());
-
-            booking.setStartTime(updated.getStartTime());
-            booking.setEndTime(updated.getEndTime());
-            booking.setStatus(updated.getStatus());
-            booking.setType(updated.getType());
-            booking.setName(updated.getName());
-            booking.setDescription(updated.getDescription());
-
-            return bookingRepository.save(booking);
-
-        }).orElseThrow(() -> new RuntimeException("Booking no encontrado con id: " + id));
+    public List<BookingSummaryDTO> getByCompany(Long companyId) {
+        return repository.findByCompany(companyId)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
     }
 
     @Override
-    public void delete(Long id) {
-        bookingRepository.deleteById(id);
+    public List<BookingSummaryDTO> getByCustomer(Long customerId) {
+        return repository.findByCustomer(customerId)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
     }
+
+    @Override
+    public List<BookingSummaryDTO> getBySupplier(Long supplierId) {
+        return repository.findBySupplier(supplierId)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BookingSummaryDTO> getByStatus(String status) {
+        return repository.findByStatus(BookingStatus.valueOf(status))
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BookingSummaryDTO> getBetweenDates(LocalDateTime start, LocalDateTime end) {
+        return repository.findBetweenDates(start, end)
+                .stream()
+                .map(this::toSummaryDTO)
+                .toList();
+    }
+
+    // =========================
+    // STATE CHANGES
+    // =========================
 
     @Override
     public Booking confirm(Long id) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.setStatus(BookingStatus.CONFIRMED);
-            return bookingRepository.save(booking);
-        }).orElseThrow(() -> new RuntimeException("Booking no encontrado"));
+        Booking booking = findEntity(id);
+        booking.setStatus(BookingStatus.CONFIRMED);
+        return repository.save(booking);
     }
 
     @Override
     public Booking cancel(Long id) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.setStatus(BookingStatus.CANCELLED);
-            return bookingRepository.save(booking);
-        }).orElseThrow(() -> new RuntimeException("Booking no encontrado"));
+        Booking booking = findEntity(id);
+        booking.setStatus(BookingStatus.CANCELLED);
+        return repository.save(booking);
     }
 
     @Override
-    public List<Booking> findByCustomerId(Long customerId) {
-        return bookingRepository.findByCustomerId(customerId);
+    public Booking complete(Long id) {
+        Booking booking = findEntity(id);
+        booking.setStatus(BookingStatus.COMPLETED);
+        return repository.save(booking);
     }
 
     @Override
-    public List<Booking> findByServiceId(Long serviceId) {
-        return bookingRepository.findByServiceId(serviceId);
+    public void delete(Long id) {
+        repository.deleteById(id);
     }
 
-    @Override
-    public List<Booking> findByCompanyId(Long companyId) {
-        return bookingRepository.findByCompanyId(companyId);
+    // =========================
+    // INTERNAL
+    // =========================
+
+    private Booking findEntity(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking no encontrado"));
+    }
+
+    private BookingDetailsDTO toDetailsDTO(Booking b) {
+        return new BookingDetailsDTO(
+                b.getId(),
+                b.getService().getName(),
+                b.getCustomer().getPerson().getFirstName() + " " +
+                        b.getCustomer().getPerson().getLastName(),
+                b.getService().getSupplier().getPerson().getFirstName(),
+                b.getStartTime(),
+                b.getEndTime(),
+                b.getStatus(),
+                b.getDescription()
+        );
+    }
+
+    private BookingSummaryDTO toSummaryDTO(Booking b) {
+        return new BookingSummaryDTO(
+                b.getId(),
+                b.getService().getName(),
+                b.getCustomer().getPerson().getFirstName(),
+                b.getStartTime(),
+                b.getStatus()
+        );
+    }
+
+    private BookingAdminDTO toAdminDTO(Booking b) {
+        return new BookingAdminDTO(
+                b.getId(),
+                b.getCompany().getId(),
+                b.getService().getId(),
+                b.getCustomer().getId(),
+                b.getStatus(),
+                b.getCreatedAt()
+        );
     }
 }

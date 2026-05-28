@@ -1,10 +1,13 @@
 package com.timora.app.controller;
 
+import com.timora.app.dto.BookingDetailsDTO;
+import com.timora.app.dto.BookingSummaryDTO;
 import com.timora.app.model.Booking;
 import com.timora.app.service.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,80 +21,73 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-
-    @GetMapping
-    public ResponseEntity<List<Booking>> findAll() {
-        return ResponseEntity.ok(bookingService.findAll());
-    }
-
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Booking> findById(@PathVariable Long id) {
-        return bookingService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-
+    // =========================
+    // CREATE (ENTITY IN)
+    // =========================
     @PostMapping
     public ResponseEntity<Booking> create(@RequestBody Booking booking) {
-        Booking saved = bookingService.save(booking);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(bookingService.create(booking));
     }
 
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Booking> update(@PathVariable Long id, @RequestBody Booking booking) {
-        try {
-            Booking updated = bookingService.update(id, booking);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    // =========================
+    // READ (DTO OUT)
+    // =========================
+    @GetMapping("/{id}")
+    public ResponseEntity<BookingDetailsDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getById(id));
     }
 
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<BookingSummaryDTO>> getByCompany(@PathVariable Long companyId) {
+        return ResponseEntity.ok(bookingService.getByCompany(companyId));
+    }
 
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<BookingSummaryDTO>> getByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(bookingService.getByCustomer(customerId));
+    }
+
+    @GetMapping("/supplier/{supplierId}")
+    public ResponseEntity<List<BookingSummaryDTO>> getBySupplier(@PathVariable Long supplierId) {
+        return ResponseEntity.ok(bookingService.getBySupplier(supplierId));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<BookingSummaryDTO>> getByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(bookingService.getByStatus(status));
+    }
+
+    @GetMapping("/between")
+    public ResponseEntity<List<BookingSummaryDTO>> getBetweenDates(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end) {
+        return ResponseEntity.ok(bookingService.getBetweenDates(start, end));
+    }
+
+    // =========================
+    // STATE CHANGES (ENTITY OUT)
+    // =========================
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<Booking> confirm(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirm(id));
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Booking> cancel(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.cancel(id));
+    }
+
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Booking> complete(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.complete(id));
+    }
+
+    // =========================
+    // DELETE
+    // =========================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         bookingService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Booking>> findByCustomer(@PathVariable Long customerId) {
-        return ResponseEntity.ok(bookingService.findByCustomerId(customerId));
-    }
-
-
-    @GetMapping("/service/{serviceId}")
-    public ResponseEntity<List<Booking>> findByService(@PathVariable Long serviceId) {
-        return ResponseEntity.ok(bookingService.findByServiceId(serviceId));
-    }
-
-
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<Booking>> findByCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(bookingService.findByCompanyId(companyId));
-    }
-
-
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<Booking> confirm(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(bookingService.confirm(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<Booking> cancel(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(bookingService.cancel(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
     }
 }
