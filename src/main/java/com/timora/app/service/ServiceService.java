@@ -1,6 +1,9 @@
 package com.timora.app.service;
 
-import com.timora.app.model.Service;
+import com.timora.app.dto.ServiceCreateDTO;
+import com.timora.app.dto.ServiceDetailsDTO;
+import com.timora.app.dto.ServiceSummaryDTO;
+import com.timora.app.dto.ServiceUpdateDTO;
 import com.timora.app.model.enums.ServiceStatus;
 
 import java.util.List;
@@ -8,22 +11,17 @@ import java.util.Optional;
 
 public interface ServiceService {
 
-    List<Service> findAll();
+    List<ServiceSummaryDTO> findAll();
 
-    Optional<Service> findById(Long id);
+    List<ServiceSummaryDTO> getServicesBySupplier(Long supplierId);
 
-    Service save(Service service);
+    ServiceDetailsDTO getServiceById(Long id);
 
-    Service update(Long id, Service service);
+    ServiceDetailsDTO createService(ServiceCreateDTO dto);
+
+    ServiceDetailsDTO updateService(Long id, ServiceUpdateDTO dto);
+
+    void updateStatus(Long id, String status);
 
     void delete(Long id);
-
-    // Filtros
-    List<Service> findByCompanyId(Long companyId);
-
-    List<Service> findBySupplierId(Long supplierId);
-
-    List<Service> findByStatus(ServiceStatus status);
-
-    Optional<Service> findByName(String name);
 }
