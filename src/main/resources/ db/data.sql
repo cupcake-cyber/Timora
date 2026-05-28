@@ -163,3 +163,88 @@ VALUES
 (2, 1, '2026-01-01', '2026-12-31', 'WEDNESDAY', '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
 (2, 1, '2026-01-01', '2026-12-31', 'THURSDAY',  '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW()),
 (2, 1, '2026-01-01', '2026-12-31', 'FRIDAY',    '14:00:00', '18:00:00', 'WEEKLY', 30, 1, 'ACTIVE', 'Afternoon shift', NOW());
+
+-- =========================
+-- BOOKINGS (valid inside availability)
+-- Company A - supplier_id = 1
+-- =========================
+INSERT INTO booking (
+    company_id,
+    service_id,
+    customer_id,
+    created_by_user_id,
+    start_time,
+    end_time,
+    status,
+    type,
+    name,
+    description,
+    created_at
+)
+VALUES
+
+-- 1) BOOKED + PAID (morning slot)
+(
+    2,
+    1,
+    1,
+    2,
+    '2026-06-01 09:00:00',
+    '2026-06-01 09:30:00',
+    'CONFIRMED',
+    'APPOINTMENT',
+    'Haircut Morning',
+    'Basic haircut booking',
+    NOW()
+),
+
+-- 2) BOOKED (afternoon slot)
+(
+    2,
+    2,
+    1,
+    2,
+    '2026-06-01 14:00:00',
+    '2026-06-01 14:30:00',
+    'CONFIRMED',
+    'APPOINTMENT',
+    'Beard Trim',
+    'Afternoon beard service',
+    NOW()
+),
+
+-- 3) BOOKED (future slot)
+(
+    2,
+    1,
+    1,
+    2,
+    '2026-06-02 10:00:00',
+    '2026-06-02 10:30:00',
+    'PENDING',
+    'APPOINTMENT',
+    'Haircut Second Day',
+    'Scheduled haircut',
+    NOW()
+);
+
+-- =========================
+-- PAYMENT (ONLY FOR FIRST BOOKING)
+-- =========================
+INSERT INTO payment (
+    company_id,
+    booking_id,
+    amount,
+    status,
+    method,
+    created_at
+)
+VALUES
+(
+    2,
+    1,
+    10.00,
+    'PAID',
+    'CASH',
+    NOW()
+);
