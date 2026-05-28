@@ -12,16 +12,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class ServiceUpdateDTO {
-    @NotBlank
     private String name;
-
     private String description;
-
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal price;
-    
-    @NotNull
-    @Min(1)
     private Integer duration;
 }

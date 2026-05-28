@@ -14,25 +14,14 @@ import java.time.LocalTime;
 @Getter
 @Setter
 public class AvailabilityCreateDTO {
-    @NotNull
     private Long supplierId;
-    @NotNull
     private LocalDate startDate;
-    @NotNull
     private LocalDate endDate;
     private DayOfWeek dayOfWeek;
-    @NotNull
     private LocalTime startTime;
-    @NotNull
     private LocalTime endTime;
-    @NotNull
     private AvailabilityRecurring recurrenceType;
-    @NotNull
-    @Min(5)
-    @Max(480)
     private Integer slotDurationMinutes;
-    @NotNull
-    @Min(1)
     private Integer capacity;
     private String notes;
 }
