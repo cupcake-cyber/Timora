@@ -6,28 +6,19 @@ import com.timora.app.dto.LoginRequest;
 import com.timora.app.model.User;
 import com.timora.app.security.jwt.JwtUtil;
 import com.timora.app.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserService userService;
-
-    public AuthController(
-            AuthenticationManager authenticationManager,
-            JwtUtil jwtUtil,
-            UserService userService
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-        this.userService = userService;
-    }
 
     @PostMapping("/login")
     public AuthResponseDTO login(@RequestBody LoginRequest request) {

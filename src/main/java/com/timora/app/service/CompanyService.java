@@ -5,10 +5,9 @@ import com.timora.app.model.Company;
 import java.util.List;
 
 public interface CompanyService {
-    Company createCompany(Company company);
-    List<Company> getAllCompanies();
-    Company getCompanyById(Long id);
-    Company updateCompany(Long id, Company company);
-    void deleteCompanyById(Long id);
-    Company patchCompany(Long id, Company company);
+    Company create(Company company);
+    List<Company> getAll();
+    Company getById(Long id);
+    Company patch(Long id, Company company);
+    void delete(Long id);
 }

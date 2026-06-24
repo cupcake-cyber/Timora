@@ -25,7 +25,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final AccessControlService auth;
 
     @Override
-    public Company createCompany(Company company) {
+    public Company create(Company company) {
 
         User user = securityHelper.getCurrentUser();
 
@@ -44,7 +44,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<Company> getAllCompanies() {
+    public List<Company> getAll() {
 
         User user = securityHelper.getCurrentUser();
 
@@ -58,7 +58,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Company getCompanyById(Long id) {
+    public Company getById(Long id) {
 
         User user = securityHelper.getCurrentUser();
 
@@ -69,54 +69,22 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Company updateCompany(Long id, Company updatedCompany) {
-
-        User user = securityHelper.getCurrentUser();
-
-        auth.requireSameCompany(user, id);
-
-        Company existing = getCompanyById(id);
-
-        if (!existing.getEmail().equals(updatedCompany.getEmail())
-                && companyRepository.existsByEmail(updatedCompany.getEmail())) {
-            throw new BusinessException("Email already exists");
-        }
-
-        if (!existing.getRuc().equals(updatedCompany.getRuc())
-                && companyRepository.existsByRuc(updatedCompany.getRuc())) {
-            throw new BusinessException("RUC already exists");
-        }
-
-        existing.setName(updatedCompany.getName());
-        existing.setRuc(updatedCompany.getRuc());
-        existing.setAddress(updatedCompany.getAddress());
-        existing.setPhone(updatedCompany.getPhone());
-        existing.setEmail(updatedCompany.getEmail());
-
-        return companyRepository.save(existing);
-    }
-
-    @Override
-    public void deleteCompanyById(Long id) {
+    public void delete(Long id) {
 
         User user = securityHelper.getCurrentUser();
 
         auth.requireOwner(user);
 
-        Company company = getCompanyById(id);
+        Company company = getById(id);
 
         company.setStatus(CompanyStatus.INACTIVE);
         companyRepository.save(company);
     }
 
     @Override
-    public Company patchCompany(Long id, Company updatedCompany) {
+    public Company patch(Long id, Company updatedCompany) {
 
         User user = securityHelper.getCurrentUser();
-
-        // =========================
-        // ACCESS CONTROL
-        // =========================
 
         if (!auth.isOwner(user)) {
 
@@ -129,11 +97,7 @@ public class CompanyServiceImpl implements CompanyService {
             }
         }
 
-        Company existing = getCompanyById(id);
-
-        // =========================
-        // PATCH FIELDS
-        // =========================
+        Company existing = getById(id);
 
         if (updatedCompany.getName() != null) {
             existing.setName(updatedCompany.getName());

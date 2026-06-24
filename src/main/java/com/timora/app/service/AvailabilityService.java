@@ -10,14 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AvailabilityService {
-
-    List<AvailabilityDTO> getMyAvailabilities();
-
-    List<AvailabilityDTO> getAvailabilityBySupplier(Long supplierId);
-
+    Availability create(Availability availability);
+    List<AvailabilityDTO> getAll();
+    List<AvailabilityDTO> getBySupplierId(Long supplierId);
+    AvailabilityDTO getById(Long id);
     AvailabilityDTO createAvailability(AvailabilityCreateDTO dto);
-
-    void updateStatus(Long id, String status);
-
+    Availability patch(Long id, Availability availability);
     void delete(Long id);
 }
