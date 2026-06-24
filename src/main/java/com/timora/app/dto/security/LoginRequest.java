@@ -1,4 +1,4 @@
-package com.timora.app.dto;
+package com.timora.app.dto.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

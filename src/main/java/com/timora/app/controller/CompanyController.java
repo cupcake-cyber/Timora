@@ -1,6 +1,7 @@
 package com.timora.app.controller;
 
-import com.timora.app.model.Company;
+import com.timora.app.dto.CompanyCreateDTO;
+import com.timora.app.dto.CompanyDTO;
 import com.timora.app.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,24 +18,23 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @GetMapping
-    public ResponseEntity<List<Company>> getAll() {
+    public ResponseEntity<List<CompanyDTO>> getAll() {
         return ResponseEntity.ok(companyService.getAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Company> getById(@PathVariable Long id) {
+    public ResponseEntity<CompanyDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(companyService.getById(id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Company> patch(@PathVariable Long id, @RequestBody Company company) {
-        return ResponseEntity.ok(companyService.patch(id, company));
+    public ResponseEntity<CompanyDTO> patch(@PathVariable Long id, @RequestBody CompanyDTO dto) {
+        return ResponseEntity.ok(companyService.patch(id, dto));
     }
 
     @PostMapping
-    public ResponseEntity<Company> create(@RequestBody Company company) {
-        Company createdCompany = companyService.create(company);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCompany);
+    public ResponseEntity<CompanyDTO> create(@RequestBody CompanyCreateDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyService.create(dto));
     }
 
     @DeleteMapping("/{id}")

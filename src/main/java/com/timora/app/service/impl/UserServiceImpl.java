@@ -1,26 +1,17 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.dto.CreatePersonRequest;
-import com.timora.app.dto.CurrentUserDTO;
-import com.timora.app.dto.UserSummaryDTO;
+import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.model.Person;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
-import com.timora.app.repository.PersonRepository;
 import com.timora.app.repository.UserRepository;
-import com.timora.app.repository.UserSupplierRoleRepository;
-import com.timora.app.service.AuthorizationService;
 import com.timora.app.service.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

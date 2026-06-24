@@ -1,5 +1,7 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.CompanyCreateDTO;
+import com.timora.app.dto.CompanyDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
@@ -25,64 +27,71 @@ public class CompanyServiceImpl implements CompanyService {
     private final AccessControlService auth;
 
     @Override
-    public Company create(Company company) {
+    public CompanyDTO create(CompanyCreateDTO companyDTO) {
 
         User user = securityHelper.getCurrentUser();
-
         auth.requireOwner(user);
 
-        if (companyRepository.existsByRuc(company.getRuc())) {
+        if (companyRepository.existsByRuc(companyDTO.getRuc())) {
             throw new BusinessException("El RUC ya está registrado");
         }
 
-        if (companyRepository.existsByEmail(company.getEmail())) {
+        if (companyRepository.existsByEmail(companyDTO.getEmail())) {
             throw new BusinessException("El correo ya está registrado");
         }
 
+        Company company = new Company();
+
+        company.setRuc(companyDTO.getRuc());
+        company.setEmail(companyDTO.getEmail());
+        company.setName(companyDTO.getName());
+        company.setAddress(companyDTO.getAddress());
+        company.setPhone(companyDTO.getPhone());
         company.setStatus(CompanyStatus.ACTIVE);
-        return companyRepository.save(company);
+
+        Company saved = companyRepository.save(company);
+
+        return toDTO(saved);
     }
 
     @Override
-    public List<Company> getAll() {
+    public List<CompanyDTO> getAll() {
 
         User user = securityHelper.getCurrentUser();
+        auth.requireOwner(user);
 
-        if (auth.isOwner(user)) {
-            return companyRepository.findAll();
-        }
+        List<Company> companies = companyRepository.findByStatus(CompanyStatus.ACTIVE);
 
-        return companyRepository.findAllById(
-                List.of(user.getCompany().getId())
-        );
+        return companies.stream().map(this::toDTO).toList();
     }
 
     @Override
-    public Company getById(Long id) {
+    public CompanyDTO getById(Long id) {
 
         User user = securityHelper.getCurrentUser();
-
         auth.requireSameCompany(user, id);
 
-        return companyRepository.findById(id)
+        Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company not found"));
+
+        return toDTO(company);
     }
 
     @Override
     public void delete(Long id) {
 
         User user = securityHelper.getCurrentUser();
-
         auth.requireOwner(user);
 
-        Company company = getById(id);
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Company not found"));
 
         company.setStatus(CompanyStatus.INACTIVE);
         companyRepository.save(company);
     }
 
     @Override
-    public Company patch(Long id, Company updatedCompany) {
+    public CompanyDTO patch(Long id, CompanyDTO updatedCompany) {
 
         User user = securityHelper.getCurrentUser();
 
@@ -92,45 +101,66 @@ public class CompanyServiceImpl implements CompanyService {
                 throw new ForbiddenException("USER cannot update companies");
             }
 
-            if (!user.getCompany().getId().equals(id)) {
+            if (user.getCompany() == null ||
+                    !user.getCompany().getId().equals(id)) {
                 throw new ForbiddenException("ADMIN can only update their own company");
             }
         }
 
-        Company existing = getById(id);
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Company no encontrada"));
 
         if (updatedCompany.getName() != null) {
-            existing.setName(updatedCompany.getName());
+            company.setName(updatedCompany.getName());
         }
 
         if (updatedCompany.getRuc() != null) {
 
-            if (!existing.getRuc().equals(updatedCompany.getRuc())
-                    && companyRepository.existsByRuc(updatedCompany.getRuc())) {
+            if (company.getRuc() != null &&
+                    !company.getRuc().equals(updatedCompany.getRuc()) &&
+                    companyRepository.existsByRuc(updatedCompany.getRuc())) {
                 throw new BusinessException("RUC ya registrado");
             }
 
-            existing.setRuc(updatedCompany.getRuc());
+            company.setRuc(updatedCompany.getRuc());
         }
 
         if (updatedCompany.getAddress() != null) {
-            existing.setAddress(updatedCompany.getAddress());
+            company.setAddress(updatedCompany.getAddress());
         }
 
         if (updatedCompany.getPhone() != null) {
-            existing.setPhone(updatedCompany.getPhone());
+            company.setPhone(updatedCompany.getPhone());
         }
 
         if (updatedCompany.getEmail() != null) {
 
-            if (!existing.getEmail().equals(updatedCompany.getEmail())
-                    && companyRepository.existsByEmail(updatedCompany.getEmail())) {
+            if (company.getEmail() != null &&
+                    !company.getEmail().equals(updatedCompany.getEmail()) &&
+                    companyRepository.existsByEmail(updatedCompany.getEmail())) {
                 throw new BusinessException("Email ya registrado");
             }
 
-            existing.setEmail(updatedCompany.getEmail());
+            company.setEmail(updatedCompany.getEmail());
         }
 
-        return companyRepository.save(existing);
+        Company saved = companyRepository.save(company);
+
+        return toDTO(saved);
+    }
+
+    private CompanyDTO toDTO(Company company) {
+
+        CompanyDTO dto = new CompanyDTO();
+
+        dto.setId(company.getId());
+        dto.setRuc(company.getRuc());
+        dto.setEmail(company.getEmail());
+        dto.setName(company.getName());
+        dto.setAddress(company.getAddress());
+        dto.setPhone(company.getPhone());
+        dto.setStatus(company.getStatus());
+
+        return dto;
     }
 }
