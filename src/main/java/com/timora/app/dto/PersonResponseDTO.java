@@ -12,7 +12,6 @@ public class PersonResponseDTO {
 
     private Long id;
 
-    // PERSON
     private String firstName;
     private String lastName;
     private String phone;
@@ -20,19 +19,9 @@ public class PersonResponseDTO {
     private String address;
     private String status;
 
-    // USER
-    private Boolean hasUser;
     private UserDTO user;
-
-    // CUSTOMER
-    private Boolean isCustomer;
     private CustomerDTO customer;
-
-    // SUPPLIER
-    private Boolean isSupplier;
     private SupplierDTO supplier;
-
-    // =========================
 
     @Getter
     @Setter

@@ -12,6 +12,8 @@ import com.timora.app.model.enums.PersonStatus;
 import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.PersonRepository;
 import com.timora.app.repository.UserRepository;
+import com.timora.app.security.AccessControlService;
+import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.*;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,9 @@ import java.util.List;
 @AllArgsConstructor
 public class PersonIdentityServiceImpl implements PersonIdentityService {
 
+    private final SecurityHelper securityHelper;
+    private final AccessControlService auth;
+
     private final PersonService personService;
     private final UserService userService;
     private final CustomerService customerService;
@@ -31,53 +36,60 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
     private final PersonRepository personRepository;
     private final UserRepository userRepository;
 
-    // =========================
-    // CREATE
-    // =========================
     @Override
     @Transactional
     public PersonResponseDTO create(CreatePersonRequest request) {
 
+        User user = securityHelper.getCurrentUser();
+
+
+
+        if (!auth.isOwner(user)) {
+
+            if (user.getGlobalRole() == GlobalRole.USER) {
+                throw new ForbiddenException("USER cannot create persons");
+            }
+
+            if (user.getCompany() == null ||
+                    !user.getCompany().getId().equals(request.getCompanyId())) {
+                throw new ForbiddenException("ADMIN can only create persons in their own company");
+            }
+        }
+
         Person person = personService.createBasePerson(request);
 
-        if (Boolean.TRUE.equals(request.getCreateUser()) && request.getUser() != null) {
+        if (request.getUser() != null) {
             User user = userService.createUser(person, request.getUser());
             person.setUser(user);
         }
 
-        if (Boolean.TRUE.equals(request.getIsCustomer())) {
+        if (request.getCustomer() != null) {
             customerService.createCustomer(person, request.getCustomer());
         }
 
-        if (Boolean.TRUE.equals(request.getIsSupplier())) {
+        if (request.getSupplier() != null) {
             supplierService.createSupplier(person, request.getSupplier());
         }
 
         return mapToDTO(person);
     }
 
-    // =========================
-    // GET ALL
-    // =========================
     @Override
     public List<PersonResponseDTO> getAll() {
 
-        User currentUser = getCurrentUser();
+        User user = securityHelper.getCurrentUser();
 
-        boolean isOwner = currentUser.getGlobalRole() == GlobalRole.OWNER;
+        boolean isOwner = auth.isOwner(user);
 
         List<Person> persons = isOwner
-                ? personRepository.findAll(true, null)
-                : personRepository.findAll(false, currentUser.getCompany().getId());
+                ? personRepository.findAllByStatus(PersonStatus.ACTIVE)
+                : personRepository.findAllByStatusAndCompanyId(PersonStatus.INACTIVE, user.getCompany().getId());
 
         return persons.stream()
                 .map(this::mapToDTO)
                 .toList();
     }
 
-    // =========================
-    // GET BY ID
-    // =========================
     @Override
     public PersonResponseDTO getById(Long id) {
 
@@ -89,9 +101,6 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
         return mapToDTO(person);
     }
 
-    // =========================
-    // UPDATE
-    // =========================
     @Override
     @Transactional
     public PersonResponseDTO update(Long id, UpdatePersonRequest request) {
@@ -149,9 +158,6 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
         return mapToDTO(personRepository.save(person));
     }
 
-    // =========================
-    // DELETE (SOFT DELETE)
-    // =========================
     @Override
     @Transactional
     public void delete(Long id) {
@@ -170,19 +176,6 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
         }
 
         personRepository.save(person);
-    }
-
-    // =========================
-    // SECURITY
-    // =========================
-    private User getCurrentUser() {
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByLoginEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
     private void authorizePersonAccess(User currentUser, Person target) {
@@ -232,9 +225,6 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
         }
     }
 
-    // =========================
-    // MAPPER
-    // =========================
     private PersonResponseDTO mapToDTO(Person p) {
 
         PersonResponseDTO dto = new PersonResponseDTO();
