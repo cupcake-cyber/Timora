@@ -1,17 +1,17 @@
-package com.timora.app.controller;
-
-import com.timora.app.model.Supplier;
-import com.timora.app.service.SupplierService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/suppliers")
-@RequiredArgsConstructor
-public class SupplierController {
+//package com.timora.app.controller;
+//
+//import com.timora.app.model.Supplier;
+//import com.timora.app.service.SupplierService;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.bind.annotation.*;
+//
+//import java.util.List;
+//
+//@RestController
+//@RequestMapping("/api/suppliers")
+//@RequiredArgsConstructor
+//public class SupplierController {
 //    private final SupplierService supplierService;
 //
 //    @GetMapping
@@ -50,4 +50,4 @@ public class SupplierController {
 //
 //        return ResponseEntity.noContent().build();
 //    }
-}
+//}

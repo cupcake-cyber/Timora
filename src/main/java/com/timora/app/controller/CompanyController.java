@@ -1,7 +1,7 @@
 package com.timora.app.controller;
 
-import com.timora.app.dto.CompanyCreateDTO;
-import com.timora.app.dto.CompanyDTO;
+import com.timora.app.dto.company.CompanyCreateDTO;
+import com.timora.app.dto.company.CompanyDTO;
 import com.timora.app.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

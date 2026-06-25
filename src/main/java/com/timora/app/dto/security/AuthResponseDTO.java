@@ -1,5 +1,6 @@
-package com.timora.app.dto;
+package com.timora.app.dto.security;
 
+import com.timora.app.dto.CurrentUserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,10 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponseDTO {
-
     private String accessToken;
-
     private String tokenType = "Bearer";
-
     private CurrentUserDTO user;
 }

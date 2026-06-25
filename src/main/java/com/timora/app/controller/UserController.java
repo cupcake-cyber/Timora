@@ -1,16 +1,16 @@
-package com.timora.app.controller;
-
-import com.timora.app.dto.UserSummaryDTO;
-import com.timora.app.model.User;
-import com.timora.app.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
+//package com.timora.app.controller;
+//
+//import com.timora.app.dto.UserSummaryDTO;
+//import com.timora.app.model.User;
+//import com.timora.app.service.UserService;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.web.bind.annotation.*;
+//
+//import java.util.List;
+//
+//@RestController
+//@RequestMapping("/api/users")
+//public class UserController {
 //    private final UserService userService;
 //
 //    public UserController(UserService userService) {
@@ -47,4 +47,4 @@ public class UserController {
 //    public void deleteUser(@PathVariable Long id) {
 //        userService.deleteUser(id);
 //    }
-}
+//}

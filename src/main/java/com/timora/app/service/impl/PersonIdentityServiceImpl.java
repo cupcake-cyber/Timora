@@ -3,6 +3,7 @@ package com.timora.app.service.impl;
 import com.timora.app.dto.CreatePersonRequest;
 import com.timora.app.dto.PersonResponseDTO;
 import com.timora.app.dto.UpdatePersonRequest;
+import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Person;
@@ -42,25 +43,33 @@ public class PersonIdentityServiceImpl implements PersonIdentityService {
 
         User user = securityHelper.getCurrentUser();
 
+        // una persona no puede ser cliente ni proveedor al mismo tiempo
+        if (request.getCustomer() != null && request.getSupplier() != null) {
+            throw new BusinessException("A person cannot be both a Customer and a Supplier");
+        }
+        // un cliente no puede ser usuario
+        if (request.getUser() != null && request.getCustomer() != null) {
+            throw new BusinessException("A Customer cannot be a User");
+        }
 
 
         if (!auth.isOwner(user)) {
-
-            if (user.getGlobalRole() == GlobalRole.USER) {
-                throw new ForbiddenException("USER cannot create persons");
-            }
-
-            if (user.getCompany() == null ||
-                    !user.getCompany().getId().equals(request.getCompanyId())) {
-                throw new ForbiddenException("ADMIN can only create persons in their own company");
+            if(user.getCompany().getId() != request.getCompanyId()){
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }else{
+                if(!auth.isAdmin(user)){
+                    if(request.getCustomer() == null){
+                        throw new ForbiddenException("You are not allowed to perform this action");
+                    }
+                }
             }
         }
 
         Person person = personService.createBasePerson(request);
 
         if (request.getUser() != null) {
-            User user = userService.createUser(person, request.getUser());
-            person.setUser(user);
+            User userModel = userService.createUser(person, request.getUser());
+            person.setUser(userModel);
         }
 
         if (request.getCustomer() != null) {

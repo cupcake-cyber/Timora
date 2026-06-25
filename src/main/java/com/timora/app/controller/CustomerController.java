@@ -1,18 +1,18 @@
-package com.timora.app.controller;
-
-import com.timora.app.model.Customer;
-import com.timora.app.service.CustomerService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/customers")
-@RequiredArgsConstructor
-public class CustomerController {
-
+//package com.timora.app.controller;
+//
+//import com.timora.app.model.Customer;
+//import com.timora.app.service.CustomerService;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.bind.annotation.*;
+//
+//import java.util.List;
+//
+//@RestController
+//@RequestMapping("/api/customers")
+//@RequiredArgsConstructor
+//public class CustomerController {
+//
 //    private final CustomerService customerService;
 //
 //    @GetMapping
@@ -51,5 +51,5 @@ public class CustomerController {
 //
 //        return ResponseEntity.noContent().build();
 //    }
-
-}
+//
+//}

@@ -1,8 +1,7 @@
 package com.timora.app.service;
 
-import com.timora.app.dto.CompanyCreateDTO;
-import com.timora.app.dto.CompanyDTO;
-import com.timora.app.model.Company;
+import com.timora.app.dto.company.CompanyCreateDTO;
+import com.timora.app.dto.company.CompanyDTO;
 
 import java.util.List;
 
