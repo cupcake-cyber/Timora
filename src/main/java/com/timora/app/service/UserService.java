@@ -2,7 +2,7 @@ package com.timora.app.service;
 
 import com.timora.app.dto.CreatePersonRequest;
 
-import com.timora.app.dto.CurrentUserDTO;
+import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.model.Person;
 import com.timora.app.model.User;
 

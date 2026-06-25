@@ -1,6 +1,5 @@
 package com.timora.app.dto.security;
 
-import com.timora.app.dto.CurrentUserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

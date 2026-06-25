@@ -1,7 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.dto.CreatePersonRequest;
-import com.timora.app.dto.CurrentUserDTO;
+import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.model.Person;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;

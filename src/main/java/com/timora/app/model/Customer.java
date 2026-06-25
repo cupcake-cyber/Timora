@@ -36,5 +36,6 @@ public class Customer {
     private String notes;
 
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

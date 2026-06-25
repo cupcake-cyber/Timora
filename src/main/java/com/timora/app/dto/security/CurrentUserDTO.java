@@ -1,4 +1,4 @@
-package com.timora.app.dto;
+package com.timora.app.dto.security;
 
 import com.timora.app.model.enums.GlobalRole;
 import lombok.Getter;

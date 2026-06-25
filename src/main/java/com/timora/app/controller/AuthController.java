@@ -1,7 +1,7 @@
 package com.timora.app.controller;
 
 import com.timora.app.dto.security.AuthResponseDTO;
-import com.timora.app.dto.CurrentUserDTO;
+import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.dto.security.LoginRequest;
 import com.timora.app.model.User;
 import com.timora.app.security.jwt.JwtUtil;
