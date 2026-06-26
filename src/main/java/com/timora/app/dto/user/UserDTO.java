@@ -17,8 +17,8 @@ public class UserDTO {
     private Long id;
     private Long companyId;
     private String email;
-    private UserStatus status;
     private GlobalRole role;
+    private UserStatus status;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdDate;
 }

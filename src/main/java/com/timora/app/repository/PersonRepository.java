@@ -16,28 +16,5 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     List<Person> findAllByStatus(PersonStatus status);
     List<Person> findAllByStatusAndCompanyId(PersonStatus status, Long companyId);
-
-    @Query("""
-        SELECT p FROM Person p
-        LEFT JOIN FETCH p.user
-        WHERE p.status = 'ACTIVE'
-        AND (:isOwner = true OR p.company.id = :companyId)
-    """)
-    List<Person> findAll(Boolean isOwner, Long companyId);
-
-    @Query("""
-        SELECT p FROM Person p
-        LEFT JOIN FETCH p.user
-        WHERE p.status = 'ACTIVE'
-        AND (:companyId IS NULL OR p.company.id = :companyId)
-    """)
-    List<Person> findAllActiveByCompany(Long companyId);
-
-    @Query("""
-        SELECT p FROM Person p
-        LEFT JOIN FETCH p.user
-        WHERE p.id = :id
-        AND p.status = 'ACTIVE'
-    """)
-    Optional<Person> findActiveById(Long id);
+    Person findByIdAndStatus(Long id, PersonStatus status);
 }

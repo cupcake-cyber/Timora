@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,5 +17,5 @@ public class SupplierDTO {
     private Long personId;
     private String specialty;
     private String notes;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 }

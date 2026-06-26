@@ -33,11 +33,11 @@ public class CompanyServiceImpl implements CompanyService {
         auth.requireOwner(user);
 
         if (companyRepository.existsByRuc(companyDTO.getRuc())) {
-            throw new BusinessException("El RUC ya está registrado");
+            throw new BusinessException("The RUC already exists");
         }
 
         if (companyRepository.existsByEmail(companyDTO.getEmail())) {
-            throw new BusinessException("El correo ya está registrado");
+            throw new BusinessException("The email already exists");
         }
 
         Company company = new Company();

@@ -14,14 +14,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
     boolean existsByPersonId(Long personId);
 
-    boolean existsByIdAndCompanyId(Long id, Long companyId);
-
-    boolean existsByPersonIdAndCompanyId(Long personId, Long companyId);
-
-    // =========================
-    // FINDERS (SAFE / SCOPED)
-    // =========================
-
     Optional<Supplier> findByIdAndCompanyId(Long id, Long companyId);
 
     Optional<Supplier> findByPersonId(Long personId);
@@ -29,10 +21,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     Optional<Supplier> findByPersonIdAndCompanyId(Long personId, Long companyId);
 
     List<Supplier> findByCompanyId(Long companyId);
-
-    // =========================
-    // DELETE (SOFT OR HARD USAGE SUPPORT)
-    // =========================
 
     void deleteByPersonId(Long personId);
 

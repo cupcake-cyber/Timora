@@ -1,61 +1,84 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.dto.customer.CustomerCreateDTO;
+import com.timora.app.dto.customer.CustomerDTO;
+import com.timora.app.exception.BusinessException;
+import com.timora.app.exception.ForbiddenException;
 import com.timora.app.model.Customer;
 import com.timora.app.model.Person;
+import com.timora.app.model.User;
 import com.timora.app.repository.CustomerRepository;
+import com.timora.app.security.AccessControlService;
+import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CustomerService;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final SecurityHelper securityHelper;
+    private final AccessControlService auth;
 
     @Override
-    public Customer createCustomer(Person person, CreatePersonRequest.CustomerData data) {
+    public Customer create(Person person, CustomerCreateDTO customerDTO) {
 
-        if (customerRepository.existsByPersonId(person.getId())) {
-            throw new IllegalArgumentException("Person already is customer");
+        User user = securityHelper.getCurrentUser();
+
+        if (!auth.isOwner(user)) {
+            if(user.getCompany().getId() != customerDTO.getCompanyId().longValue()){
+                throw new ForbiddenException("You can not create entities outside of your company.");
+            }
+        }
+
+        if (customerRepository.existsByPersonId(customerDTO.getPersonId())){
+            throw new BusinessException("Customer already exists");
         }
 
         Customer customer = new Customer();
+
         customer.setPerson(person);
         customer.setCompany(person.getCompany());
-
-        if (data != null) {
-            customer.setNotes(data.getNotes());
-        }
+        customer.setNotes(customerDTO.getNotes());
 
         return customerRepository.save(customer);
     }
 
-    @Override
-    public Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data) {
+//    @Override
+//    public Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data) {
+//
+//        Customer customer = customerRepository.findByPersonId(person.getId())
+//                .orElseThrow(() -> new RuntimeException("Customer not found"));
+//
+//        if (data != null && data.getNotes() != null) {
+//            customer.setNotes(data.getNotes());
+//        }
+//
+//        return customerRepository.save(customer);
+//    }
+//
+//    @Override
+//    public void deleteByPersonId(Long personId) {
+//        customerRepository.deleteByPersonId(personId);
+//    }
+//
+//    @Override
+//    public boolean existsByPerson(Long personId) {
+//        return customerRepository.existsByPersonId(personId);
+//    }
 
-        Customer customer = customerRepository.findByPersonId(person.getId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+    private CustomerDTO toDTO(Customer customer) {
 
-        if (data != null && data.getNotes() != null) {
-            customer.setNotes(data.getNotes());
-        }
+        CustomerDTO dto = new CustomerDTO();
 
-        return customerRepository.save(customer);
-    }
+        dto.setId(customer.getId());
+        dto.setCompanyId(customer.getCompany().getId());
+        dto.setPersonId(customer.getPerson().getId());
+        dto.setNotes(customer.getNotes());
+        dto.setCreatedAt(customer.getCreatedAt());
 
-    @Override
-    public void deleteByPersonId(Long personId) {
-        customerRepository.deleteByPersonId(personId);
-    }
-
-    @Override
-    public boolean existsByPerson(Long personId) {
-        return customerRepository.existsByPersonId(personId);
+        return dto;
     }
 }
