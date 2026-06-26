@@ -28,16 +28,17 @@ public class SupplierServiceImpl implements SupplierService {
         User user = securityHelper.getCurrentUser();
 
         if (!auth.isOwner(user)) {
-            if(user.getCompany().getId() != supplierDTO.getCompanyId().longValue()){
+            if(!user.getCompany().getId().equals(supplierDTO.getCompanyId())) {
                 throw new ForbiddenException("You can not create entities outside of your company.");
             }
             if(!auth.isAdmin(user)){
                 throw  new ForbiddenException("ADMIN can only create Suppliers");
             }
         }
-
+        // TODO: Exponer un método en PersonService para validar la existencia de un Supplier.
+        // Evitar usar el repositorio de otra entidad únicamente como utilidad.
         if (supplierRepository.existsByPersonId(supplierDTO.getPersonId())){
-            throw new BusinessException("Customer already exists");
+            throw new BusinessException("Supplier already exists");
         }
 
         Supplier supplier = new Supplier();

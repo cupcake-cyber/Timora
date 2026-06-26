@@ -28,11 +28,12 @@ public class CustomerServiceImpl implements CustomerService {
         User user = securityHelper.getCurrentUser();
 
         if (!auth.isOwner(user)) {
-            if(user.getCompany().getId() != customerDTO.getCompanyId().longValue()){
-                throw new ForbiddenException("You can not create entities outside of your company.");
+            if (!user.getCompany().getId().equals(customerDTO.getCompanyId())) {
+                throw new ForbiddenException("You cannot create entities outside your company.");
             }
         }
-
+        // TODO: Exponer un método en PersonService para validar la existencia de un Customer.
+        // Evitar usar el repositorio de otra entidad únicamente como utilidad.
         if (customerRepository.existsByPersonId(customerDTO.getPersonId())){
             throw new BusinessException("Customer already exists");
         }

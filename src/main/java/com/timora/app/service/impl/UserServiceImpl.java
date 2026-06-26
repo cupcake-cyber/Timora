@@ -34,11 +34,11 @@ public class UserServiceImpl implements UserService {
         User currentUser = securityHelper.getCurrentUser();
 
         if (!auth.isOwner(currentUser)) {
-            if(currentUser.getCompany().getId() != userDTO.getCompanyId().longValue()){
-                throw new ForbiddenException("You can not create entities outside of your company.");
+            if (!currentUser.getCompany().getId().equals(userDTO.getCompanyId())) {
+                throw new ForbiddenException("You cannot create entities outside your company.");
             }
             if(!auth.isAdmin(currentUser)){
-                throw  new ForbiddenException("ADMIN can only create user");
+                throw new ForbiddenException("Only administrators can create users.");
             }
         }
         if (userRepository.existsByEmail(userDTO.getEmail())){
