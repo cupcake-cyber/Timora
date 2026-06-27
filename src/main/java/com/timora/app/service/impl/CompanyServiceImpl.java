@@ -15,6 +15,7 @@ import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CompanyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final AccessControlService auth;
 
     @Override
+    @Transactional
     public CompanyDTO create(CompanyCreateDTO companyDTO) {
 
         User user = securityHelper.getCurrentUser();
@@ -78,6 +80,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
 
         User user = securityHelper.getCurrentUser();
@@ -91,6 +94,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Transactional
     public CompanyDTO patch(Long id, CompanyDTO updatedCompany) {
 
         User user = securityHelper.getCurrentUser();

@@ -12,29 +12,8 @@ import java.util.Optional;
 @Repository
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
-    boolean existsByPersonId(Long personId);
-
     Optional<Supplier> findByIdAndCompanyId(Long id, Long companyId);
 
     Optional<Supplier> findByPersonId(Long personId);
 
-    Optional<Supplier> findByPersonIdAndCompanyId(Long personId, Long companyId);
-
-    List<Supplier> findByCompanyId(Long companyId);
-
-    void deleteByPersonId(Long personId);
-
-    void deleteByIdAndCompanyId(Long id, Long companyId);
-
-    @Query("""
-        SELECT s
-        FROM Supplier s
-        JOIN Person p ON p.id = s.person.id
-        WHERE p.user.id = :userId
-          AND s.company.id = :companyId
-    """)
-    Optional<Supplier> findByUserIdAndCompanyId(
-            @Param("userId") Long userId,
-            @Param("companyId") Long companyId
-    );
 }

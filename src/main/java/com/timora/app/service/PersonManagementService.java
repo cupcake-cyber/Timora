@@ -6,7 +6,7 @@ import com.timora.app.dto.personidentity.PersonIdentityDTO;
 public interface PersonManagementService {
 
     PersonIdentityDTO create(PersonIdentityCreateDTO request);
-
+    PersonIdentityDTO patch(PersonIdentityDTO request);
 //    List<PersonResponseDTO> getAll();
 //
 //    PersonResponseDTO getById(Long id);

@@ -10,6 +10,7 @@ import com.timora.app.model.enums.PersonStatus;
 import com.timora.app.repository.CompanyRepository;
 import com.timora.app.repository.PersonRepository;
 import com.timora.app.service.PersonService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,37 @@ public class PersonServiceImpl implements PersonService {
     private final CompanyRepository companyRepository;
 
     @Override
+    @Transactional
+    public Person patch(Long id, PersonDTO dto) {
+
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Person not found"));
+
+        if (dto.getFirstName() != null) {
+            person.setFirstName(dto.getFirstName());
+        }
+
+        if (dto.getLastName() != null) {
+            person.setLastName(dto.getLastName());
+        }
+
+        if (dto.getPhone() != null) {
+            person.setPhone(dto.getPhone());
+        }
+
+        if (dto.getEmail() != null) {
+            person.setEmail(dto.getEmail());
+        }
+
+        if (dto.getAddress() != null) {
+            person.setAddress(dto.getAddress());
+        }
+
+        return personRepository.save(person);
+    }
+
+    @Override
+    @Transactional
     public Person create(PersonCreateDTO personDTO) {
 
         if (personRepository.existsByEmail(personDTO.getEmail())) {
@@ -40,6 +72,19 @@ public class PersonServiceImpl implements PersonService {
 
         return personRepository.save(person);
     }
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Person person = personRepository.findById(id).orElseThrow(() -> new RuntimeException("Person not found"));
+        person.setStatus(PersonStatus.INACTIVE);
+        personRepository.save(person);
+    }
+    @Override
+    public Person findById(Long id) {
+        return personRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Person not found with Person id: " + id));
+    }
+
     private PersonDTO toDTO(Person person) {
 
         PersonDTO dto = new PersonDTO();

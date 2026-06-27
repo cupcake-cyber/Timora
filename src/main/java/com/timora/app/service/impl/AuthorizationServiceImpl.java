@@ -1,6 +1,5 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.repository.RolePermissionRepository;
 import com.timora.app.service.AuthorizationService;
 import org.springframework.stereotype.Service;
 

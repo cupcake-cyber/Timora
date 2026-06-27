@@ -81,55 +81,19 @@ CREATE TABLE supplier (
 );
 
 -- =========================
--- ROLE
+-- USER_SUPPLIER_PERMISSION
 -- =========================
-CREATE TABLE role (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    company_id BIGINT,
-    name VARCHAR(100),
-    description TEXT,
-    created_at DATETIME,
-
-    FOREIGN KEY (company_id) REFERENCES company(id)
-);
-
--- =========================
--- PERMISSION
--- =========================
-CREATE TABLE permission (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    code VARCHAR(100),
-    description TEXT
-);
-
--- =========================
--- ROLE_PERMISSION
--- =========================
-CREATE TABLE role_permission (
-    role_id BIGINT,
-    permission_id BIGINT,
-
-    PRIMARY KEY (role_id, permission_id),
-
-    FOREIGN KEY (role_id) REFERENCES role(id),
-    FOREIGN KEY (permission_id) REFERENCES permission(id)
-);
-
--- =========================
--- USER_SUPPLIER_ROLE
--- =========================
-CREATE TABLE user_supplier_role (
+CREATE TABLE user_supplier_permission (
     user_id BIGINT,
     supplier_id BIGINT,
-    role_id BIGINT,
+    permission VARCHAR(50),
     assigned_by_user_id BIGINT,
     created_at DATETIME,
 
-    PRIMARY KEY (user_id, supplier_id, role_id),
+    PRIMARY KEY (user_id, supplier_id, permission),
 
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (supplier_id) REFERENCES supplier(id),
-    FOREIGN KEY (role_id) REFERENCES role(id),
     FOREIGN KEY (assigned_by_user_id) REFERENCES user(id)
 );
 

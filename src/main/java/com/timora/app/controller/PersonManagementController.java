@@ -22,6 +22,11 @@ public class PersonManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(personManagementService.create(dto));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<PersonIdentityDTO> patch(@RequestBody PersonIdentityDTO dto) {
+        return ResponseEntity.ok(personManagementService.patch(dto));
+    }
+
 
 //    @GetMapping
 //    public ResponseEntity<List<PersonIdentityDTO>> getAll() {

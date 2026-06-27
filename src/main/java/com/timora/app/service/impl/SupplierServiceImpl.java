@@ -11,6 +11,7 @@ import com.timora.app.repository.SupplierRepository;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.SupplierService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,23 +24,14 @@ public class SupplierServiceImpl implements SupplierService {
     private final AccessControlService auth;
 
     @Override
+    public Supplier findById(Long id){
+        return  supplierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
+    }
+
+    @Override
+    @Transactional
     public Supplier create(Person person, SupplierCreateDTO supplierDTO) {
-
-        User user = securityHelper.getCurrentUser();
-
-        if (!auth.isOwner(user)) {
-            if(!user.getCompany().getId().equals(supplierDTO.getCompanyId())) {
-                throw new ForbiddenException("You can not create entities outside of your company.");
-            }
-            if(!auth.isAdmin(user)){
-                throw  new ForbiddenException("ADMIN can only create Suppliers");
-            }
-        }
-        // TODO: Exponer un método en PersonService para validar la existencia de un Supplier.
-        // Evitar usar el repositorio de otra entidad únicamente como utilidad.
-        if (supplierRepository.existsByPersonId(supplierDTO.getPersonId())){
-            throw new BusinessException("Supplier already exists");
-        }
 
         Supplier supplier = new Supplier();
         supplier.setPerson(person);
@@ -50,35 +42,23 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierRepository.save(supplier);
     }
 
-//    @Override
-//    public Supplier updateSupplier(Person person, CreatePersonRequest.SupplierData data) {
-//
-//        Supplier supplier = supplierRepository.findByPersonId(person.getId())
-//                .orElseThrow(() -> new RuntimeException("Supplier not found"));
-//
-//        if (data != null) {
-//
-//            if (data.getSpecialty() != null) {
-//                supplier.setSpecialty(data.getSpecialty());
-//            }
-//
-//            if (data.getNotes() != null) {
-//                supplier.setNotes(data.getNotes());
-//            }
-//        }
-//
-//        return supplierRepository.save(supplier);
-//    }
-//
-//    @Override
-//    public void deleteByPersonId(Long personId) {
-//        supplierRepository.deleteByPersonId(personId);
-//    }
-//
-//    @Override
-//    public boolean existsByPerson(Long personId) {
-//        return supplierRepository.existsByPersonId(personId);
-//    }
+    @Override
+    @Transactional
+    public Supplier patch(Long id, SupplierDTO dto) {
+
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
+
+        if (dto.getSpecialty() != null) {
+            supplier.setSpecialty(dto.getSpecialty());
+        }
+
+        if (dto.getNotes() != null) {
+            supplier.setNotes(dto.getNotes());
+        }
+
+        return supplierRepository.save(supplier);
+    }
 
     private SupplierDTO toDTO(Supplier supplier) {
 

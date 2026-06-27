@@ -11,6 +11,7 @@ import com.timora.app.repository.CustomerRepository;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CustomerService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,46 +20,37 @@ import org.springframework.stereotype.Service;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
 
     @Override
+    public Customer findById(Long id) {
+        return  customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+    }
+
+    @Override
+    @Transactional
     public Customer create(Person person, CustomerCreateDTO customerDTO) {
 
-        User user = securityHelper.getCurrentUser();
-
-        if (!auth.isOwner(user)) {
-            if (!user.getCompany().getId().equals(customerDTO.getCompanyId())) {
-                throw new ForbiddenException("You cannot create entities outside your company.");
-            }
-        }
-        // TODO: Exponer un método en PersonService para validar la existencia de un Customer.
-        // Evitar usar el repositorio de otra entidad únicamente como utilidad.
-        if (customerRepository.existsByPersonId(customerDTO.getPersonId())){
-            throw new BusinessException("Customer already exists");
-        }
-
         Customer customer = new Customer();
-
         customer.setPerson(person);
         customer.setCompany(person.getCompany());
         customer.setNotes(customerDTO.getNotes());
 
         return customerRepository.save(customer);
     }
+    @Override
+    @Transactional
+    public Customer patch(Long id, CustomerDTO dto) {
 
-//    @Override
-//    public Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data) {
-//
-//        Customer customer = customerRepository.findByPersonId(person.getId())
-//                .orElseThrow(() -> new RuntimeException("Customer not found"));
-//
-//        if (data != null && data.getNotes() != null) {
-//            customer.setNotes(data.getNotes());
-//        }
-//
-//        return customerRepository.save(customer);
-//    }
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+
+        if (dto.getNotes() != null) {
+            customer.setNotes(dto.getNotes());
+        }
+
+        return customer;
+    }
 //
 //    @Override
 //    public void deleteByPersonId(Long personId) {

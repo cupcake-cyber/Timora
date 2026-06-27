@@ -5,21 +5,18 @@ import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.dto.user.UserCreateDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.exception.BusinessException;
-import com.timora.app.exception.ForbiddenException;
 import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.UserRepository;
-import com.timora.app.security.AccessControlService;
-import com.timora.app.security.SecurityHelper;
+import com.timora.app.service.ConfigurationService;
 import com.timora.app.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
 
 
 @Service
@@ -28,27 +25,23 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
-
-
+    private final ConfigurationService configurationService;
 
     @Override
+    public User findById(Long id){
+        return  userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Override
+    public User findByLoginEmail(String email) {
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    @Transactional
     public User create(Person person, UserCreateDTO userDTO) {
-
-        User currentUser = securityHelper.getCurrentUser();
-
-        if (!auth.isOwner(currentUser)) {
-            if (!currentUser.getCompany().getId().equals(userDTO.getCompanyId())) {
-                throw new ForbiddenException("You cannot create entities outside your company.");
-            }
-            if(!auth.isAdmin(currentUser)){
-                throw new ForbiddenException("Only administrators can create users.");
-            }
-        }
-        if (userRepository.existsByEmail(userDTO.getEmail())){
-            throw new BusinessException("User already exists");
-        }
 
         User user = new User();
 
@@ -59,37 +52,46 @@ public class UserServiceImpl implements UserService {
         user.setStatus(UserStatus.ACTIVE);
         user.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
 
+        configurationService.create(user);
+
+        return userRepository.save(user);
+    }
+    @Override
+    @Transactional
+    public User patch(Long id, UserDTO dto) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        if (dto.getEmail() != null) {
+
+            if (!dto.getEmail().equals(user.getEmail())
+                    && userRepository.existsByEmail(dto.getEmail())) {
+                throw new BusinessException("Email already exists");
+            }
+
+            user.setEmail(dto.getEmail());
+        }
+
+        if (dto.getRole() != null) {
+            user.setGlobalRole(dto.getRole());
+        }
+
+        if (dto.getStatus() != null) {
+            user.setStatus(dto.getStatus());
+        }
+
         return userRepository.save(user);
     }
 
     @Override
-    public User findByLoginEmail(String email) {
-        return userRepository.findByLoginEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public void delete(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setStatus(UserStatus.INACTIVE);
+        userRepository.save(user);
     }
-//    @Override
-//    public User updateUser(User user, CreatePersonRequest.UserData data) {
-//
-//        if (data.getLoginEmail() != null) {
-//            user.setLoginEmail(data.getLoginEmail());
-//        }
-//
-//        if (data.getGlobalRole() != null) {
-//            user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
-//        }
-//
-//        if (data.getPassword() != null) {
-//            user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
-//        }
-//
-//        return userRepository.save(user);
-//    }
-//
-//    @Override
-//    public void deleteUser(Long id) {
-//        userRepository.deleteById(id);
-//    }
-//
+
     @Override
     public CurrentUserDTO buildCurrentUser(User user) {
 

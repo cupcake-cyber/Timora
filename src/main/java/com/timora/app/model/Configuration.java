@@ -53,4 +53,5 @@ public class Configuration {
 
     @Column(name = "dark_mode")
     private Boolean darkMode;
+
 }

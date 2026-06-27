@@ -56,6 +56,8 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             }else{
                 //Se omite revisar que solo sea cliente si el user es admin
                 if(!auth.isAdmin(currentUser)){
+                    //si no es customer no pasa
+                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
                     if(request.getCustomer() == null){
                         throw new ForbiddenException("You are not allowed to perform this action");
                     }
@@ -79,7 +81,54 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
 
 
+
         return toDTO(person, user, customer, supplier);
+    }
+
+    public PersonIdentityDTO patch(PersonIdentityDTO request){
+        User currentUser = securityHelper.getCurrentUser();
+
+        //Se omite cualquier permiso de ser owner
+        if (!auth.isOwner(currentUser)) {
+            //Se comprueba que sean de la misma compañia
+            if (!currentUser.getCompany().getId().equals(request.getPerson().getCompanyId())){
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }else{
+                //Se omite revisar que solo sea cliente si el user es admin
+                if(!auth.isAdmin(currentUser)){
+                    //si no es customer no pasa
+                    if(request.getCustomer() == null){
+                        throw new ForbiddenException("You are not allowed to perform this action");
+                    }
+                    //si no es el mismo no pasa
+                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
+                    if(!request.getPerson().getId().equals(currentUser.getId())){
+                        throw new ForbiddenException("You are not allowed to perform this action");
+                    }
+                }
+            }
+        }
+
+        Person person = personService.patch(request.getPerson().getId(), request.getPerson());
+
+        User user = null;
+
+        if (request.getUser() != null) {
+            user = userService.patch(request.getUser().getId(), request.getUser());
+        }
+
+        Customer customer = null;
+        if (request.getCustomer() != null) {
+            customer = customerService.patch(request.getCustomer().getId(), request.getCustomer());
+        }
+
+        Supplier supplier = null;
+
+        if (request.getSupplier() != null) {
+            supplier = supplierService.patch(request.getSupplier().getId(), request.getSupplier());
+        }
+
+        return toDTO(person,user,customer,supplier);
     }
 
 //    @Override
