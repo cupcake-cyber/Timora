@@ -1,10 +1,11 @@
 package com.timora.app.dto.security;
 
 import com.timora.app.model.enums.GlobalRole;
+import com.timora.app.model.enums.UserStatus;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.List;
-import java.util.Map;
+
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -13,26 +14,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CurrentUserDTO {
-
-    private Long id;
-
-    private String email;
-
-    private String fullName;
-
-    private GlobalRole globalRole;
-
-    private boolean active;
-
-    private boolean companyAdmin;
-
-    private boolean supplierUser;
-
+    //Tenant
     private Long companyId;
-
-    private List<Long> supplierIds;
-
-    private String status;
-
-    private Map<Long, List<String>> supplierPermissions;
+    //Datos Person
+    private Long personId;
+    private String firstName;
+    private String lastName;
+    private String phone;
+    private String address;
+    //Datos User
+    private Long userId;
+    private String email;
+    private GlobalRole role;
+    private UserStatus status;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime createdDate;
+    //Datos Supplier
+    private Long supplierId;
+    private String specialty;
+    private String notes;
+    //Datos Customer
+    //private Long customerId
+    //private String notes;
 }

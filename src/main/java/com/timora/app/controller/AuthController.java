@@ -32,7 +32,7 @@ public class AuthController {
 
         User user = userService.findByLoginEmail(request.getEmail());
 
-        String token = jwtUtil.generateToken(user.getLoginEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
 
         CurrentUserDTO currentUser = userService.buildCurrentUser(user);
 

@@ -34,7 +34,7 @@ public class User {
     @NotBlank
     @Email
     @Column(name = "login_email", nullable = false, unique = true)
-    private String loginEmail;
+    private String email;
 
     @NotBlank
     @Column(name = "password_hash", nullable = false)

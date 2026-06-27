@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @AllArgsConstructor
 public class PersonManagementServiceImpl implements PersonManagementService {
@@ -33,7 +32,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final UserService userService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
-    private final PersonRepository personRepository;
 
     @Override
     @Transactional
@@ -78,6 +76,8 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         Supplier supplier = request.getSupplier() != null
                 ? supplierService.create(person, request.getSupplier())
                 : null;
+
+
 
         return toDTO(person, user, customer, supplier);
     }
@@ -274,7 +274,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         dto.setId(u.getId());
         dto.setCompanyId(u.getCompany().getId());
-        dto.setEmail(u.getLoginEmail());
+        dto.setEmail(u.getEmail());
         dto.setRole(u.getGlobalRole());
         dto.setLastLoginAt(u.getLastLoginAt());
         dto.setCreatedDate(u.getCreatedAt());

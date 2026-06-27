@@ -1,11 +1,13 @@
 package com.timora.app.service.impl;
 
 
+import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.dto.user.UserCreateDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.model.Person;
+import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.UserRepository;
@@ -15,6 +17,9 @@ import com.timora.app.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -49,7 +54,7 @@ public class UserServiceImpl implements UserService {
 
         user.setPerson(person);
         user.setCompany(person.getCompany());
-        user.setLoginEmail(userDTO.getEmail());
+        user.setEmail(userDTO.getEmail());
         user.setGlobalRole(userDTO.getRole());
         user.setStatus(UserStatus.ACTIVE);
         user.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
@@ -57,11 +62,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-//    @Override
-//    public User findByLoginEmail(String email) {
-//        return userRepository.findByLoginEmail(email)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//    }
+    @Override
+    public User findByLoginEmail(String email) {
+        return userRepository.findByLoginEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 //    @Override
 //    public User updateUser(User user, CreatePersonRequest.UserData data) {
 //
@@ -85,47 +90,38 @@ public class UserServiceImpl implements UserService {
 //        userRepository.deleteById(id);
 //    }
 //
-//    @Override
-//    public CurrentUserDTO buildCurrentUser(User user) {
-//
-//        CurrentUserDTO dto = new CurrentUserDTO();
-//
-//        dto.setId(user.getId());
-//        dto.setEmail(user.getLoginEmail());
-//
-//        String fullName = user.getPerson() != null
-//                ? user.getPerson().getFirstName() + " " + user.getPerson().getLastName()
-//                : null;
-//
-//        dto.setFullName(fullName);
-//
-//        dto.setGlobalRole(user.getGlobalRole());
-//        dto.setActive(user.getStatus() != null && user.getStatus().name().equals("ACTIVE"));
-//
-//        dto.setCompanyId(user.getCompany().getId());
-//        dto.setStatus(user.getStatus().name());
-//
-//        // =========================
-//        // FLAGS (ajústalos a tu negocio real)
-//        // =========================
-//
-//        dto.setCompanyAdmin(user.getGlobalRole().name().equals("OWNER")
-//                || user.getGlobalRole().name().equals("ADMIN"));
-//
-//        dto.setSupplierUser(user.getPerson() != null && user.getPerson().getSupplier() != null);
-//
-//        // supplierIds (si tienes relación real)
-//        if (user.getPerson() != null && user.getPerson().getSupplier() != null) {
-//            dto.setSupplierIds(List.of(user.getPerson().getSupplier().getId()));
-//        } else {
-//            dto.setSupplierIds(List.of());
-//        }
-//
-//        // permisos (placeholder por ahora)
-//        dto.setSupplierPermissions(Map.of());
-//
-//        return dto;
-//    }
+    @Override
+    public CurrentUserDTO buildCurrentUser(User user) {
+
+        CurrentUserDTO dto = new CurrentUserDTO();
+        Person person = user.getPerson();
+
+        dto.setCompanyId(user.getCompany().getId());
+
+        dto.setPersonId(person.getId());
+        dto.setFirstName(person.getFirstName());
+        dto.setLastName(person.getLastName());
+        dto.setPhone(person.getPhone());
+        dto.setAddress(person.getAddress());
+
+        dto.setUserId(user.getId());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getGlobalRole());
+        dto.setStatus(user.getStatus());
+        dto.setLastLoginAt(user.getLastLoginAt());
+        dto.setCompanyId(user.getCompany().getId());
+
+        Supplier supplier = person.getSupplier();
+
+        if(supplier!=null){
+            dto.setSupplierId(supplier.getId());
+            dto.setSpecialty(supplier.getSpecialty());
+            dto.setNotes(supplier.getNotes());
+        }
+
+
+        return dto;
+    }
 
     private UserDTO toDTO(User user) {
 
@@ -133,7 +129,7 @@ public class UserServiceImpl implements UserService {
 
         dto.setId(user.getId());
         dto.setCompanyId(user.getCompany().getId());
-        dto.setEmail(user.getLoginEmail());
+        dto.setEmail(user.getEmail());
         dto.setRole(user.getGlobalRole());
         dto.setLastLoginAt(user.getLastLoginAt());
         dto.setCreatedDate(user.getCreatedAt());
