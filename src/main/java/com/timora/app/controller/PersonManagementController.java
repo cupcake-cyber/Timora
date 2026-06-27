@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/persons")
@@ -32,18 +34,10 @@ public class PersonManagementController {
         return ResponseEntity.noContent().build();
     }
 
-
-//    @GetMapping
-//    public ResponseEntity<List<PersonIdentityDTO>> getAll() {
-//        return ResponseEntity.ok(personManagementService.getAll());
-//    }
-//
-//    @GetMapping("/{id}")
-//    public PersonIdentityDTO getById(@PathVariable Long id) {
-//        return personManagementService.getById(id);
-//    }
-//
-//
+    @GetMapping
+    public ResponseEntity<List<PersonIdentityDTO>> getAll() {
+        return ResponseEntity.ok(personManagementService.getAll());
+    }
 
 
 

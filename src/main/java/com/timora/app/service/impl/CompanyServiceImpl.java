@@ -102,7 +102,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         if (!auth.isOwner(user)) {
 
-            if (user.getGlobalRole() == GlobalRole.USER) {
+            if (user.getRole() == GlobalRole.USER) {
                 throw new ForbiddenException("USER cannot update companies");
             }
 

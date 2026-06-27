@@ -1,7 +1,7 @@
 package com.timora.app.controller;
 
 import com.timora.app.dto.security.AuthResponseDTO;
-import com.timora.app.dto.security.CurrentUserDTO;
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.dto.security.LoginRequest;
 import com.timora.app.model.User;
 import com.timora.app.security.jwt.JwtUtil;
@@ -30,11 +30,11 @@ public class AuthController {
                 )
         );
 
-        User user = userService.findByLoginEmail(request.getEmail());
+        User user = userService.findByEmail(request.getEmail());
 
         String token = jwtUtil.generateToken(user.getEmail());
 
-        CurrentUserDTO currentUser = userService.buildCurrentUser(user);
+        CurrentUser currentUser = userService.buildCurrentUser(user);
 
         return new AuthResponseDTO(
                 token,

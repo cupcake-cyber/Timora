@@ -19,7 +19,7 @@ public class SecurityHelper {
                 .getAuthentication()
                 .getName();
 
-        return userRepository.findByLoginEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }

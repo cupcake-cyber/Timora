@@ -1,13 +1,12 @@
 package com.timora.app.service.impl;
 
 
-import com.timora.app.dto.security.CurrentUserDTO;
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.dto.user.UserCreateDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.dto.user.UserPatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.model.Person;
-import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.UserStatus;
 import com.timora.app.repository.UserRepository;
@@ -35,8 +34,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByLoginEmail(String email) {
-        return userRepository.findByLoginEmail(email)
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -49,13 +48,13 @@ public class UserServiceImpl implements UserService {
         user.setPerson(person);
         user.setCompany(person.getCompany());
         user.setEmail(userDTO.getEmail());
-        user.setGlobalRole(userDTO.getRole());
+        user.setRole(userDTO.getRole());
         user.setStatus(UserStatus.ACTIVE);
         user.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
-
+        User saved  = userRepository.save(user);
         configurationService.create(user);
 
-        return userRepository.save(user);
+        return saved;
     }
     @Override
     @Transactional
@@ -75,7 +74,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (dto.getRole() != null) {
-            user.setGlobalRole(dto.getRole());
+            user.setRole(dto.getRole());
         }
 
         return userRepository.save(user);
@@ -90,34 +89,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CurrentUserDTO buildCurrentUser(User user) {
+    public CurrentUser buildCurrentUser(User user) {
 
-        CurrentUserDTO dto = new CurrentUserDTO();
+        CurrentUser dto = new CurrentUser();
         Person person = user.getPerson();
 
         dto.setCompanyId(user.getCompany().getId());
 
         dto.setPersonId(person.getId());
-        dto.setFirstName(person.getFirstName());
-        dto.setLastName(person.getLastName());
-        dto.setPhone(person.getPhone());
-        dto.setAddress(person.getAddress());
-
         dto.setUserId(user.getId());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getGlobalRole());
-        dto.setStatus(user.getStatus());
-        dto.setLastLoginAt(user.getLastLoginAt());
+        dto.setRole(user.getRole());
         dto.setCompanyId(user.getCompany().getId());
-
-        Supplier supplier = person.getSupplier();
-
-        if(supplier!=null){
-            dto.setSupplierId(supplier.getId());
-            dto.setSpecialty(supplier.getSpecialty());
-            dto.setNotes(supplier.getNotes());
-        }
-
 
         return dto;
     }
@@ -129,7 +112,7 @@ public class UserServiceImpl implements UserService {
         dto.setId(user.getId());
         dto.setCompanyId(user.getCompany().getId());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getGlobalRole());
+        dto.setRole(user.getRole());
         dto.setLastLoginAt(user.getLastLoginAt());
         dto.setCreatedDate(user.getCreatedAt());
         dto.setStatus(user.getStatus());

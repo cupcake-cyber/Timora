@@ -23,10 +23,15 @@ public class Person {
     private Long id;
 
     @NotNull
+    @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @JoinColumn(name = "user_id")
+    // =========================
+    // EXTENSIONES (1 - 0..1)
+    // =========================
+
+    @OneToOne(mappedBy = "person")
     private User user;
 
     @OneToOne(mappedBy = "person")
@@ -34,6 +39,10 @@ public class Person {
 
     @OneToOne(mappedBy = "person")
     private Supplier supplier;
+
+    // =========================
+    // DATA
+    // =========================
 
     @NotBlank
     @Column(name = "first_name", nullable = false)

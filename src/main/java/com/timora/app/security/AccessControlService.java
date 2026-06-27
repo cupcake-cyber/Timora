@@ -14,27 +14,27 @@ public class AccessControlService {
     // =========================
 
     public void requireOwner(User user) {
-        if (user.getGlobalRole() != GlobalRole.OWNER) {
+        if (user.getRole() != GlobalRole.OWNER) {
             throw new ForbiddenException("Only OWNER allowed");
         }
     }
 
     public void requireAdminOrOwner(User user) {
-        if (user.getGlobalRole() == GlobalRole.USER) {
+        if (user.getRole() == GlobalRole.USER) {
             throw new ForbiddenException("Insufficient permissions");
         }
     }
 
     public boolean isOwner(User user) {
-        return user.getGlobalRole() == GlobalRole.OWNER;
+        return user.getRole() == GlobalRole.OWNER;
     }
 
     public boolean isAdmin(User user) {
-        return user.getGlobalRole() == GlobalRole.ADMIN;
+        return user.getRole() == GlobalRole.ADMIN;
     }
 
     public boolean isUser(User user) {
-        return user.getGlobalRole() == GlobalRole.USER;
+        return user.getRole() == GlobalRole.USER;
     }
 
     // =========================

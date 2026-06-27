@@ -15,6 +15,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class PersonServiceImpl implements PersonService {
@@ -85,7 +87,14 @@ public class PersonServiceImpl implements PersonService {
         return personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with Person id: " + id));
     }
-
+    @Override
+    public List<Person> findAll(){
+        return  personRepository.findByStatus(PersonStatus.ACTIVE);
+    }
+    @Override
+    public List<Person> findByCompanyId(Long companyId) {
+        return personRepository.findByCompanyIdAndStatus(companyId, PersonStatus.ACTIVE);
+    }
     private PersonDTO toDTO(Person person) {
 
         PersonDTO dto = new PersonDTO();

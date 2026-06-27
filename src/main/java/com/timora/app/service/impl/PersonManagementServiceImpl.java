@@ -13,7 +13,6 @@ import com.timora.app.model.Customer;
 import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
-import com.timora.app.repository.*;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.*;
@@ -21,6 +20,10 @@ import com.timora.app.service.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +37,15 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final CustomerService customerService;
     private final SupplierService supplierService;
 
+    private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
+
+        if (entityCompanyId == null) return;
+
+        if (!Objects.equals(baseCompanyId, entityCompanyId)) {
+            throw new BusinessException(entityName + " must belong to the same company");
+        }
+    }
+
     @Override
     @Transactional
     public PersonIdentityDTO create(PersonIdentityCreateDTO request) {
@@ -43,6 +55,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         if (request.getPerson() == null) {
             throw new BusinessException("You need to define a person.");
         }
+        Long baseCompanyId = request.getPerson().getCompanyId();
 
         boolean hasUser = request.getUser() != null;
         boolean hasCustomer = request.getCustomer() != null;
@@ -58,6 +71,17 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             throw new BusinessException("A customer cannot be a supplier.");
         }
 
+        validateSameCompany(baseCompanyId,
+                request.getUser() != null ? request.getUser().getCompanyId() : null,
+                "User");
+
+        validateSameCompany(baseCompanyId,
+                request.getSupplier() != null ? request.getSupplier().getCompanyId() : null,
+                "Supplier");
+
+        validateSameCompany(baseCompanyId,
+                request.getCustomer() != null ? request.getCustomer().getCompanyId() : null,
+                "Customer");
 
         //Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
@@ -206,80 +230,42 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             userService.delete(user.getId());
         }
     }
-//    @Override
-//    public List<PersonResponseDTO> getAll() {
-//
-//        User user = securityHelper.getCurrentUser();
-//
-//        boolean isOwner = auth.isOwner(user);
-//
-//        List<Person> persons = isOwner
-//                ? personRepository.findAllByStatus(PersonStatus.ACTIVE)
-//                : personRepository.findAllByStatusAndCompanyId(PersonStatus.INACTIVE, user.getCompany().getId());
-//
-//        return persons.stream()
-//                .map(this::mapToDTO)
-//                .toList();
-//    }
-//
-//    @Override
-//    public PersonResponseDTO getById(Long id) {
-//
-//        Person person = personRepository.findById(id)
-//                .orElseThrow(() -> new NotFoundException("Person not found"));
-//
-//        authorizePersonAccess(getCurrentUser(), person);
-//
-//        return mapToDTO(person);
-//    }
-//
-//
-//    private void authorizePersonAccess(User currentUser, Person target) {
-//
-//        GlobalRole role = currentUser.getGlobalRole();
-//
-//        if (role == GlobalRole.OWNER) return;
-//
-//        if (role == GlobalRole.ADMIN) {
-//
-//            if (!currentUser.getCompany().getId()
-//                    .equals(target.getCompany().getId())) {
-//                throw new ForbiddenException("Different company");
-//            }
-//            return;
-//        }
-//
-//        if (role == GlobalRole.USER) {
-//
-//            if (currentUser.getPerson() == null) {
-//                throw new ForbiddenException("No linked person");
-//            }
-//
-//            if (!target.getId().equals(currentUser.getPerson().getId())) {
-//                throw new ForbiddenException("Self only");
-//            }
-//        }
-//    }
-//
-//    private void authorizeDeleteAccess(User currentUser, Person target) {
-//
-//        GlobalRole role = currentUser.getGlobalRole();
-//
-//        if (role == GlobalRole.OWNER) return;
-//
-//        if (role == GlobalRole.ADMIN) {
-//
-//            if (!currentUser.getCompany().getId()
-//                    .equals(target.getCompany().getId())) {
-//                throw new ForbiddenException("Different company");
-//            }
-//            return;
-//        }
-//
-//        if (role == GlobalRole.USER) {
-//            throw new ForbiddenException("USER cannot delete");
-//        }
-//    }
+
+    @Override
+    public List<PersonIdentityDTO> getAll() {
+
+        User user = securityHelper.getCurrentUser();
+
+        List<Person> persons;
+
+        if (auth.isOwner(user)) {
+            persons = personService.findAll();
+        }else{
+            persons = personService.findByCompanyId(user.getCompany().getId());
+        }
+
+        return persons.stream()
+                .map(p -> toDTO(p, p.getUser(), p.getCustomer(), p.getSupplier()))
+                .toList();
+    }
+
+    @Override
+    public PersonIdentityDTO getById(Long personId) {
+        User currentUser = securityHelper.getCurrentUser();
+        Person person = personService.findById(personId);
+        if (!auth.isOwner(currentUser)) {
+            if (!currentUser.getCompany().getId().equals(person.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }
+        }
+
+        User user = person.getUser();
+        Customer customer = person.getCustomer();
+        Supplier supplier = person.getSupplier();
+
+        return toDTO(person, user, customer, supplier);
+
+    }
 
     public PersonIdentityDTO toDTO(Person p, User u, Customer c, Supplier s) {
 
@@ -323,7 +309,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         dto.setId(u.getId());
         dto.setCompanyId(u.getCompany().getId());
         dto.setEmail(u.getEmail());
-        dto.setRole(u.getGlobalRole());
+        dto.setRole(u.getRole());
         dto.setLastLoginAt(u.getLastLoginAt());
         dto.setCreatedDate(u.getCreatedAt());
         dto.setStatus(u.getStatus());
