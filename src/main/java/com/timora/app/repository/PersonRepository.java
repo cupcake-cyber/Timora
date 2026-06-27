@@ -12,9 +12,4 @@ import java.util.Optional;
 @Repository
 public interface PersonRepository extends JpaRepository<Person, Long> {
     boolean existsByEmail(String email);
-    boolean existsByEmailAndCompanyId(String email, Long companyId);
-
-    List<Person> findAllByStatus(PersonStatus status);
-    List<Person> findAllByStatusAndCompanyId(PersonStatus status, Long companyId);
-    Person findByIdAndStatus(Long id, PersonStatus status);
 }

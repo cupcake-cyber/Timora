@@ -9,7 +9,6 @@ import com.timora.app.model.Supplier;
 import java.util.List;
 
 public interface SupplierService {
-
     Supplier create(Person person, SupplierCreateDTO supplierDTO);
     Supplier findById(Long id);
     Supplier patch(Long id, SupplierPatchDTO dto);
