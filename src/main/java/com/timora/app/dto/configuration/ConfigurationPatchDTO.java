@@ -11,9 +11,7 @@ import java.time.LocalTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConfigurationDTO {
-    private Long id;
-    private Long userId;
+public class ConfigurationPatchDTO {
     private Boolean notifyAppointments;
     private Boolean notifyReservations;
     private Boolean notifyCancellations;

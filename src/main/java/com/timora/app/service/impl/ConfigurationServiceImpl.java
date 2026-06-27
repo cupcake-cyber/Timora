@@ -1,6 +1,7 @@
 package com.timora.app.service.impl;
 
 import com.timora.app.dto.configuration.ConfigurationDTO;
+import com.timora.app.dto.configuration.ConfigurationPatchDTO;
 import com.timora.app.model.Configuration;
 import com.timora.app.model.User;
 import com.timora.app.repository.ConfigurationRepository;
@@ -31,10 +32,10 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     @Override
     @Transactional
-    public Configuration patch(Long id, Configuration updatedConfiguration) {
+    public ConfigurationDTO patch(Long userId, ConfigurationPatchDTO updatedConfiguration) {
 
-        Configuration existingConfiguration = configurationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Configuration not found with id: " + id));
+        Configuration existingConfiguration = configurationRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Configuration not found with userId: " + userId));
 
         if (updatedConfiguration.getNotifyAppointments() != null) {
             existingConfiguration.setNotifyAppointments(updatedConfiguration.getNotifyAppointments());
@@ -75,7 +76,8 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         if (updatedConfiguration.getDarkMode() != null) {
             existingConfiguration.setDarkMode(updatedConfiguration.getDarkMode());
         }
-        return configurationRepository.save(existingConfiguration);
+        Configuration saved = configurationRepository.save(existingConfiguration);
+        return toDTO(saved);
     }
 
     private ConfigurationDTO toDTO(Configuration configuration) {

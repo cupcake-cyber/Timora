@@ -2,6 +2,7 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.company.CompanyCreateDTO;
 import com.timora.app.dto.company.CompanyDTO;
+import com.timora.app.dto.company.CompanyPatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
@@ -95,7 +96,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     @Transactional
-    public CompanyDTO patch(Long id, CompanyDTO updatedCompany) {
+    public CompanyDTO patch(Long id, CompanyPatchDTO updatedCompany) {
 
         User user = securityHelper.getCurrentUser();
 

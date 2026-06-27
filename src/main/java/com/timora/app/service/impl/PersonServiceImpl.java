@@ -2,6 +2,7 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.person.PersonCreateDTO;
 import com.timora.app.dto.person.PersonDTO;
+import com.timora.app.dto.person.PersonPatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.model.Company;
 import com.timora.app.model.Person;
@@ -23,7 +24,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     @Transactional
-    public Person patch(Long id, PersonDTO dto) {
+    public Person patch(Long id, PersonPatchDTO dto) {
 
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found"));

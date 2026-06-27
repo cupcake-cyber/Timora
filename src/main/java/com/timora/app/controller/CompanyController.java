@@ -2,6 +2,7 @@ package com.timora.app.controller;
 
 import com.timora.app.dto.company.CompanyCreateDTO;
 import com.timora.app.dto.company.CompanyDTO;
+import com.timora.app.dto.company.CompanyPatchDTO;
 import com.timora.app.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class CompanyController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<CompanyDTO> patch(@PathVariable Long id, @RequestBody CompanyDTO dto) {
+    public ResponseEntity<CompanyDTO> patch(@PathVariable Long id, @RequestBody CompanyPatchDTO dto) {
         return ResponseEntity.ok(companyService.patch(id, dto));
     }
 

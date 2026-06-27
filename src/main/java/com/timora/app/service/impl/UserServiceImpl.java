@@ -4,6 +4,7 @@ package com.timora.app.service.impl;
 import com.timora.app.dto.security.CurrentUserDTO;
 import com.timora.app.dto.user.UserCreateDTO;
 import com.timora.app.dto.user.UserDTO;
+import com.timora.app.dto.user.UserPatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     @Transactional
-    public User patch(Long id, UserDTO dto) {
+    public User patch(Long id, UserPatchDTO dto) {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -75,10 +76,6 @@ public class UserServiceImpl implements UserService {
 
         if (dto.getRole() != null) {
             user.setGlobalRole(dto.getRole());
-        }
-
-        if (dto.getStatus() != null) {
-            user.setStatus(dto.getStatus());
         }
 
         return userRepository.save(user);

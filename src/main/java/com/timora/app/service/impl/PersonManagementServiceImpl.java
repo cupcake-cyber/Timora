@@ -4,6 +4,7 @@ import com.timora.app.dto.personidentity.PersonIdentityCreateDTO;
 import com.timora.app.dto.personidentity.PersonIdentityDTO;
 import com.timora.app.dto.customer.CustomerDTO;
 import com.timora.app.dto.person.PersonDTO;
+import com.timora.app.dto.personidentity.PersonIdentityPatchDTO;
 import com.timora.app.dto.supplier.SupplierDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.exception.BusinessException;
@@ -39,14 +40,24 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         User currentUser = securityHelper.getCurrentUser();
 
-        // una persona no puede ser cliente ni proveedor al mismo tiempo
-        if (request.getCustomer() != null && request.getSupplier() != null) {
-            throw new BusinessException("A person cannot be both a Customer and a Supplier");
+        if (request.getPerson() == null) {
+            throw new BusinessException("You need to define a person.");
         }
-        // un cliente no puede ser usuario
-        if (request.getUser() != null && request.getCustomer() != null) {
-            throw new BusinessException("A Customer cannot be a User");
+
+        boolean hasUser = request.getUser() != null;
+        boolean hasCustomer = request.getCustomer() != null;
+        boolean hasSupplier = request.getSupplier() != null;
+
+        if (!hasUser && !hasCustomer && !hasSupplier) {
+            throw new BusinessException("A person must be created as a User, Supplier or Customer.");
         }
+        if (hasCustomer && hasUser) {
+            throw new BusinessException("A customer cannot be a user.");
+        }
+        if (hasCustomer && hasSupplier) {
+            throw new BusinessException("A customer cannot be a supplier.");
+        }
+
 
         //Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
@@ -79,58 +90,122 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 ? supplierService.create(person, request.getSupplier())
                 : null;
 
-
-
-
         return toDTO(person, user, customer, supplier);
     }
 
-    public PersonIdentityDTO patch(PersonIdentityDTO request){
+    @Override
+    @Transactional
+    public PersonIdentityDTO patch(Long id, PersonIdentityPatchDTO request) {
+
         User currentUser = securityHelper.getCurrentUser();
 
-        //Se omite cualquier permiso de ser owner
+        Person current = personService.findById(id);
+
+        // Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
-            //Se comprueba que sean de la misma compañia
-            if (!currentUser.getCompany().getId().equals(request.getPerson().getCompanyId())){
+            // Se comprueba que sean de la misma compañia
+            if (!currentUser.getCompany().getId().equals(current.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
-            }else{
-                //Se omite revisar que solo sea cliente si el user es admin
-                if(!auth.isAdmin(currentUser)){
-                    //si no es customer no pasa
-                    if(request.getCustomer() == null){
+            } else {
+                // Se omite revisar que solo sea cliente si el user es admin
+                if (!auth.isAdmin(currentUser)) {
+
+                    // si no es customer no pasa
+                    if (request.getCustomer() == null) {
                         throw new ForbiddenException("You are not allowed to perform this action");
                     }
-                    //si no es el mismo no pasa
-                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
-                    if(!request.getPerson().getId().equals(currentUser.getId())){
+                    // si no es el mismo no pasa
+                    if (!current.getId().equals(currentUser.getId())) {
                         throw new ForbiddenException("You are not allowed to perform this action");
                     }
                 }
             }
         }
 
-        Person person = personService.patch(request.getPerson().getId(), request.getPerson());
+        boolean hasUser = current.getUser() != null;
+        boolean hasCustomer = current.getCustomer() != null;
+        boolean hasSupplier = current.getSupplier() != null;
+
+        boolean requestUser = request.getUser() != null;
+        boolean requestCustomer = request.getCustomer() != null;
+        boolean requestSupplier = request.getSupplier() != null;
+
+        // Un Customer no puede dejar de ser Customer ni convertirse en otro tipo.
+        if (hasCustomer != requestCustomer) {
+            throw new BusinessException("The customer relationship cannot be modified through this endpoint.");
+        }
+
+        // Nunca se puede quitar un User.
+        if (hasUser && !requestUser) {
+            throw new BusinessException("A user cannot be removed.");
+        }
+
+        // Solo un Supplier puede convertirse en User.
+        if (!hasUser && requestUser && !hasSupplier) {
+            throw new BusinessException("Only a supplier can be promoted to a user.");
+        }
+        // Customer nunca puede coexistir con User.
+        if (requestCustomer && requestUser) {
+            throw new BusinessException("A customer cannot be a user.");
+        }
+
+        // Customer nunca puede coexistir con Supplier.
+        if (requestCustomer && requestSupplier) {
+            throw new BusinessException("A customer cannot be a supplier.");
+        }
+
+        Person person = personService.patch(id, request.getPerson());
 
         User user = null;
-
         if (request.getUser() != null) {
-            user = userService.patch(request.getUser().getId(), request.getUser());
+            user = userService.patch(person.getUser().getId(), request.getUser());
         }
 
         Customer customer = null;
         if (request.getCustomer() != null) {
-            customer = customerService.patch(request.getCustomer().getId(), request.getCustomer());
+            customer = customerService.patch(person.getCustomer().getId(), request.getCustomer());
         }
 
         Supplier supplier = null;
-
         if (request.getSupplier() != null) {
-            supplier = supplierService.patch(request.getSupplier().getId(), request.getSupplier());
+            supplier = supplierService.patch(person.getSupplier().getId(), request.getSupplier());
         }
 
-        return toDTO(person,user,customer,supplier);
+        return toDTO(person, user, customer, supplier);
     }
 
+    @Override
+    @Transactional
+    public void delete(Long personId) {
+
+        User currentUser = securityHelper.getCurrentUser();
+
+        Person person = personService.findById(personId);
+
+        //Se omite cualquier permiso de ser owner
+        if (!auth.isOwner(currentUser)) {
+            //Se comprueba que sean de la misma compañia
+            if (!currentUser.getCompany().getId().equals(person.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }else{
+                //Se omite revisar que solo sea cliente si el user es admin
+                if(!auth.isAdmin(currentUser)){
+                    //si no es customer no pasa
+                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
+                    if(person.getCustomer() == null){
+                        throw new ForbiddenException("You are not allowed to perform this action");
+                    }
+                }
+            }
+        }
+
+
+        User user = person.getUser();
+        personService.delete(personId);
+        if (user != null) {
+            userService.delete(user.getId());
+        }
+    }
 //    @Override
 //    public List<PersonResponseDTO> getAll() {
 //
@@ -158,82 +233,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 //        return mapToDTO(person);
 //    }
 //
-//    @Override
-//    @Transactional
-//    public PersonResponseDTO update(Long id, UpdatePersonRequest request) {
-//
-//        Person person = personRepository.findById(id)
-//                .orElseThrow(() -> new NotFoundException("Person not found"));
-//
-//        User currentUser = getCurrentUser();
-//
-//        authorizePersonAccess(currentUser, person);
-//
-//        if (request.getFirstName() != null)
-//            person.setFirstName(request.getFirstName());
-//
-//        if (request.getLastName() != null)
-//            person.setLastName(request.getLastName());
-//
-//        if (request.getPhone() != null)
-//            person.setPhone(request.getPhone());
-//
-//        if (request.getEmail() != null)
-//            person.setEmail(request.getEmail());
-//
-//        if (request.getAddress() != null)
-//            person.setAddress(request.getAddress());
-//
-//        if (Boolean.TRUE.equals(request.getUpdateUser())) {
-//
-//            if (currentUser.getGlobalRole() == GlobalRole.USER) {
-//                throw new ForbiddenException("USER cannot modify accounts");
-//            }
-//
-//            if (request.getUser() != null) {
-//
-//                if (person.getUser() == null) {
-//                    User user = userService.createUser(person, request.getUser());
-//                    person.setUser(user);
-//                } else {
-//
-//                    User user = person.getUser();
-//
-//                    if (request.getUser().getLoginEmail() != null) {
-//                        user.setLoginEmail(request.getUser().getLoginEmail());
-//                    }
-//
-//                    if (request.getUser().getGlobalRole() != null) {
-//                        user.setGlobalRole(
-//                                GlobalRole.valueOf(request.getUser().getGlobalRole())
-//                        );
-//                    }
-//                }
-//            }
-//        }
-//
-//        return mapToDTO(personRepository.save(person));
-//    }
-//
-//    @Override
-//    @Transactional
-//    public void delete(Long id) {
-//
-//        Person person = personRepository.findById(id)
-//                .orElseThrow(() -> new NotFoundException("Person not found"));
-//
-//        User currentUser = getCurrentUser();
-//
-//        authorizeDeleteAccess(currentUser, person);
-//
-//        person.setStatus(PersonStatus.INACTIVE);
-//
-//        if (person.getUser() != null) {
-//            person.getUser().setStatus(UserStatus.INACTIVE);
-//        }
-//
-//        personRepository.save(person);
-//    }
 //
 //    private void authorizePersonAccess(User currentUser, Person target) {
 //

@@ -2,14 +2,10 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.customer.CustomerCreateDTO;
 import com.timora.app.dto.customer.CustomerDTO;
-import com.timora.app.exception.BusinessException;
-import com.timora.app.exception.ForbiddenException;
+import com.timora.app.dto.customer.CustomerPatchDTO;
 import com.timora.app.model.Customer;
 import com.timora.app.model.Person;
-import com.timora.app.model.User;
 import com.timora.app.repository.CustomerRepository;
-import com.timora.app.security.AccessControlService;
-import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CustomerService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -40,7 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
     @Override
     @Transactional
-    public Customer patch(Long id, CustomerDTO dto) {
+    public Customer patch(Long id, CustomerPatchDTO dto) {
 
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
@@ -51,16 +47,6 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customer;
     }
-//
-//    @Override
-//    public void deleteByPersonId(Long personId) {
-//        customerRepository.deleteByPersonId(personId);
-//    }
-//
-//    @Override
-//    public boolean existsByPerson(Long personId) {
-//        return customerRepository.existsByPersonId(personId);
-//    }
 
     private CustomerDTO toDTO(Customer customer) {
 

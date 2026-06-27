@@ -2,13 +2,12 @@ package com.timora.app.controller;
 
 import com.timora.app.dto.personidentity.PersonIdentityCreateDTO;
 import com.timora.app.dto.personidentity.PersonIdentityDTO;
+import com.timora.app.dto.personidentity.PersonIdentityPatchDTO;
 import com.timora.app.service.PersonManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,8 +22,14 @@ public class PersonManagementController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<PersonIdentityDTO> patch(@RequestBody PersonIdentityDTO dto) {
-        return ResponseEntity.ok(personManagementService.patch(dto));
+    public ResponseEntity<PersonIdentityDTO> patch(@PathVariable Long id,@RequestBody PersonIdentityPatchDTO dto) {
+        return ResponseEntity.ok(personManagementService.patch(id,dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        personManagementService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -38,17 +43,8 @@ public class PersonManagementController {
 //        return personManagementService.getById(id);
 //    }
 //
-//    @PatchMapping("/{id}")
-//    public PersonIdentityDTO update(@PathVariable Long id,
-//                                    @RequestBody UpdatePersonRequest request) {
-//        return personManagementService.update(id, request);
-//    }
 //
-//    @DeleteMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void delete(@PathVariable Long id) {
-//        personManagementService.delete(id);
-//    }
+
 
 
 }

@@ -2,11 +2,9 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.supplier.SupplierCreateDTO;
 import com.timora.app.dto.supplier.SupplierDTO;
-import com.timora.app.exception.BusinessException;
-import com.timora.app.exception.ForbiddenException;
+import com.timora.app.dto.supplier.SupplierPatchDTO;
 import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
-import com.timora.app.model.User;
 import com.timora.app.repository.SupplierRepository;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
@@ -44,7 +42,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     @Transactional
-    public Supplier patch(Long id, SupplierDTO dto) {
+    public Supplier patch(Long id, SupplierPatchDTO dto) {
 
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
