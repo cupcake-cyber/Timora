@@ -16,8 +16,9 @@ public enum Permission {
     SERVICE_UPDATE,
     SERVICE_DELETE,
 
-    CLIENT_CREATE,
-    CLIENT_READ,
-    CLIENT_UPDATE,
-    CLIENT_DELETE
+// inecesarios si clientas sera visto por todos
+//    CLIENT_CREATE,
+//    CLIENT_READ,
+//    CLIENT_UPDATE,
+//    CLIENT_DELETE
 }

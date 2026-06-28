@@ -60,7 +60,6 @@ public class Person {
     @Column(name = "phone")
     private String phone;
 
-    @NotBlank
     @Email
     @Column(name = "email", nullable = false, unique = true)
     private String email;
