@@ -1,5 +1,6 @@
 package com.timora.app.controller;
 
+import com.timora.app.dto.usersupplierpermission.UserPermissionMapDTO;
 import com.timora.app.dto.usersupplierpermission.UserSupplierPermissionCreateDTO;
 import com.timora.app.dto.usersupplierpermission.UserSupplierPermissionDTO;
 import com.timora.app.service.UserSupplierPermissionService;
@@ -42,5 +43,11 @@ public class UserSupplierPermissionController {
 
         userSupplierPermissionService.delete(dto);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/user/{userId}/map")
+    public ResponseEntity<UserPermissionMapDTO> getPermissionMap(@PathVariable Long userId) {
+        return ResponseEntity.ok(
+                userSupplierPermissionService.getPermissionMap(userId)
+        );
     }
 }

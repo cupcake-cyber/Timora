@@ -5,6 +5,7 @@ import com.timora.app.dto.personidentity.PersonIdentityDTO;
 import com.timora.app.dto.customer.CustomerDTO;
 import com.timora.app.dto.person.PersonDTO;
 import com.timora.app.dto.personidentity.PersonIdentityPatchDTO;
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.dto.supplier.SupplierDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.exception.BusinessException;
@@ -50,7 +51,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     @Transactional
     public PersonIdentityDTO create(PersonIdentityCreateDTO request) {
 
-        User currentUser = securityHelper.getCurrentUser();
+        CurrentUser currentUser = securityHelper.getCurrentUser();
 
         if (request.getPerson() == null) {
             throw new BusinessException("You need to define a person.");
@@ -86,7 +87,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         //Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
             //Se comprueba que sean de la misma compañia
-            if (!currentUser.getCompany().getId().equals(request.getPerson().getCompanyId())){
+            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())){
                 throw new ForbiddenException("You are not allowed to perform this action");
             }else{
                 //Se omite revisar que solo sea cliente si el user es admin
@@ -121,14 +122,14 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     @Transactional
     public PersonIdentityDTO patch(Long id, PersonIdentityPatchDTO request) {
 
-        User currentUser = securityHelper.getCurrentUser();
+        CurrentUser currentUser = securityHelper.getCurrentUser();
 
         Person current = personService.findById(id);
 
         // Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
             // Se comprueba que sean de la misma compañia
-            if (!currentUser.getCompany().getId().equals(current.getCompany().getId())) {
+            if (!currentUser.getCompanyId().equals(current.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             } else {
                 // Se omite revisar que solo sea cliente si el user es admin
@@ -139,7 +140,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                         throw new ForbiddenException("You are not allowed to perform this action");
                     }
                     // si no es el mismo no pasa
-                    if (!current.getId().equals(currentUser.getId())) {
+                    if (!current.getId().equals(currentUser.getPersonId())) {
                         throw new ForbiddenException("You are not allowed to perform this action");
                     }
                 }
@@ -202,14 +203,14 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     @Transactional
     public void delete(Long personId) {
 
-        User currentUser = securityHelper.getCurrentUser();
+        CurrentUser currentUser = securityHelper.getCurrentUser();
 
         Person person = personService.findById(personId);
 
         //Se omite cualquier permiso de ser owner
         if (!auth.isOwner(currentUser)) {
             //Se comprueba que sean de la misma compañia
-            if (!currentUser.getCompany().getId().equals(person.getCompany().getId())) {
+            if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }else{
                 //Se omite revisar que solo sea cliente si el user es admin
@@ -234,14 +235,14 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     @Override
     public List<PersonIdentityDTO> getAll() {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
 
         List<Person> persons;
 
         if (auth.isOwner(user)) {
             persons = personService.findAll();
         }else{
-            persons = personService.findByCompanyId(user.getCompany().getId());
+            persons = personService.findByCompanyId(user.getCompanyId());
         }
 
         return persons.stream()
@@ -251,10 +252,10 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
     @Override
     public PersonIdentityDTO getById(Long personId) {
-        User currentUser = securityHelper.getCurrentUser();
+        CurrentUser currentUser = securityHelper.getCurrentUser();
         Person person = personService.findById(personId);
         if (!auth.isOwner(currentUser)) {
-            if (!currentUser.getCompany().getId().equals(person.getCompany().getId())) {
+            if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }
         }

@@ -3,6 +3,7 @@ package com.timora.app.service.impl;
 import com.timora.app.dto.company.CompanyCreateDTO;
 import com.timora.app.dto.company.CompanyDTO;
 import com.timora.app.dto.company.CompanyPatchDTO;
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
@@ -32,7 +33,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public CompanyDTO create(CompanyCreateDTO companyDTO) {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
         auth.requireOwner(user);
 
         if (companyRepository.existsByRuc(companyDTO.getRuc())) {
@@ -60,7 +61,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public List<CompanyDTO> getAll() {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
         auth.requireOwner(user);
 
         List<Company> companies = companyRepository.findByStatus(CompanyStatus.ACTIVE);
@@ -71,7 +72,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public CompanyDTO getById(Long id) {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
         auth.requireSameCompany(user, id);
 
         Company company = companyRepository.findById(id)
@@ -84,7 +85,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public void delete(Long id) {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
         auth.requireOwner(user);
 
         Company company = companyRepository.findById(id)
@@ -98,7 +99,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public CompanyDTO patch(Long id, CompanyPatchDTO updatedCompany) {
 
-        User user = securityHelper.getCurrentUser();
+        CurrentUser user = securityHelper.getCurrentUser();
 
         if (!auth.isOwner(user)) {
 
@@ -106,8 +107,7 @@ public class CompanyServiceImpl implements CompanyService {
                 throw new ForbiddenException("USER cannot update companies");
             }
 
-            if (user.getCompany() == null ||
-                    !user.getCompany().getId().equals(id)) {
+            if (user.getCompanyId().equals(id)) {
                 throw new ForbiddenException("ADMIN can only update their own company");
             }
         }
