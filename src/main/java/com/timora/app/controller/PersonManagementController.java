@@ -39,6 +39,10 @@ public class PersonManagementController {
         return ResponseEntity.ok(personManagementService.getAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PersonIdentityDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(personManagementService.getById(id));
+    }
 
 
 }
