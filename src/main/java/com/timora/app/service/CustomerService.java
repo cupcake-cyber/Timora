@@ -1,19 +1,13 @@
 package com.timora.app.service;
 
-import com.timora.app.dto.CreatePersonRequest;
+import com.timora.app.dto.customer.CustomerCreateDTO;
+import com.timora.app.dto.customer.CustomerDTO;
+import com.timora.app.dto.customer.CustomerPatchDTO;
 import com.timora.app.model.Customer;
 import com.timora.app.model.Person;
 
-import java.util.List;
-import java.util.Optional;
-
 public interface CustomerService {
-
-    Customer createCustomer(Person person, CreatePersonRequest.CustomerData data);
-
-    Customer updateCustomer(Person person, CreatePersonRequest.CustomerData data);
-
-    void deleteByPersonId(Long personId);
-
-    boolean existsByPerson(Long personId);
+    Customer create(Person person, CustomerCreateDTO customer);
+    Customer findById(Long id);
+    Customer patch(Long id, CustomerPatchDTO dto);
 }

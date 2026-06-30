@@ -1,5 +1,6 @@
 package com.timora.app.security;
 
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
@@ -14,27 +15,51 @@ public class AccessControlService {
     // =========================
 
     public void requireOwner(User user) {
-        if (user.getGlobalRole() != GlobalRole.OWNER) {
+        if (user.getRole() != GlobalRole.OWNER) {
+            throw new ForbiddenException("Only OWNER allowed");
+        }
+    }
+    public void requireOwner(CurrentUser user) {
+        if (user.getRole() != GlobalRole.OWNER) {
             throw new ForbiddenException("Only OWNER allowed");
         }
     }
 
     public void requireAdminOrOwner(User user) {
-        if (user.getGlobalRole() == GlobalRole.USER) {
+        if (user.getRole() == GlobalRole.USER) {
+            throw new ForbiddenException("Insufficient permissions");
+        }
+    }
+    public void requireAdminOrOwner(CurrentUser user) {
+        if (user.getRole() == GlobalRole.USER) {
             throw new ForbiddenException("Insufficient permissions");
         }
     }
 
+
     public boolean isOwner(User user) {
-        return user.getGlobalRole() == GlobalRole.OWNER;
+        return user.getRole() == GlobalRole.OWNER;
     }
 
     public boolean isAdmin(User user) {
-        return user.getGlobalRole() == GlobalRole.ADMIN;
+        return user.getRole() == GlobalRole.ADMIN;
     }
 
     public boolean isUser(User user) {
-        return user.getGlobalRole() == GlobalRole.USER;
+        return user.getRole() == GlobalRole.USER;
+    }
+
+
+    public boolean isOwner(CurrentUser user) {
+        return user.getRole() == GlobalRole.OWNER;
+    }
+
+    public boolean isAdmin(CurrentUser user) {
+        return user.getRole() == GlobalRole.ADMIN;
+    }
+
+    public boolean isUser(CurrentUser user) {
+        return user.getRole() == GlobalRole.USER;
     }
 
     // =========================
@@ -47,6 +72,14 @@ public class AccessControlService {
 
         if (user.getCompany() == null ||
                 !user.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("Different company access denied");
+        }
+    }
+    public void requireSameCompany(CurrentUser user, Long companyId) {
+
+        if (isOwner(user)) return;
+
+        if (user.getCompanyId().equals(companyId)) {
             throw new ForbiddenException("Different company access denied");
         }
     }

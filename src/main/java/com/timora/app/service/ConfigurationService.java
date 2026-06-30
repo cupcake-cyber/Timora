@@ -1,20 +1,13 @@
 package com.timora.app.service;
 
+import com.timora.app.dto.configuration.ConfigurationDTO;
+import com.timora.app.dto.configuration.ConfigurationPatchDTO;
 import com.timora.app.model.Configuration;
-
-import java.util.List;
+import com.timora.app.model.User;
 
 public interface ConfigurationService {
 
-    List<Configuration> findAll();
-
-    Configuration findById(Long id);
-
-    Configuration findByUserId(Long userId);
-
-    Configuration save(Configuration configuration);
-
-    Configuration update(Long id, Configuration configuration);
-
-    void delete(Long id);
+    ConfigurationDTO getMyConfiguration();
+    public Configuration create(User user);
+    ConfigurationDTO updateMyConfiguration(ConfigurationPatchDTO configuration);
 }

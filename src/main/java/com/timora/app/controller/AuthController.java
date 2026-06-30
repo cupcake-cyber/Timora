@@ -1,33 +1,24 @@
 package com.timora.app.controller;
 
-import com.timora.app.dto.AuthResponseDTO;
-import com.timora.app.dto.CurrentUserDTO;
-import com.timora.app.dto.LoginRequest;
+import com.timora.app.dto.security.AuthResponseDTO;
+import com.timora.app.dto.security.CurrentUser;
+import com.timora.app.dto.security.LoginRequest;
 import com.timora.app.model.User;
 import com.timora.app.security.jwt.JwtUtil;
 import com.timora.app.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserService userService;
-
-    public AuthController(
-            AuthenticationManager authenticationManager,
-            JwtUtil jwtUtil,
-            UserService userService
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-        this.userService = userService;
-    }
 
     @PostMapping("/login")
     public AuthResponseDTO login(@RequestBody LoginRequest request) {
@@ -39,11 +30,11 @@ public class AuthController {
                 )
         );
 
-        User user = userService.findByLoginEmail(request.getEmail());
+        User user = userService.findByEmail(request.getEmail());
 
-        String token = jwtUtil.generateToken(user.getLoginEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        CurrentUserDTO currentUser = userService.buildCurrentUser(user);
+        CurrentUser currentUser = userService.buildCurrentUser(user);
 
         return new AuthResponseDTO(
                 token,

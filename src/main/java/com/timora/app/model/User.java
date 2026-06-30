@@ -28,13 +28,15 @@ public class User {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false, unique = true)
     private Person person;
 
     @NotBlank
     @Email
-    @Column(name = "login_email", nullable = false, unique = true)
-    private String loginEmail;
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
 
     @NotBlank
     @Column(name = "password_hash", nullable = false)
@@ -48,7 +50,7 @@ public class User {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "global_role", nullable = false)
-    private GlobalRole globalRole;
+    private GlobalRole role;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;

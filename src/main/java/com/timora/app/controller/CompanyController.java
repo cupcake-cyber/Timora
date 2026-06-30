@@ -1,52 +1,46 @@
 package com.timora.app.controller;
 
-import com.timora.app.model.Company;
+import com.timora.app.dto.company.CompanyCreateDTO;
+import com.timora.app.dto.company.CompanyDTO;
+import com.timora.app.dto.company.CompanyPatchDTO;
 import com.timora.app.service.CompanyService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/companies")
 public class CompanyController {
 
     private final CompanyService companyService;
 
-    public CompanyController(CompanyService companyService) {
-        this.companyService = companyService;
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Company createCompany(@RequestBody Company company) {
-        return companyService.createCompany(company);
-    }
-
     @GetMapping
-    public List<Company> getAllCompanies() {
-        return companyService.getAllCompanies();
+    public ResponseEntity<List<CompanyDTO>> getAll() {
+        return ResponseEntity.ok(companyService.getAll());
     }
 
     @GetMapping("/{id}")
-    public Company getCompanyById(@PathVariable Long id) {
-        return companyService.getCompanyById(id);
+    public ResponseEntity<CompanyDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(companyService.getById(id));
     }
 
-    // =========================
-    // PATCH (UPDATED)
-    // =========================
     @PatchMapping("/{id}")
-    public Company patchCompany(
-            @PathVariable Long id,
-            @RequestBody Company company
-    ) {
-        return companyService.patchCompany(id, company);
+    public ResponseEntity<CompanyDTO> patch(@PathVariable Long id, @RequestBody CompanyPatchDTO dto) {
+        return ResponseEntity.ok(companyService.patch(id, dto));
+    }
+
+    @PostMapping
+    public ResponseEntity<CompanyDTO> create(@RequestBody CompanyCreateDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyService.create(dto));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompany(@PathVariable Long id) {
-        companyService.deleteCompanyById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        companyService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

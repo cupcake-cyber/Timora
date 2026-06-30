@@ -56,47 +56,6 @@ INSERT INTO supplier (company_id, person_id, specialty, notes, created_at) VALUE
 (2, 3, 'Barber A', 'Supplier A main', NOW()),
 (3, 6, 'Barber B', 'Supplier B main', NOW());
 
--- =========================
--- ROLES
--- =========================
-INSERT INTO role (company_id, name, description, created_at) VALUES
-(1, 'OWNER_ROLE', 'Owner role', NOW()),
-(2, 'ADMIN', 'Admin role', NOW()),
-(2, 'SUPPLIER_ADMIN', 'Supplier admin', NOW()),
-(3, 'ADMIN', 'Admin role', NOW()),
-(3, 'SUPPLIER_ADMIN', 'Supplier admin', NOW());
-
--- =========================
--- PERMISSIONS
--- =========================
-INSERT INTO permission (code, description) VALUES
-('BOOKING_VIEW', 'Can view bookings'),
-('BOOKING_EDIT', 'Can edit bookings'),
-('BOOKING_CANCEL', 'Can cancel bookings'),
-('SERVICE_EDIT', 'Can edit services'),
-('AVAILABILITY_EDIT', 'Can edit availability');
-
--- =========================
--- ROLE PERMISSIONS (MINIMAL)
--- =========================
-INSERT INTO role_permission (role_id, permission_id) VALUES
--- ADMIN (assume role_id 2,4)
-(2,1),(2,2),(2,3),(2,4),(2,5),
-(4,1),(4,2),(4,3),(4,4),(4,5),
-
--- SUPPLIER_ADMIN (assume role_id 3,5)
-(3,1),(3,3),(3,5),
-(5,1),(5,3),(5,5);
-
--- =========================
--- USER SUPPLIER ROLE
--- =========================
-INSERT INTO user_supplier_role (user_id, supplier_id, role_id, assigned_by_user_id, created_at) VALUES
--- Company A
-(3, 1, 3, 2, NOW()),
-
--- Company B
-(6, 2, 5, 5, NOW());
 
 -- =========================
 -- SERVICE (2 per supplier)

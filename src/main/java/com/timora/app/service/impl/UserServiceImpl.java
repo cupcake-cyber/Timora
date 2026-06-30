@@ -1,28 +1,23 @@
 package com.timora.app.service.impl;
 
-import com.timora.app.dto.CreatePersonRequest;
-import com.timora.app.dto.CurrentUserDTO;
-import com.timora.app.dto.UserSummaryDTO;
+
+import com.timora.app.dto.security.CurrentUser;
+import com.timora.app.dto.user.UserCreateDTO;
+import com.timora.app.dto.user.UserDTO;
+import com.timora.app.dto.user.UserPatchDTO;
+import com.timora.app.exception.BusinessException;
 import com.timora.app.model.Person;
 import com.timora.app.model.User;
-import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.UserStatus;
-import com.timora.app.repository.PersonRepository;
 import com.timora.app.repository.UserRepository;
-import com.timora.app.repository.UserSupplierRoleRepository;
-import com.timora.app.service.AuthorizationService;
+import com.timora.app.service.ConfigurationService;
 import com.timora.app.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 
 @Service
 @AllArgsConstructor
@@ -30,89 +25,97 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ConfigurationService configurationService;
 
     @Override
-    public User findByLoginEmail(String email) {
-        return userRepository.findByLoginEmail(email)
+    public User findById(Long id){
+        return  userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
-    public User createUser(Person person, CreatePersonRequest.UserData data) {
+    @Transactional
+    public User create(Person person, UserCreateDTO userDTO) {
 
         User user = new User();
+
         user.setPerson(person);
         user.setCompany(person.getCompany());
-        user.setLoginEmail(data.getLoginEmail());
-        user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
+        user.setEmail(userDTO.getEmail());
+        user.setRole(userDTO.getRole());
         user.setStatus(UserStatus.ACTIVE);
+        user.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
+        User saved  = userRepository.save(user);
+        configurationService.create(user);
 
-        user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
+        return saved;
+    }
+    @Override
+    @Transactional
+    public User patch(Long id, UserPatchDTO dto) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        if (dto.getEmail() != null) {
+
+            if (!dto.getEmail().equals(user.getEmail())
+                    && userRepository.existsByEmail(dto.getEmail())) {
+                throw new BusinessException("Email already exists");
+            }
+
+            user.setEmail(dto.getEmail());
+        }
+
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole());
+        }
 
         return userRepository.save(user);
     }
 
     @Override
-    public User updateUser(User user, CreatePersonRequest.UserData data) {
-
-        if (data.getLoginEmail() != null) {
-            user.setLoginEmail(data.getLoginEmail());
-        }
-
-        if (data.getGlobalRole() != null) {
-            user.setGlobalRole(GlobalRole.valueOf(data.getGlobalRole()));
-        }
-
-        if (data.getPassword() != null) {
-            user.setPasswordHash(passwordEncoder.encode(data.getPassword()));
-        }
-
-        return userRepository.save(user);
+    @Transactional
+    public void delete(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setStatus(UserStatus.INACTIVE);
+        userRepository.save(user);
     }
 
     @Override
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
-    }
+    public CurrentUser buildCurrentUser(User user) {
 
-    @Override
-    public CurrentUserDTO buildCurrentUser(User user) {
-
-        CurrentUserDTO dto = new CurrentUserDTO();
-
-        dto.setId(user.getId());
-        dto.setEmail(user.getLoginEmail());
-
-        String fullName = user.getPerson() != null
-                ? user.getPerson().getFirstName() + " " + user.getPerson().getLastName()
-                : null;
-
-        dto.setFullName(fullName);
-
-        dto.setGlobalRole(user.getGlobalRole());
-        dto.setActive(user.getStatus() != null && user.getStatus().name().equals("ACTIVE"));
+        CurrentUser dto = new CurrentUser();
+        Person person = user.getPerson();
 
         dto.setCompanyId(user.getCompany().getId());
-        dto.setStatus(user.getStatus().name());
 
-        // =========================
-        // FLAGS (ajústalos a tu negocio real)
-        // =========================
+        dto.setPersonId(person.getId());
+        dto.setUserId(user.getId());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setCompanyId(user.getCompany().getId());
 
-        dto.setCompanyAdmin(user.getGlobalRole().name().equals("OWNER")
-                || user.getGlobalRole().name().equals("ADMIN"));
+        return dto;
+    }
 
-        dto.setSupplierUser(user.getPerson() != null && user.getPerson().getSupplier() != null);
+    private UserDTO toDTO(User user) {
 
-        // supplierIds (si tienes relación real)
-        if (user.getPerson() != null && user.getPerson().getSupplier() != null) {
-            dto.setSupplierIds(List.of(user.getPerson().getSupplier().getId()));
-        } else {
-            dto.setSupplierIds(List.of());
-        }
+        UserDTO dto = new UserDTO();
 
-        // permisos (placeholder por ahora)
-        dto.setSupplierPermissions(Map.of());
+        dto.setId(user.getId());
+        dto.setCompanyId(user.getCompany().getId());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setLastLoginAt(user.getLastLoginAt());
+        dto.setCreatedDate(user.getCreatedAt());
+        dto.setStatus(user.getStatus());
 
         return dto;
     }

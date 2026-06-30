@@ -1,14 +1,15 @@
 package com.timora.app.service;
 
-import com.timora.app.model.Company;
+import com.timora.app.dto.company.CompanyCreateDTO;
+import com.timora.app.dto.company.CompanyDTO;
+import com.timora.app.dto.company.CompanyPatchDTO;
 
 import java.util.List;
 
 public interface CompanyService {
-    Company createCompany(Company company);
-    List<Company> getAllCompanies();
-    Company getCompanyById(Long id);
-    Company updateCompany(Long id, Company company);
-    void deleteCompanyById(Long id);
-    Company patchCompany(Long id, Company company);
+    CompanyDTO create(CompanyCreateDTO company);
+    List<CompanyDTO> getAll();
+    CompanyDTO getById(Long id);
+    CompanyDTO patch(Long id, CompanyPatchDTO company);
+    void delete(Long id);
 }
