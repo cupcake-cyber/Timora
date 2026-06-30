@@ -85,9 +85,9 @@ INSERT INTO configuration (
     reminder_minutes_before,
     app_channel_enabled,
     email_channel_enabled,
-    startTimeSilence,
-    endTimeSilence,
-    darkMode
+    start_time_silence ,
+    end_time_silence ,
+    dark_mode
 ) VALUES
 
 -- OWNER (1)
@@ -104,3 +104,7 @@ INSERT INTO configuration (
 
 -- USER SUPPLIER (5)
 (5, true, true, true, true, 5, true, true, '23:00:00', '06:00:00', true);
+
+
+
+
