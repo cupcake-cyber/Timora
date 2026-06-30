@@ -108,7 +108,7 @@ CREATE TABLE service (
                          description TEXT,
                          price DECIMAL(10,2),
                          duration INT,
-                         status VARCHAR(20),
+                         status VARCHAR(30),
                          created_at DATETIME,
 
                          FOREIGN KEY (company_id) REFERENCES company(id),
@@ -183,6 +183,7 @@ CREATE TABLE payment (
 CREATE TABLE notification (
                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
                               user_id BIGINT,
+                              is_read bool,
                               type VARCHAR(20),
                               message TEXT,
                               status VARCHAR(20),
@@ -207,9 +208,9 @@ CREATE TABLE configuration (
                                app_channel_enabled BOOLEAN,
                                email_channel_enabled BOOLEAN,
 
-                               startTimeSilence TIME,
-                               endTimeSilence TIME,
-                               darkMode BOOLEAN,
+                               start_time_silence  TIME,
+                               end_time_silence  TIME,
+                               dark_mode  BOOLEAN,
 
                                FOREIGN KEY (user_id) REFERENCES user(id)
 );
