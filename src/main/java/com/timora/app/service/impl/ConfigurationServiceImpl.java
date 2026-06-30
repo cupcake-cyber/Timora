@@ -2,40 +2,72 @@ package com.timora.app.service.impl;
 
 import com.timora.app.dto.configuration.ConfigurationDTO;
 import com.timora.app.dto.configuration.ConfigurationPatchDTO;
+import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.model.Configuration;
 import com.timora.app.model.User;
+import com.timora.app.repository.CompanyRepository;
 import com.timora.app.repository.ConfigurationRepository;
+import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.ConfigurationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
 
 @Service
 @AllArgsConstructor
 public class ConfigurationServiceImpl implements ConfigurationService {
 
     private final ConfigurationRepository configurationRepository;
-
+    private final SecurityHelper securityHelper;
     @Override
-    public ConfigurationDTO findByUserId(Long userId) {
-        Configuration saved = configurationRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Configuration not found with User id: " + userId));
+    public ConfigurationDTO getMyConfiguration() {
+        CurrentUser user = securityHelper.getCurrentUser();
+
+        Configuration saved = configurationRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Configuration not found"));
         return toDTO(saved);
     }
 
     @Override
     public Configuration create(User user) {
+
         Configuration configuration = new Configuration();
+
+        // USER
         configuration.setUser(user);
+
+        // NOTIFICATIONS DEFAULTS
+        configuration.setNotifyAppointments(true);
+        configuration.setNotifyReservations(true);
+        configuration.setNotifyCancellations(true);
+        configuration.setNotifyReminders(true);
+
+        // CHANNELS DEFAULTS
+        configuration.setAppChannelEnabled(true);
+        configuration.setEmailChannelEnabled(true);
+
+        // DEFAULT REMINDER CONFIG
+        configuration.setReminderMinutesBefore(30);
+
+        // SILENCE TIME DEFAULTS (puedes ajustar)
+        configuration.setStartTimeSilence(LocalTime.of(22, 0));
+        configuration.setEndTimeSilence(LocalTime.of(7, 0));
+
+        // UI SETTINGS DEFAULTS
+        configuration.setDarkMode(false);
+
         return configurationRepository.save(configuration);
     }
 
     @Override
     @Transactional
-    public ConfigurationDTO patch(Long userId, ConfigurationPatchDTO updatedConfiguration) {
+    public ConfigurationDTO updateMyConfiguration(ConfigurationPatchDTO updatedConfiguration) {
+        CurrentUser user = securityHelper.getCurrentUser();
 
-        Configuration existingConfiguration = configurationRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Configuration not found with userId: " + userId));
+        Configuration existingConfiguration = configurationRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Configuration not found"));
 
         if (updatedConfiguration.getNotifyAppointments() != null) {
             existingConfiguration.setNotifyAppointments(updatedConfiguration.getNotifyAppointments());
@@ -76,6 +108,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         if (updatedConfiguration.getDarkMode() != null) {
             existingConfiguration.setDarkMode(updatedConfiguration.getDarkMode());
         }
+
         Configuration saved = configurationRepository.save(existingConfiguration);
         return toDTO(saved);
     }
@@ -97,4 +130,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
         return dto;
     }
+
+
 }

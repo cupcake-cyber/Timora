@@ -213,9 +213,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             user = userService.patch(person.getUser().getId(), dto);
         }
 
-        // =========================
-        // CUSTOMER PATCH (solo si viene explícito)
-        // =========================
         Customer customer = null;
         if (request.getCustomer() != null) {
 

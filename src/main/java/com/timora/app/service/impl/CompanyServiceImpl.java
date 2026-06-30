@@ -64,8 +64,8 @@ public class CompanyServiceImpl implements CompanyService {
         CurrentUser user = securityHelper.getCurrentUser();
         auth.requireOwner(user);
 
-        List<Company> companies = companyRepository.findByStatus(CompanyStatus.ACTIVE);
-
+//        List<Company> companies = companyRepository.findByStatus(CompanyStatus.ACTIVE);
+        List<Company> companies = companyRepository.findAll();
         return companies.stream().map(this::toDTO).toList();
     }
 

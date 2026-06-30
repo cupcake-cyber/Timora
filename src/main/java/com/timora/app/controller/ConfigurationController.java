@@ -11,15 +11,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/configurations")
 public class ConfigurationController {
+
     private final ConfigurationService configurationService;
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ConfigurationDTO> getByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(configurationService.findByUserId(userId));
+    @GetMapping
+    public ResponseEntity<ConfigurationDTO> getMyConfiguration() {
+        return ResponseEntity.ok(configurationService.getMyConfiguration());
     }
 
-    @PatchMapping("/user/{userId}")
-    public ResponseEntity<ConfigurationDTO> update(@PathVariable Long userId, @RequestBody ConfigurationPatchDTO configuration) {
-        return ResponseEntity.ok(configurationService.patch(userId, configuration));
+    @PatchMapping
+    public ResponseEntity<ConfigurationDTO> updateMyConfiguration(
+            @RequestBody ConfigurationPatchDTO configuration
+    ) {
+        return ResponseEntity.ok(configurationService.updateMyConfiguration(configuration));
     }
 }

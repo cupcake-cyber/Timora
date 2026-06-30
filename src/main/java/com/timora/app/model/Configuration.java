@@ -45,13 +45,13 @@ public class Configuration {
     @Column(name = "email_channel_enabled")
     private Boolean emailChannelEnabled;
 
-    @Column(name = "start_time_silence")
+    @Column(name = "start_time_silence ")
     private LocalTime startTimeSilence;
 
-    @Column(name = "end_time_silence")
+    @Column(name = "end_time_silence ")
     private LocalTime endTimeSilence;
 
-    @Column(name = "dark_mode")
+    @Column(name = "dark_mode ")
     private Boolean darkMode;
 
 }
