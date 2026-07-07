@@ -79,7 +79,7 @@ public class AccessControlService {
 
         if (isOwner(user)) return;
 
-        if (user.getCompanyId().equals(companyId)) {
+        if (!user.getCompanyId().equals(companyId)) {
             throw new ForbiddenException("Different company access denied");
         }
     }

@@ -22,12 +22,12 @@ public class UserSupplierPermission {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("supplierId")
-    @JoinColumn(name = "supplier_id", nullable = false)
+    @JoinColumn(name = "supplier_id", nullable = false, insertable = false, updatable = false)
     private Supplier supplier;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,6 +35,6 @@ public class UserSupplierPermission {
     private User assignedBy;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

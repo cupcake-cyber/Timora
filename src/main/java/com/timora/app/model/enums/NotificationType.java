@@ -5,5 +5,5 @@ public enum NotificationType {
     CANCELLATION,
     REMINDER,
     SYSTEM,
-    PAYMENT
+    PAYMENT,
 }

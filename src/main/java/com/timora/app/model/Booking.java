@@ -20,7 +20,6 @@ public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,7 +35,7 @@ public class Booking {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id")
+    @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdByUser;
 
     @Column(name = "start_time", nullable = false)
@@ -47,11 +46,11 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private BookingStatus status;
+    private BookingStatus status = BookingStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private BookingType type;
+    private BookingType type = BookingType.APPOINTMENT;
 
     @Column(name = "name")
     private String name;
@@ -60,6 +59,6 @@ public class Booking {
     private String description;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

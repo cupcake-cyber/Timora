@@ -1,15 +1,13 @@
 package com.timora.app.dto.company;
 
 import com.timora.app.model.enums.CompanyStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class CompanyDTO {
     private Long id;
     private String name;

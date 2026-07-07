@@ -3,6 +3,7 @@ package com.timora.app.controller;
 import com.timora.app.dto.usersupplierpermission.UserPermissionMapDTO;
 import com.timora.app.dto.usersupplierpermission.UserSupplierPermissionCreateDTO;
 import com.timora.app.dto.usersupplierpermission.UserSupplierPermissionDTO;
+import com.timora.app.model.enums.Permission;
 import com.timora.app.service.UserSupplierPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,14 @@ public class UserSupplierPermissionController {
 
     @DeleteMapping
     public ResponseEntity<Void> delete(
-            @RequestBody UserSupplierPermissionCreateDTO dto) {
+            @RequestParam Long userId,
+            @RequestParam Long supplierId,
+            @RequestParam Permission permission) {
+
+        UserSupplierPermissionCreateDTO dto = new UserSupplierPermissionCreateDTO();
+        dto.setUserId(userId);
+        dto.setSupplierId(supplierId);
+        dto.setPermission(permission);
 
         userSupplierPermissionService.delete(dto);
         return ResponseEntity.noContent().build();

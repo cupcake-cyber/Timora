@@ -3,6 +3,8 @@ package com.timora.app.model;
 import com.timora.app.model.enums.Permission;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,12 +21,13 @@ import java.io.Serializable;
 @Embeddable
 public class UserSupplierPermissionId implements Serializable {
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "supplier_id")
+    @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
-    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "permission", nullable = false)
     private Permission permission;
 }

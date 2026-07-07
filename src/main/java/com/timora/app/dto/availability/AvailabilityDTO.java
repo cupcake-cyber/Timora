@@ -1,9 +1,7 @@
-package com.timora.app.dto;
+package com.timora.app.dto.availability;
 
 import com.timora.app.model.enums.AvailabilityRecurring;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import com.timora.app.model.enums.AvailabilityStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +15,9 @@ import java.time.LocalTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AvailabilityCreateDTO {
-
+public class AvailabilityDTO {
+    private Long companyId;
+    private Long supplierId;
     private LocalDate startDate;
     private LocalDate endDate;
     private DayOfWeek dayOfWeek;
@@ -27,5 +26,6 @@ public class AvailabilityCreateDTO {
     private AvailabilityRecurring recurrenceType;
     private Integer slotDurationMinutes;
     private Integer capacity;
+    private AvailabilityStatus status;
     private String notes;
 }

@@ -71,10 +71,11 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyDTO getById(Long id) {
-
         CurrentUser user = securityHelper.getCurrentUser();
-        auth.requireSameCompany(user, id);
 
+        auth.requireSameCompany(user, id);
+        System.out.println(user.getCompanyId());
+        System.out.println(id);
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company not found"));
 
@@ -103,13 +104,12 @@ public class CompanyServiceImpl implements CompanyService {
 
         if (!auth.isOwner(user)) {
 
-            if (user.getRole() == GlobalRole.USER) {
+            auth.requireSameCompany(user, id);
+
+            if (auth.isUser(user)) {
                 throw new ForbiddenException("USER cannot update companies");
             }
 
-            if (user.getCompanyId().equals(id)) {
-                throw new ForbiddenException("ADMIN can only update their own company");
-            }
         }
 
         Company company = companyRepository.findById(id)

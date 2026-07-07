@@ -25,33 +25,32 @@ public class Configuration {
     private User user;
 
     @Column(name = "notify_appointments")
-    private Boolean notifyAppointments;
+    private Boolean notifyAppointments = true;
 
     @Column(name = "notify_reservations")
-    private Boolean notifyReservations;
+    private Boolean notifyReservations = true;
 
     @Column(name = "notify_cancellations")
-    private Boolean notifyCancellations;
+    private Boolean notifyCancellations = true;
 
     @Column(name = "notify_reminders")
-    private Boolean notifyReminders;
+    private Boolean notifyReminders = true;
 
     @Column(name = "reminder_minutes_before")
-    private Integer reminderMinutesBefore;
+    private Integer reminderMinutesBefore = 30;
 
     @Column(name = "app_channel_enabled")
-    private Boolean appChannelEnabled;
+    private Boolean appChannelEnabled = true;
 
     @Column(name = "email_channel_enabled")
-    private Boolean emailChannelEnabled;
+    private Boolean emailChannelEnabled = true;
 
-    @Column(name = "start_time_silence ")
-    private LocalTime startTimeSilence;
+    @Column(name = "start_time_silence")
+    private LocalTime startTimeSilence = LocalTime.of(22, 0);
 
-    @Column(name = "end_time_silence ")
-    private LocalTime endTimeSilence;
+    @Column(name = "end_time_silence")
+    private LocalTime endTimeSilence = LocalTime.of(7, 0);
 
-    @Column(name = "dark_mode ")
-    private Boolean darkMode;
-
+    @Column(name = "dark_mode")
+    private Boolean darkMode = false;
 }
