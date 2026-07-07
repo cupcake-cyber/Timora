@@ -20,7 +20,6 @@ public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @Column(name = "name", nullable = false)
@@ -40,9 +39,9 @@ public class Company {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private CompanyStatus status;
+    private CompanyStatus status = CompanyStatus.ACTIVE;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

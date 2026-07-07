@@ -19,5 +19,5 @@ public enum Permission {
     CLIENT_CREATE,
     CLIENT_READ,
     CLIENT_UPDATE,
-    CLIENT_DELETE
+    CLIENT_DELETE,
 }

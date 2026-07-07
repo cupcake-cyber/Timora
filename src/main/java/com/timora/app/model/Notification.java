@@ -43,10 +43,4 @@ public class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-//    @PrePersist
-//    public void prePersist() {
-//        this.createdAt = LocalDateTime.now();
-//        if (this.status == null) this.status = NotificationStatus.PENDING;
-//        if (this.isRead == null) this.isRead = false;
-//    }
 }

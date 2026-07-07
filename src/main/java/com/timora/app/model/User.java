@@ -45,17 +45,17 @@ public class User {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private UserStatus status;
+    private UserStatus status = UserStatus.ACTIVE;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "global_role", nullable = false)
-    private GlobalRole role;
+    private GlobalRole role = GlobalRole.USER;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

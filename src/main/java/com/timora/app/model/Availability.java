@@ -24,46 +24,45 @@ public class Availability {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "company_id")
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplier_id", nullable = false)
+    @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date")
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week")
     private DayOfWeek dayOfWeek;
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private LocalTime startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recurrence_type", nullable = false)
-    private AvailabilityRecurring recurrenceType;
+    @Column(name = "recurrence_type")
+    private AvailabilityRecurring recurrenceType = AvailabilityRecurring.NONE;
 
-    @Column(name = "slot_duration_minutes", nullable = false)
+    @Column(name = "slot_duration_minutes")
     private Integer slotDurationMinutes;
 
-    @Column(name = "capacity", nullable = false)
+    @Column(name = "capacity")
     private Integer capacity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private AvailabilityStatus status;
+    private AvailabilityStatus status = AvailabilityStatus.ACTIVE;
 
     @Column(name = "notes")
     private String notes;

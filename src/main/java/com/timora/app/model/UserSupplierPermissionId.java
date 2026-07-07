@@ -21,13 +21,13 @@ import java.io.Serializable;
 @Embeddable
 public class UserSupplierPermissionId implements Serializable {
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "supplier_id")
+    @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "permission")
+    @Column(name = "permission", nullable = false)
     private Permission permission;
 }

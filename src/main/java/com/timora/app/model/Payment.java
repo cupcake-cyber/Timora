@@ -22,7 +22,6 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,21 +29,21 @@ public class Payment {
     private Company company;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "appointment_id", nullable = false)
-    private  Booking booking;
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private PaymentStatus status;
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "method", nullable = false)
-    private PaymentMethod method;
+    private PaymentMethod method = PaymentMethod.CASH;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 }

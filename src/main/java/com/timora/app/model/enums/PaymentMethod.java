@@ -8,5 +8,5 @@ public enum PaymentMethod {
     YAPE,
     PLIN,
     DIGITAL_WALLET,
-    OTHER
+    OTHER,
 }
