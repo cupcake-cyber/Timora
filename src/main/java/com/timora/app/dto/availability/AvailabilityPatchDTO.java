@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -18,9 +17,18 @@ import java.time.LocalTime;
 public class AvailabilityPatchDTO {
     private LocalDate startDate;
     private LocalDate endDate;
-    private DayOfWeek dayOfWeek;
     private LocalTime startTime;
     private LocalTime endTime;
+
+    // Días de la semana como booleanos
+    private Boolean monday;
+    private Boolean tuesday;
+    private Boolean wednesday;
+    private Boolean thursday;
+    private Boolean friday;
+    private Boolean saturday;
+    private Boolean sunday;
+
     private AvailabilityRecurring recurrenceType;
     private Integer slotDurationMinutes;
     private Integer capacity;

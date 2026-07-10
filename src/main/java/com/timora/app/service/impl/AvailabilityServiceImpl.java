@@ -9,31 +9,39 @@ import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Availability;
 import com.timora.app.model.Company;
+import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.enums.AvailabilityStatus;
+import com.timora.app.model.enums.Permission;
 import com.timora.app.repository.AvailabilityRepository;
-import com.timora.app.repository.CompanyRepository;
-import com.timora.app.repository.SupplierRepository;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.AvailabilityService;
+import com.timora.app.service.CompanyService;
+import com.timora.app.service.PersonService;
+import com.timora.app.service.SupplierService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @AllArgsConstructor
 public class AvailabilityServiceImpl implements AvailabilityService {
 
     private final AvailabilityRepository availabilityRepository;
-    private final SupplierRepository supplierRepository;
-    private final CompanyRepository companyRepository;
+    private final CompanyService companyService;
+    private final SupplierService supplierService;
+    private final PersonService personService;
     private final SecurityHelper securityHelper;
     private final AccessControlService auth;
+
+    // =========================
+    // CREATE
+    // =========================
 
     @Override
     @Transactional
@@ -41,48 +49,37 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        // Validar que el companyId existe
+        // =========================
+        // 1. VALIDACIONES BÁSICAS
+        // =========================
+
         if (request.getCompanyId() == null) {
             throw new BusinessException("Company ID is required");
         }
 
-        // Validar que el supplierId existe
         if (request.getSupplierId() == null) {
             throw new BusinessException("Supplier ID is required");
         }
 
-        // Validar que el supplier existe
-        Supplier supplier = supplierRepository.findById(request.getSupplierId())
-                .orElseThrow(() -> new NotFoundException("Supplier not found"));
+        // Usar servicios en lugar de repositorios
+        Supplier supplier = supplierService.findById(request.getSupplierId());
 
-        // Validar que el supplier pertenece a la compañía indicada
         if (!supplier.getCompany().getId().equals(request.getCompanyId())) {
             throw new BusinessException("Supplier does not belong to the specified company");
         }
 
-        // Validar que la compañía existe
-        Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new NotFoundException("Company not found"));
+        Company company = companyService.getByIdEntity(request.getCompanyId());
 
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden operar en su compañía
-            if (!currentUser.getCompanyId().equals(request.getCompanyId())) {
-                throw new ForbiddenException("You are not allowed to perform this action in another company");
-            }
+        // =========================
+        // 2. VALIDACIONES DE FECHAS Y HORARIOS
+        // =========================
 
-            // User no puede crear disponibilidades
-            if (!auth.isAdmin(currentUser)) {
-                throw new ForbiddenException("You are not allowed to create availability");
-            }
+        if (request.getStartDate() == null) {
+            throw new BusinessException("Start date is required");
         }
 
-        // Validar fechas
-        if (request.getStartDate() == null || request.getEndDate() == null) {
-            throw new BusinessException("Start date and end date are required");
-        }
-
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+        if (request.getEndDate() != null &&
+                request.getStartDate().isAfter(request.getEndDate())) {
             throw new BusinessException("Start date must be before end date");
         }
 
@@ -90,7 +87,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             throw new BusinessException("Start date cannot be in the past");
         }
 
-        // Validar tiempo
         if (request.getStartTime() == null || request.getEndTime() == null) {
             throw new BusinessException("Start time and end time are required");
         }
@@ -99,7 +95,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             throw new BusinessException("Start time must be before end time");
         }
 
-        // Validar slot duration y capacity
         if (request.getSlotDurationMinutes() == null || request.getSlotDurationMinutes() <= 0) {
             throw new BusinessException("Slot duration must be greater than 0");
         }
@@ -108,16 +103,71 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             throw new BusinessException("Capacity must be greater than 0");
         }
 
-        // Validar overlapping
-        validateOverlap(request.getSupplierId(), request.getStartDate(), request.getEndDate(), null);
+        // =========================
+        // 3. VALIDACIÓN DE DÍAS SEGÚN RECURRENCIA
+        // =========================
 
-        // Crear la entidad
+        if (request.getRecurrenceType() != null) {
+            switch (request.getRecurrenceType()) {
+                case WEEKLY:
+                    if (!hasAnyDaySelected(request)) {
+                        throw new BusinessException(
+                                "At least one day must be selected for WEEKLY recurrence"
+                        );
+                    }
+                    break;
+                case NONE:
+                    if (hasAnyDaySelected(request)) {
+                        throw new BusinessException(
+                                "Days should not be selected for NONE recurrence"
+                        );
+                    }
+                    break;
+                case DAILY:
+                case MONTHLY:
+                case YEARLY:
+                case CUSTOM:
+                    // Estos tipos ignoran los días booleanos
+                    break;
+            }
+        }
+
+        // =========================
+        // 4. 🔐 CONTROL DE ACCESO
+        // =========================
+
+        checkCreatePermission(currentUser, supplier, request.getCompanyId());
+
+        // =========================
+        // 5. VALIDAR OVERLAPPING
+        // =========================
+
+        validateOverlap(
+                request.getSupplierId(),
+                request.getStartDate(),
+                request.getEndDate(),
+                null
+        );
+
+        // =========================
+        // 6. CREAR ENTIDAD
+        // =========================
+
         Availability availability = new Availability();
         availability.setCompany(company);
         availability.setSupplier(supplier);
         availability.setStartDate(request.getStartDate());
         availability.setEndDate(request.getEndDate());
-        availability.setDayOfWeek(request.getDayOfWeek());
+
+        // Días de la semana
+        availability.setMonday(request.getMonday() != null && request.getMonday());
+        availability.setTuesday(request.getTuesday() != null && request.getTuesday());
+        availability.setWednesday(request.getWednesday() != null && request.getWednesday());
+        availability.setThursday(request.getThursday() != null && request.getThursday());
+        availability.setFriday(request.getFriday() != null && request.getFriday());
+        availability.setSaturday(request.getSaturday() != null && request.getSaturday());
+        availability.setSunday(request.getSunday() != null && request.getSunday());
+
         availability.setStartTime(request.getStartTime());
         availability.setEndTime(request.getEndTime());
         availability.setRecurrenceType(request.getRecurrenceType());
@@ -131,6 +181,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         return toDTO(saved);
     }
 
+    // =========================
+    // PATCH (UPDATE)
+    // =========================
+
     @Override
     @Transactional
     public AvailabilityDTO patch(Long id, AvailabilityPatchDTO request) {
@@ -140,32 +194,32 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Availability availability = availabilityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Availability not found"));
 
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden operar en su compañía
-            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to perform this action in another company");
-            }
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
 
-            // User no puede actualizar disponibilidades
-            if (!auth.isAdmin(currentUser)) {
-                throw new ForbiddenException("You are not allowed to update availability");
-            }
-        }
+        checkUpdatePermission(currentUser, availability);
+
+        // =========================
+        // VALIDACIONES
+        // =========================
 
         // Validar fechas si vienen en el request
-        if (request.getStartDate() != null && request.getEndDate() != null) {
-            if (request.getStartDate().isAfter(request.getEndDate())) {
+        LocalDate startDate = request.getStartDate() != null
+                ? request.getStartDate()
+                : availability.getStartDate();
+        LocalDate endDate = request.getEndDate() != null
+                ? request.getEndDate()
+                : availability.getEndDate();
+
+        if (request.getStartDate() != null || request.getEndDate() != null) {
+            if (startDate.isAfter(endDate)) {
                 throw new BusinessException("Start date must be before end date");
             }
 
-            if (request.getStartDate().isBefore(LocalDate.now())) {
+            if (startDate.isBefore(LocalDate.now())) {
                 throw new BusinessException("Start date cannot be in the past");
             }
-
-            // Validar overlapping con los nuevos datos
-            LocalDate startDate = request.getStartDate() != null ? request.getStartDate() : availability.getStartDate();
-            LocalDate endDate = request.getEndDate() != null ? request.getEndDate() : availability.getEndDate();
 
             validateOverlap(availability.getSupplier().getId(), startDate, endDate, id);
         }
@@ -177,17 +231,25 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             }
         }
 
-        // Actualizar campos
+        // Validar slot duration y capacity
+        if (request.getSlotDurationMinutes() != null && request.getSlotDurationMinutes() <= 0) {
+            throw new BusinessException("Slot duration must be greater than 0");
+        }
+
+        if (request.getCapacity() != null && request.getCapacity() <= 0) {
+            throw new BusinessException("Capacity must be greater than 0");
+        }
+
+        // =========================
+        // ACTUALIZAR CAMPOS
+        // =========================
+
         if (request.getStartDate() != null) {
             availability.setStartDate(request.getStartDate());
         }
 
         if (request.getEndDate() != null) {
             availability.setEndDate(request.getEndDate());
-        }
-
-        if (request.getDayOfWeek() != null) {
-            availability.setDayOfWeek(request.getDayOfWeek());
         }
 
         if (request.getStartTime() != null) {
@@ -198,21 +260,38 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             availability.setEndTime(request.getEndTime());
         }
 
+        // Días de la semana (si vienen en el request)
+        if (request.getMonday() != null) {
+            availability.setMonday(request.getMonday());
+        }
+        if (request.getTuesday() != null) {
+            availability.setTuesday(request.getTuesday());
+        }
+        if (request.getWednesday() != null) {
+            availability.setWednesday(request.getWednesday());
+        }
+        if (request.getThursday() != null) {
+            availability.setThursday(request.getThursday());
+        }
+        if (request.getFriday() != null) {
+            availability.setFriday(request.getFriday());
+        }
+        if (request.getSaturday() != null) {
+            availability.setSaturday(request.getSaturday());
+        }
+        if (request.getSunday() != null) {
+            availability.setSunday(request.getSunday());
+        }
+
         if (request.getRecurrenceType() != null) {
             availability.setRecurrenceType(request.getRecurrenceType());
         }
 
         if (request.getSlotDurationMinutes() != null) {
-            if (request.getSlotDurationMinutes() <= 0) {
-                throw new BusinessException("Slot duration must be greater than 0");
-            }
             availability.setSlotDurationMinutes(request.getSlotDurationMinutes());
         }
 
         if (request.getCapacity() != null) {
-            if (request.getCapacity() <= 0) {
-                throw new BusinessException("Capacity must be greater than 0");
-            }
             availability.setCapacity(request.getCapacity());
         }
 
@@ -220,7 +299,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             availability.setNotes(request.getNotes());
         }
 
-        // Actualizar status si viene en el request
         if (request.getStatus() != null) {
             availability.setStatus(request.getStatus());
         }
@@ -229,6 +307,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         return toDTO(saved);
     }
+
+    // =========================
+    // DELETE (Soft Delete)
+    // =========================
 
     @Override
     @Transactional
@@ -239,109 +321,20 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Availability availability = availabilityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Availability not found"));
 
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden operar en su compañía
-            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to perform this action in another company");
-            }
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
 
-            // User no puede eliminar disponibilidades
-            if (!auth.isAdmin(currentUser)) {
-                throw new ForbiddenException("You are not allowed to delete availability");
-            }
-        }
+        checkDeletePermission(currentUser, availability);
 
         // Soft delete - cambiar estado a INACTIVE
         availability.setStatus(AvailabilityStatus.INACTIVE);
         availabilityRepository.save(availability);
     }
 
-    @Override
-    public List<AvailabilityDTO> getAllByCompany() {
-
-        CurrentUser currentUser = securityHelper.getCurrentUser();
-
-        List<Availability> availabilities;
-
-        if (auth.isOwner(currentUser)) {
-            // Owner ve todas las disponibilidades de todas las compañías (incluyendo INACTIVE)
-            availabilities = availabilityRepository.findAll();
-        } else {
-            // Admin y User solo ven ACTIVE de su compañía
-            availabilities = availabilityRepository.findByCompanyIdAndStatus(
-                    currentUser.getCompanyId(),
-                    AvailabilityStatus.ACTIVE
-            );
-        }
-
-        return availabilities.stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
-    @Override
-    public List<AvailabilityDTO> getAllBySupplier(Long supplierId) {
-
-        CurrentUser currentUser = securityHelper.getCurrentUser();
-
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new NotFoundException("Supplier not found"));
-
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden ver de su compañía
-            if (!currentUser.getCompanyId().equals(supplier.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to view availability from another company");
-            }
-        }
-
-        List<Availability> availabilities;
-
-        if (auth.isOwner(currentUser)) {
-            // Owner ve todas las disponibilidades del supplier (incluyendo INACTIVE)
-            availabilities = availabilityRepository.findBySupplierId(supplierId);
-        } else {
-            // Admin y User solo ven ACTIVE
-            availabilities = availabilityRepository.findBySupplierIdAndStatus(
-                    supplierId,
-                    AvailabilityStatus.ACTIVE
-            );
-        }
-
-        return availabilities.stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
-    @Override
-    public List<AvailabilityDTO> getBySupplierAndDate(Long supplierId, LocalDate date) {
-
-        CurrentUser currentUser = securityHelper.getCurrentUser();
-
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new NotFoundException("Supplier not found"));
-
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden ver de su compañía
-            if (!currentUser.getCompanyId().equals(supplier.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to view availability from another company");
-            }
-        }
-
-        // Siempre filtramos solo ACTIVE para este endpoint (incluso para owner)
-        // Ya que es un endpoint de consulta específica para fechas
-        List<Availability> availabilities = availabilityRepository.findBySupplierIdAndDate(
-                supplierId,
-                date,
-                AvailabilityStatus.ACTIVE
-        );
-
-        return availabilities.stream()
-                .map(this::toDTO)
-                .toList();
-    }
+    // =========================
+    // GET BY ID
+    // =========================
 
     @Override
     public AvailabilityDTO getById(Long id) {
@@ -351,65 +344,395 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Availability availability = availabilityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Availability not found"));
 
-        // Control de acceso mejorado
-        if (!auth.isOwner(currentUser)) {
-            // Admin y User solo pueden ver de su compañía
-            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to view this availability");
-            }
-        }
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        checkReadPermission(currentUser, availability);
 
         // Los usuarios normales solo pueden ver ACTIVE
-        if (!auth.isOwner(currentUser) && availability.getStatus() == AvailabilityStatus.INACTIVE) {
+        if (!auth.isOwner(currentUser) &&
+                !auth.isAdmin(currentUser) &&
+                availability.getStatus() == AvailabilityStatus.INACTIVE) {
             throw new NotFoundException("Availability not found");
         }
 
         return toDTO(availability);
     }
 
+    // =========================
+    // GET ALL BY COMPANY
+    // =========================
+
+    @Override
+    public List<AvailabilityDTO> getAllByCompany() {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        List<Availability> availabilities;
+
+        if (auth.isOwner(currentUser)) {
+            // Owner ve todas las disponibilidades de todas las compañías
+            availabilities = availabilityRepository.findAll();
+        } else {
+            // Admin y User solo ven de su compañía
+            availabilities = availabilityRepository.findByCompanyId(
+                    currentUser.getCompanyId()
+            );
+
+            // Filtrar por permisos de lectura
+            availabilities = availabilities.stream()
+                    .filter(a -> hasReadAccess(currentUser, a))
+                    .toList();
+        }
+
+        return availabilities.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // =========================
+    // GET ALL BY SUPPLIER
+    // =========================
+
+    @Override
+    public List<AvailabilityDTO> getAllBySupplier(Long supplierId) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        // Usar servicio en lugar de repositorio
+        Supplier supplier = supplierService.findById(supplierId);
+
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        // Verificar que el usuario pueda acceder al supplier
+        auth.requireSupplierAccess(currentUser, supplier);
+
+        List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
+
+        // Filtrar por permisos de lectura
+        availabilities = availabilities.stream()
+                .filter(a -> hasReadAccess(currentUser, a))
+                .toList();
+
+        return availabilities.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // =========================
+    // GET BY SUPPLIER AND DATE
+    // =========================
+
+    @Override
+    public List<AvailabilityDTO> getBySupplierAndDate(Long supplierId, LocalDate date) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        // Usar servicio en lugar de repositorio
+        Supplier supplier = supplierService.findById(supplierId);
+
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        auth.requireSupplierAccess(currentUser, supplier);
+
+        List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
+
+        // Filtrar por fecha y permisos
+        availabilities = availabilities.stream()
+                .filter(a -> a.getStatus() == AvailabilityStatus.ACTIVE)
+                .filter(a -> isDateInRange(date, a))
+                .filter(a -> hasReadAccess(currentUser, a))
+                .toList();
+
+        return availabilities.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // =========================
+    // VALIDACIÓN DE OVERLAPPING
+    // =========================
+
     @Override
     public void validateOverlap(Long supplierId, LocalDate startDate, LocalDate endDate, Long excludeId) {
 
-        boolean hasOverlap;
+        // Si endDate es null, usamos una fecha muy lejana para la validación
+        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.of(2999, 12, 31);
 
-        if (excludeId != null) {
-            hasOverlap = availabilityRepository.existsOverlappingExcludingId(
-                    supplierId,
-                    startDate,
-                    endDate,
-                    excludeId,
-                    AvailabilityStatus.ACTIVE
-            );
-        } else {
-            hasOverlap = availabilityRepository.existsOverlapping(
-                    supplierId,
-                    startDate,
-                    endDate,
-                    AvailabilityStatus.ACTIVE
-            );
-        }
+        boolean hasOverlap = availabilityRepository.existsOverlapping(
+                supplierId,
+                startDate,
+                effectiveEndDate,
+                excludeId,
+                AvailabilityStatus.ACTIVE
+        );
 
         if (hasOverlap) {
             throw new BusinessException("Availability overlaps with existing availability for this supplier");
         }
     }
 
-    private AvailabilityDTO toDTO(Availability availability) {
+    // =========================
+    // MÉTODOS DE PERMISOS
+    // =========================
 
+    private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(companyId)) {
+                throw new ForbiddenException(
+                        "You are not allowed to create availability in another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException(
+                    "You are not allowed to create availability in another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        // CASO A: El usuario ES el supplier
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(supplier.getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso AVAILABILITY_CREATE para este supplier
+        auth.requirePermission(currentUser, supplier, Permission.AVAILABILITY_CREATE);
+    }
+
+    private void checkReadPermission(CurrentUser currentUser, Availability availability) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to view availability from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to view availability from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        // CASO A: El usuario ES el supplier
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(availability.getSupplier().getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso AVAILABILITY_READ para este supplier
+        auth.requirePermission(
+                currentUser,
+                availability.getSupplier(),
+                Permission.AVAILABILITY_READ
+        );
+    }
+
+    private void checkUpdatePermission(CurrentUser currentUser, Availability availability) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to update availability from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to update availability from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        // CASO A: El usuario ES el supplier
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(availability.getSupplier().getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso AVAILABILITY_UPDATE para este supplier
+        auth.requirePermission(
+                currentUser,
+                availability.getSupplier(),
+                Permission.AVAILABILITY_UPDATE
+        );
+    }
+
+    private void checkDeletePermission(CurrentUser currentUser, Availability availability) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to delete availability from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to delete availability from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        // CASO A: El usuario ES el supplier
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(availability.getSupplier().getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso AVAILABILITY_DELETE para este supplier
+        auth.requirePermission(
+                currentUser,
+                availability.getSupplier(),
+                Permission.AVAILABILITY_DELETE
+        );
+    }
+
+    private boolean hasReadAccess(CurrentUser currentUser, Availability availability) {
+        try {
+            checkReadPermission(currentUser, availability);
+            return true;
+        } catch (ForbiddenException e) {
+            return false;
+        }
+    }
+
+    // =========================
+    // MÉTODOS AUXILIARES
+    // =========================
+
+    private boolean hasAnyDaySelected(AvailabilityCreateDTO request) {
+        return Boolean.TRUE.equals(request.getMonday()) ||
+                Boolean.TRUE.equals(request.getTuesday()) ||
+                Boolean.TRUE.equals(request.getWednesday()) ||
+                Boolean.TRUE.equals(request.getThursday()) ||
+                Boolean.TRUE.equals(request.getFriday()) ||
+                Boolean.TRUE.equals(request.getSaturday()) ||
+                Boolean.TRUE.equals(request.getSunday());
+    }
+
+    private boolean isDateInRange(LocalDate date, Availability availability) {
+        LocalDate start = availability.getStartDate();
+        LocalDate end = availability.getEndDate();
+
+        if (date.isBefore(start)) {
+            return false;
+        }
+
+        if (end != null && date.isAfter(end)) {
+            return false;
+        }
+
+        // Verificar día de la semana si es WEEKLY
+        if (availability.getRecurrenceType() != null) {
+            switch (availability.getRecurrenceType()) {
+                case WEEKLY:
+                    DayOfWeek dayOfWeek = date.getDayOfWeek();
+                    return switch (dayOfWeek) {
+                        case MONDAY -> availability.getMonday();
+                        case TUESDAY -> availability.getTuesday();
+                        case WEDNESDAY -> availability.getWednesday();
+                        case THURSDAY -> availability.getThursday();
+                        case FRIDAY -> availability.getFriday();
+                        case SATURDAY -> availability.getSaturday();
+                        case SUNDAY -> availability.getSunday();
+                    };
+                case MONTHLY:
+                    return date.getDayOfMonth() == availability.getStartDate().getDayOfMonth();
+                case YEARLY:
+                    return date.getMonth() == availability.getStartDate().getMonth() &&
+                            date.getDayOfMonth() == availability.getStartDate().getDayOfMonth();
+                case DAILY:
+                case NONE:
+                case CUSTOM:
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        return true;
+    }
+
+    // =========================
+    // TO DTO
+    // =========================
+
+    private AvailabilityDTO toDTO(Availability availability) {
         AvailabilityDTO dto = new AvailabilityDTO();
 
+        dto.setId(availability.getId());
         dto.setCompanyId(availability.getCompany().getId());
         dto.setSupplierId(availability.getSupplier().getId());
         dto.setStartDate(availability.getStartDate());
         dto.setEndDate(availability.getEndDate());
-        dto.setDayOfWeek(availability.getDayOfWeek());
         dto.setStartTime(availability.getStartTime());
         dto.setEndTime(availability.getEndTime());
+
+        // Días de la semana
+        dto.setMonday(availability.getMonday());
+        dto.setTuesday(availability.getTuesday());
+        dto.setWednesday(availability.getWednesday());
+        dto.setThursday(availability.getThursday());
+        dto.setFriday(availability.getFriday());
+        dto.setSaturday(availability.getSaturday());
+        dto.setSunday(availability.getSunday());
+
         dto.setRecurrenceType(availability.getRecurrenceType());
         dto.setSlotDurationMinutes(availability.getSlotDurationMinutes());
         dto.setCapacity(availability.getCapacity());
         dto.setStatus(availability.getStatus());
         dto.setNotes(availability.getNotes());
+        dto.setCreatedAt(availability.getCreatedAt());
 
         return dto;
     }

@@ -1,247 +1,517 @@
-//package com.timora.app.service.impl;
-//
-//import com.timora.app.dto.*;
-//import com.timora.app.model.*;
-//import com.timora.app.model.enums.BookingStatus;
-//import com.timora.app.model.enums.BookingType;
-//import com.timora.app.model.enums.AvailabilityStatus;
-//import com.timora.app.repository.*;
-//import com.timora.app.service.BookingService;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.security.core.context.SecurityContextHolder;
-//import org.springframework.stereotype.Service;
-//
-//import java.time.LocalDateTime;
-//import java.util.List;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class BookingServiceImpl implements BookingService {
-//
-//    private final BookingRepository repository;
-//    private final ServiceRepository serviceRepository;
-//    private final CustomerRepository customerRepository;
-//    private final UserRepository userRepository;
-//    private final SupplierRepository supplierRepository;
-//    private final AvailabilityRepository availabilityRepository;
-//
-//    // =========================================================
-//    // CREATE
-//    // =========================================================
-//    @Override
-//    public BookingDetailsDTO create(BookingCreateDTO dto) {
-//
-//        User user = getCurrentUser();
-//        Supplier supplier = getSupplierFromUser(user);
-//
-//        Customer customer = customerRepository.findById(dto.getCustomerId())
-//                .orElseThrow(() -> new RuntimeException("Customer not found"));
-//
-//        com.timora.app.model.Service service = serviceRepository.findById(dto.getServiceId())
-//                .orElseThrow(() -> new RuntimeException("Service not found"));
-//
-//        // 1. ownership del servicio
-//        if (!service.getSupplier().getId().equals(supplier.getId())) {
-//            throw new RuntimeException("Service does not belong to supplier");
-//        }
-//
-//        // 2. misma company
-//        if (!customer.getCompany().getId().equals(user.getCompany().getId())) {
-//            throw new RuntimeException("Customer not in same company");
-//        }
-//
-//        // 3. availability
-//        validateAvailability(supplier, dto.getStartTime(), dto.getEndTime());
-//
-//        // 4. overlap
-//        if (repository.existsOverlap(
-//                supplier.getId(),
-//                dto.getStartTime(),
-//                dto.getEndTime()
-//        )) {
-//            throw new RuntimeException("Time slot already booked");
-//        }
-//
-//        Booking booking = new Booking();
-//        booking.setCompany(user.getCompany());
-//        booking.setService(service);
-//        booking.setCustomer(customer);
-//        booking.setCreatedByUser(user);
-//
-//        booking.setStartTime(dto.getStartTime());
-//        booking.setEndTime(dto.getEndTime());
-//
-//        booking.setName(dto.getName());
-//        booking.setDescription(dto.getDescription());
-//
-//        booking.setStatus(BookingStatus.PENDING);
-//        booking.setType(BookingType.APPOINTMENT);
-//
-//        repository.save(booking);
-//
-//        return toDetailsDTO(booking);
-//    }
-//
-//    // =========================================================
-//    // READ BY ID
-//    // =========================================================
-//    @Override
-//    public BookingDetailsDTO getById(Long id) {
-//
-//        Booking booking = repository.findByIdFull(id)
-//                .orElseThrow(() -> new RuntimeException("Booking not found"));
-//
-//        return toDetailsDTO(booking);
-//    }
-//
-//    // =========================================================
-//    // SUPPLIER BOOKINGS
-//    // =========================================================
-//    @Override
-//    public List<BookingSummaryDTO> getMyBookings() {
-//
-//        User user = getCurrentUser();
-//        Supplier supplier = getSupplierFromUser(user);
-//
-//        return repository.findBySupplier(supplier.getId())
-//                .stream()
-//                .map(this::toSummaryDTO)
-//                .toList();
-//    }
-//
-//    // =========================================================
-//    // OTHER LISTS
-//    // =========================================================
-//    @Override
-//    public List<BookingSummaryDTO> getByCompany(Long companyId) {
-//        return repository.findByCompany(companyId)
-//                .stream()
-//                .map(this::toSummaryDTO)
-//                .toList();
-//    }
-//
-//    @Override
-//    public List<BookingSummaryDTO> getByCustomer(Long customerId) {
-//        return repository.findByCustomer(customerId)
-//                .stream()
-//                .map(this::toSummaryDTO)
-//                .toList();
-//    }
-//
-//    // =========================================================
-//    // STATUS
-//    // =========================================================
-//    @Override
-//    public BookingDetailsDTO confirm(Long id) {
-//        return updateStatus(id, BookingStatus.CONFIRMED);
-//    }
-//
-//    @Override
-//    public BookingDetailsDTO cancel(Long id) {
-//        return updateStatus(id, BookingStatus.CANCELLED);
-//    }
-//
-//    @Override
-//    public BookingDetailsDTO complete(Long id) {
-//        return updateStatus(id, BookingStatus.COMPLETED);
-//    }
-//
-//    @Override
-//    public void delete(Long id) {
-//        repository.deleteById(id);
-//    }
-//
-//    private BookingDetailsDTO updateStatus(Long id, BookingStatus status) {
-//
-//        Booking booking = findEntity(id);
-//        booking.setStatus(status);
-//
-//        repository.save(booking);
-//
-//        return toDetailsDTO(booking);
-//    }
-//
-//    // =========================================================
-//    // AVAILABILITY RULE
-//    // =========================================================
-//    private void validateAvailability(Supplier supplier,
-//                                      LocalDateTime start,
-//                                      LocalDateTime end) {
-//
-//        List<Availability> availabilities =
-//                availabilityRepository.findByCompanyIdAndSupplierIdAndStatus(
-//                        supplier.getCompany().getId(),
-//                        supplier.getId(),
-//                        AvailabilityStatus.ACTIVE
-//                );
-//
-//        boolean valid = availabilities.stream().anyMatch(a -> {
-//
-//            LocalDateTime slotStart = LocalDateTime.of(
-//                    start.toLocalDate(),
-//                    a.getStartTime()
-//            );
-//
-//            LocalDateTime slotEnd = LocalDateTime.of(
-//                    start.toLocalDate(),
-//                    a.getEndTime()
-//            );
-//
-//            return !start.isBefore(slotStart) && !end.isAfter(slotEnd);
-//        });
-//
-//        if (!valid) {
-//            throw new RuntimeException("Outside supplier availability");
-//        }
-//    }
-//
-//    // =========================================================
-//    // HELPERS
-//    // =========================================================
-//    private User getCurrentUser() {
-//        String email = SecurityContextHolder.getContext()
-//                .getAuthentication()
-//                .getName();
-//
-//        return userRepository.findByLoginEmail(email)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//    }
-//
-//    private Supplier getSupplierFromUser(User user) {
-//        return supplierRepository.findByUserIdAndCompanyId(
-//                user.getId(),
-//                user.getCompany().getId()
-//        ).orElseThrow(() -> new RuntimeException("User is not supplier"));
-//    }
-//
-//    private Booking findEntity(Long id) {
-//        return repository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Booking not found"));
-//    }
-//
-//    // =========================================================
-//    // MAPPERS
-//    // =========================================================
-//    private BookingDetailsDTO toDetailsDTO(Booking b) {
-//        return new BookingDetailsDTO(
-//                b.getId(),
-//                b.getService().getName(),
-//                b.getCustomer().getPerson().getFirstName(),
-//                b.getService().getSupplier().getPerson().getFirstName(),
-//                b.getStartTime(),
-//                b.getEndTime(),
-//                b.getStatus(),
-//                b.getDescription()
-//        );
-//    }
-//
-//    private BookingSummaryDTO toSummaryDTO(Booking b) {
-//        return new BookingSummaryDTO(
-//                b.getId(),
-//                b.getService().getName(),
-//                b.getCustomer().getPerson().getFirstName(),
-//                b.getStartTime(),
-//                b.getStatus()
-//        );
-//    }
-//}
+package com.timora.app.service.impl;
+
+import com.timora.app.dto.booking.BookingCreateDTO;
+import com.timora.app.dto.booking.BookingDTO;
+import com.timora.app.dto.booking.BookingPatchDTO;
+import com.timora.app.dto.security.CurrentUser;
+import com.timora.app.exception.BusinessException;
+import com.timora.app.exception.ForbiddenException;
+import com.timora.app.exception.NotFoundException;
+import com.timora.app.model.*;
+import com.timora.app.model.enums.BookingStatus;
+import com.timora.app.model.enums.BookingType;
+import com.timora.app.model.enums.Permission;
+import com.timora.app.repository.BookingRepository;
+import com.timora.app.security.AccessControlService;
+import com.timora.app.security.SecurityHelper;
+import com.timora.app.security.AvailabilityValidatorService;
+import com.timora.app.service.*;
+import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@org.springframework.stereotype.Service
+@AllArgsConstructor
+public class BookingServiceImpl implements BookingService {
+
+    private final BookingRepository bookingRepository;
+    private final CompanyService companyService;
+    private final ServiceService serviceService;
+    private final CustomerService customerService;
+    private final UserService userService;
+    private final SupplierService supplierService;
+    private final PersonService personService;
+    private final SecurityHelper securityHelper;
+    private final AccessControlService auth;
+    private final AvailabilityValidatorService availabilityValidator;
+
+    private static final List<BookingStatus> ACTIVE_STATUSES = List.of(
+            BookingStatus.PENDING,
+            BookingStatus.CONFIRMED,
+            BookingStatus.COMPLETED
+    );
+
+    @Override
+    @Transactional
+    public BookingDTO create(BookingCreateDTO request) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        if (request.getCompanyId() == null) {
+            throw new BusinessException("Company ID is required");
+        }
+
+        if (request.getServiceId() == null) {
+            throw new BusinessException("Service ID is required");
+        }
+
+        if (request.getCustomerId() == null) {
+            throw new BusinessException("Customer ID is required");
+        }
+
+        if (request.getStartTime() == null || request.getEndTime() == null) {
+            throw new BusinessException("Start time and end time are required");
+        }
+
+        if (request.getStartTime().isAfter(request.getEndTime())) {
+            throw new BusinessException("Start time must be before end time");
+        }
+
+        if (request.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Start time cannot be in the past");
+        }
+
+        Company company = companyService.getByIdEntity(request.getCompanyId());
+
+        Service service = serviceService.getByIdEntity(request.getServiceId());
+
+        if (!service.getCompany().getId().equals(request.getCompanyId())) {
+            throw new BusinessException("Service does not belong to the specified company");
+        }
+
+        Customer customer = customerService.findById(request.getCustomerId());
+
+        if (!customer.getCompany().getId().equals(request.getCompanyId())) {
+            throw new BusinessException("Customer does not belong to the specified company");
+        }
+
+        Supplier supplier = service.getSupplier();
+        checkCreatePermission(currentUser, supplier, request.getCompanyId());
+
+        validateOverlap(
+                request.getServiceId(),
+                request.getStartTime(),
+                request.getEndTime(),
+                null
+        );
+
+        availabilityValidator.validateBookingAvailability(
+                supplier.getId(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
+
+        User createdByUser = userService.findById(currentUser.getUserId());
+
+        Booking booking = new Booking();
+        booking.setCompany(company);
+        booking.setService(service);
+        booking.setCustomer(customer);
+        booking.setCreatedByUser(createdByUser);
+        booking.setStartTime(request.getStartTime());
+        booking.setEndTime(request.getEndTime());
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setType(request.getType() != null ? request.getType() : BookingType.APPOINTMENT);
+        booking.setName(request.getName());
+        booking.setDescription(request.getDescription());
+
+        Booking saved = bookingRepository.save(booking);
+
+        return toDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public BookingDTO patch(Long id, BookingPatchDTO request) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
+
+        checkUpdatePermission(currentUser, booking);
+
+        LocalDateTime startTime = request.getStartTime() != null
+                ? request.getStartTime()
+                : booking.getStartTime();
+        LocalDateTime endTime = request.getEndTime() != null
+                ? request.getEndTime()
+                : booking.getEndTime();
+
+        if (request.getStartTime() != null || request.getEndTime() != null) {
+            if (startTime.isAfter(endTime)) {
+                throw new BusinessException("Start time must be before end time");
+            }
+
+            if (startTime.isBefore(LocalDateTime.now())) {
+                throw new BusinessException("Start time cannot be in the past");
+            }
+
+            validateOverlap(
+                    booking.getService().getId(),
+                    startTime,
+                    endTime,
+                    id
+            );
+
+            availabilityValidator.validateBookingAvailability(
+                    booking.getService().getSupplier().getId(),
+                    startTime,
+                    endTime
+            );
+        }
+
+        if (request.getServiceId() != null) {
+            Service service = serviceService.getByIdEntity(request.getServiceId());
+
+            if (!service.getCompany().getId().equals(booking.getCompany().getId())) {
+                throw new BusinessException("Service does not belong to the same company");
+            }
+
+            booking.setService(service);
+        }
+
+        if (request.getCustomerId() != null) {
+            Customer customer = customerService.findById(request.getCustomerId());
+
+            if (!customer.getCompany().getId().equals(booking.getCompany().getId())) {
+                throw new BusinessException("Customer does not belong to the same company");
+            }
+
+            booking.setCustomer(customer);
+        }
+
+        if (request.getStartTime() != null) {
+            booking.setStartTime(request.getStartTime());
+        }
+
+        if (request.getEndTime() != null) {
+            booking.setEndTime(request.getEndTime());
+        }
+
+        if (request.getStatus() != null) {
+            booking.setStatus(request.getStatus());
+        }
+
+        if (request.getType() != null) {
+            booking.setType(request.getType());
+        }
+
+        if (request.getName() != null) {
+            booking.setName(request.getName());
+        }
+
+        if (request.getDescription() != null) {
+            booking.setDescription(request.getDescription());
+        }
+
+        Booking saved = bookingRepository.save(booking);
+
+        return toDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
+
+        checkDeletePermission(currentUser, booking);
+
+        booking.setStatus(BookingStatus.DELETED);
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    public BookingDTO getById(Long id) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
+
+        checkReadPermission(currentUser, booking);
+
+        if (!auth.isOwner(currentUser) &&
+                !auth.isAdmin(currentUser) &&
+                booking.getStatus() == BookingStatus.DELETED) {
+            throw new NotFoundException("Booking not found");
+        }
+
+        return toDTO(booking);
+    }
+
+    @Override
+    public List<BookingDTO> getAllByCompany() {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        List<Booking> bookings;
+
+        if (auth.isOwner(currentUser)) {
+            bookings = bookingRepository.findAll();
+        } else {
+            bookings = bookingRepository.findByCompanyId(currentUser.getCompanyId());
+
+            bookings = bookings.stream()
+                    .filter(b -> hasReadAccess(currentUser, b))
+                    .toList();
+        }
+
+        return bookings.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BookingDTO> getAllByCustomer(Long customerId) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Customer customer = customerService.findById(customerId);
+
+        if (!auth.isOwner(currentUser) &&
+                !currentUser.getCompanyId().equals(customer.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to view bookings from another company");
+        }
+
+        List<Booking> bookings = bookingRepository.findByCustomerId(customerId);
+
+        bookings = bookings.stream()
+                .filter(b -> hasReadAccess(currentUser, b))
+                .toList();
+
+        return bookings.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public Booking getByIdEntity(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Booking not found with id: " + id));
+    }
+
+    @Override
+    public List<BookingDTO> getAllByService(Long serviceId) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Service service = serviceService.getByIdEntity(serviceId);
+
+        if (!auth.isOwner(currentUser) &&
+                !currentUser.getCompanyId().equals(service.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to view bookings from another company");
+        }
+
+        List<Booking> bookings = bookingRepository.findByServiceId(serviceId);
+
+        bookings = bookings.stream()
+                .filter(b -> hasReadAccess(currentUser, b))
+                .toList();
+
+        return bookings.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BookingDTO> getAllBySupplier(Long supplierId) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Supplier supplier = supplierService.findById(supplierId);
+
+        auth.requireSupplierAccess(currentUser, supplier);
+
+        List<Booking> bookings = bookingRepository.findBySupplierId(supplierId);
+
+        bookings = bookings.stream()
+                .filter(b -> hasReadAccess(currentUser, b))
+                .toList();
+
+        return bookings.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BookingDTO> getBySupplierAndDateRange(Long supplierId, LocalDateTime startDate, LocalDateTime endDate) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Supplier supplier = supplierService.findById(supplierId);
+
+        auth.requireSupplierAccess(currentUser, supplier);
+
+        List<Booking> bookings = bookingRepository.findBySupplierIdAndDateRange(
+                supplierId,
+                startDate,
+                endDate
+        );
+
+        bookings = bookings.stream()
+                .filter(b -> hasReadAccess(currentUser, b))
+                .toList();
+
+        return bookings.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
+    public void validateOverlap(Long serviceId, LocalDateTime startTime, LocalDateTime endTime, Long excludeId) {
+
+        boolean hasOverlap = bookingRepository.existsOverlapping(
+                serviceId,
+                startTime,
+                endTime,
+                excludeId,
+                ACTIVE_STATUSES
+        );
+
+        if (hasOverlap) {
+            throw new BusinessException("Booking overlaps with existing booking for this service");
+        }
+    }
+
+    private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(companyId)) {
+                throw new ForbiddenException("You are not allowed to create bookings in another company");
+            }
+            return;
+        }
+
+        if (!currentUser.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException("You are not allowed to create bookings in another company");
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        if (currentSupplier != null && currentSupplier.getId().equals(supplier.getId())) {
+            return;
+        }
+
+        auth.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
+    }
+
+    private void checkReadPermission(CurrentUser currentUser, Booking booking) {
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to view bookings from another company");
+            }
+            return;
+        }
+
+        if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to view bookings from another company");
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = booking.getService().getSupplier();
+
+        if (currentSupplier != null && currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_READ);
+    }
+
+    private void checkUpdatePermission(CurrentUser currentUser, Booking booking) {
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to update bookings from another company");
+            }
+            return;
+        }
+
+        if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to update bookings from another company");
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = booking.getService().getSupplier();
+
+        if (currentSupplier != null && currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_UPDATE);
+    }
+
+    private void checkDeletePermission(CurrentUser currentUser, Booking booking) {
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to delete bookings from another company");
+            }
+            return;
+        }
+
+        if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to delete bookings from another company");
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = booking.getService().getSupplier();
+
+        if (currentSupplier != null && currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_DELETE);
+    }
+
+    private boolean hasReadAccess(CurrentUser currentUser, Booking booking) {
+        try {
+            checkReadPermission(currentUser, booking);
+            return true;
+        } catch (ForbiddenException e) {
+            return false;
+        }
+    }
+
+    private BookingDTO toDTO(Booking booking) {
+        BookingDTO dto = new BookingDTO();
+
+        dto.setId(booking.getId());
+        dto.setCompanyId(booking.getCompany().getId());
+        dto.setServiceId(booking.getService().getId());
+        dto.setCustomerId(booking.getCustomer().getId());
+        dto.setCreatedByUserId(booking.getCreatedByUser().getId());
+        dto.setStartTime(booking.getStartTime());
+        dto.setEndTime(booking.getEndTime());
+        dto.setStatus(booking.getStatus());
+        dto.setType(booking.getType());
+        dto.setName(booking.getName());
+        dto.setDescription(booking.getDescription());
+        dto.setCreatedAt(booking.getCreatedAt());
+
+        return dto;
+    }
+}

@@ -16,6 +16,7 @@ import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;
+import com.timora.app.model.enums.Permission;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.*;
@@ -24,7 +25,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,6 +39,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final UserService userService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
+    private final UserSupplierPermissionService permissionService;
 
     private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
 
@@ -86,22 +87,51 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 request.getCustomer() != null ? request.getCustomer().getCompanyId() : null,
                 "Customer");
 
-        //Se omite cualquier permiso de ser owner
-        if (!auth.isOwner(currentUser)) {
-            //Se comprueba que sean de la misma compañia
-            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())){
+        // =========================
+        // PERMISOS
+        // =========================
+
+        // OWNER: Puede hacer todo
+        if (auth.isOwner(currentUser)) {
+            // Pasa sin restricciones
+        }
+        // ADMIN: Puede hacer todo dentro de su compañía
+        else if (auth.isAdmin(currentUser)) {
+            // Verificar que sea de la misma compañía
+            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
-            }else{
-                //Se omite revisar que solo sea cliente si el user es admin
-                if(!auth.isAdmin(currentUser)){
-                    //si no es customer no pasa
-                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
-                    if(request.getCustomer() == null){
-                        throw new ForbiddenException("You are not allowed to perform this action");
-                    }
-                }
+            }
+            // ADMIN puede crear lo que sea dentro de su empresa
+        }
+        // USER: Solo puede crear CUSTOMER
+        else {
+            // Verificar que sea de la misma compañía
+            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())) {
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }
+
+            // Un USER solo puede crear CUSTOMER (no USER ni SUPPLIER)
+            if (!hasCustomer) {
+                throw new ForbiddenException("You are not allowed to create Users or Suppliers");
+            }
+
+            // 🔥 Si el USER es SUPPLIER, puede crear customers sin permisos adicionales
+            // Obtener el supplier del usuario actual
+            Person currentPerson = personService.findById(currentUser.getPersonId());
+            Supplier currentSupplier = currentPerson.getSupplier();
+
+            if (currentSupplier != null) {
+                // Es supplier, puede crear customers libremente (dentro de su compañía)
+                // Pasa sin restricciones
+            } else {
+                // No es supplier, necesita permiso CUSTOMER_CREATE en algún proveedor
+                auth.requireCanCreateCustomerAnywhere(currentUser);
             }
         }
+
+        // =========================
+        // CREACIÓN
+        // =========================
 
         Person person = personService.create(request.getPerson());
 
@@ -128,24 +158,49 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         Person current = personService.findById(id);
 
         // =========================
-        // 🔐 ACCESS CONTROL (igual que antes)
+        // 🔐 ACCESS CONTROL
         // =========================
         if (!auth.isOwner(currentUser)) {
 
+            // Validar misma compañía
             if (!currentUser.getCompanyId().equals(current.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }
 
+            // Si es USER
             if (!auth.isAdmin(currentUser)) {
 
+                // Solo puede editar su propia persona
                 if (!current.getId().equals(currentUser.getPersonId())) {
-                    throw new ForbiddenException("You are not allowed to perform this action");
+                    throw new ForbiddenException("You can only edit your own profile");
+                }
+
+                // Solo puede editar si es CUSTOMER
+                if (current.getCustomer() == null) {
+                    throw new ForbiddenException("You are not a customer");
+                }
+
+                // Solo puede editar CUSTOMER (no USER ni SUPPLIER)
+                if (request.getUser() != null || request.getSupplier() != null) {
+                    throw new ForbiddenException("You are not allowed to modify user or supplier data");
+                }
+
+                // 🔥 Si el USER es SUPPLIER, puede actualizar customers sin permisos adicionales
+                if (request.getCustomer() != null) {
+                    Person currentPerson = personService.findById(currentUser.getPersonId());
+                    Supplier currentSupplier = currentPerson.getSupplier();
+
+                    if (currentSupplier == null) {
+                        // No es supplier, necesita permiso CUSTOMER_UPDATE en algún proveedor
+                        auth.requireCanUpdateCustomerAnywhere(currentUser);
+                    }
+                    // Si es supplier, pasa sin restricciones
                 }
             }
         }
 
         // =========================
-        // 🔒 BUSINESS RULES (solo si el campo viene explícito)
+        // 🔒 BUSINESS RULES
         // =========================
 
         if (request.getCustomer() != null && current.getCustomer() == null) {
@@ -174,7 +229,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         Person person = personService.patch(id, request.getPerson());
 
         // =========================
-        // USER PATCH + ROLES (resistente)
+        // USER PATCH + ROLES
         // =========================
         User user = null;
 
@@ -213,6 +268,9 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             user = userService.patch(person.getUser().getId(), dto);
         }
 
+        // =========================
+        // CUSTOMER PATCH
+        // =========================
         Customer customer = null;
         if (request.getCustomer() != null) {
 
@@ -244,26 +302,55 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     public void delete(Long personId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
-
         Person person = personService.findById(personId);
 
-        //Se omite cualquier permiso de ser owner
-        if (!auth.isOwner(currentUser)) {
-            //Se comprueba que sean de la misma compañia
+        // =========================
+        // 🔐 ACCESS CONTROL
+        // =========================
+
+        // OWNER: Puede eliminar todo
+        if (auth.isOwner(currentUser)) {
+            // Pasa sin restricciones
+        }
+        // ADMIN: Puede eliminar todo dentro de su compañía
+        else if (auth.isAdmin(currentUser)) {
+            // Verificar que sea de la misma compañía
             if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
-            }else{
-                //Se omite revisar que solo sea cliente si el user es admin
-                if(!auth.isAdmin(currentUser)){
-                    //si no es customer no pasa
-                    //TODO: el user tiene mas permisos, revisar la implementacion con UserSupplierPermission
-                    if(person.getCustomer() == null){
-                        throw new ForbiddenException("You are not allowed to perform this action");
-                    }
-                }
             }
+            // ADMIN puede eliminar lo que sea dentro de su empresa
+        }
+        // USER: Solo puede eliminar CUSTOMER
+        else {
+            // Verificar que sea de la misma compañía
+            if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }
+
+            // Un USER solo puede eliminar CUSTOMER (no USER ni SUPPLIER)
+            if (person.getCustomer() == null) {
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }
+
+            // Solo puede eliminar su propio perfil
+            if (!person.getId().equals(currentUser.getPersonId())) {
+                throw new ForbiddenException("You can only delete your own profile");
+            }
+
+            // 🔥 Si el USER es SUPPLIER, puede eliminar customers sin permisos adicionales
+            Person currentPerson = personService.findById(currentUser.getPersonId());
+            Supplier currentSupplier = currentPerson.getSupplier();
+
+            if (currentSupplier == null) {
+                // No es supplier, necesita permiso CUSTOMER_DELETE en algún proveedor
+                auth.requireCanDeleteCustomerAnywhere(currentUser);
+            }
+            // Si es supplier, pasa sin restricciones
         }
 
+        // =========================
+        // ELIMINACIÓN
+        // =========================
 
         User user = person.getUser();
         personService.delete(personId);

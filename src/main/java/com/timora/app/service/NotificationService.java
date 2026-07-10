@@ -7,6 +7,5 @@ import java.util.List;
 public interface NotificationService {
     List<NotificationDTO> getMyNotifications();
     NotificationDTO markAsRead(Long id);
-    public NotificationDTO create(Long userId, NotificationCreateDTO dto);
-    //List<NotificationDTO> findByUserAndTypeDTO(Long userId, NotificationType type);
+    NotificationDTO create(Long userId, NotificationCreateDTO dto);
 }

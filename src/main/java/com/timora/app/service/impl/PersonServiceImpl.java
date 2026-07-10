@@ -4,12 +4,12 @@ import com.timora.app.dto.person.PersonCreateDTO;
 import com.timora.app.dto.person.PersonDTO;
 import com.timora.app.dto.person.PersonPatchDTO;
 import com.timora.app.exception.BusinessException;
+import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Company;
 import com.timora.app.model.Person;
-import com.timora.app.model.enums.CompanyStatus;
 import com.timora.app.model.enums.PersonStatus;
-import com.timora.app.repository.CompanyRepository;
 import com.timora.app.repository.PersonRepository;
+import com.timora.app.service.CompanyService;
 import com.timora.app.service.PersonService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -22,14 +22,14 @@ import java.util.List;
 public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
-    private final CompanyRepository companyRepository;
+    private final CompanyService companyService;
 
     @Override
     @Transactional
     public Person patch(Long id, PersonPatchDTO dto) {
 
         Person person = personRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Person not found"));
+                .orElseThrow(() -> new NotFoundException("Person not found with id: " + id));
 
         if (dto.getFirstName() != null) {
             person.setFirstName(dto.getFirstName());
@@ -62,7 +62,7 @@ public class PersonServiceImpl implements PersonService {
             throw new BusinessException("Person already exists");
         }
 
-        Company company = companyRepository.findByIdAndStatus(personDTO.getCompanyId(), CompanyStatus.ACTIVE);
+        Company company = companyService.getByIdEntity(personDTO.getCompanyId());
 
         Person person = new Person();
         person.setCompany(company);
@@ -75,26 +75,38 @@ public class PersonServiceImpl implements PersonService {
 
         return personRepository.save(person);
     }
+
     @Override
     @Transactional
     public void delete(Long id) {
-        Person person = personRepository.findById(id).orElseThrow(() -> new RuntimeException("Person not found"));
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Person not found with id: " + id));
         person.setStatus(PersonStatus.INACTIVE);
         personRepository.save(person);
     }
+
     @Override
     public Person findById(Long id) {
         return personRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Person not found with Person id: " + id));
+                .orElseThrow(() -> new NotFoundException("Person not found with id: " + id));
     }
+
     @Override
-    public List<Person> findAll(){
-        return  personRepository.findByStatus(PersonStatus.ACTIVE);
+    public Person getByIdEntity(Long id) {
+        return personRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Person not found with id: " + id));
     }
+
+    @Override
+    public List<Person> findAll() {
+        return personRepository.findByStatus(PersonStatus.ACTIVE);
+    }
+
     @Override
     public List<Person> findByCompanyId(Long companyId) {
         return personRepository.findByCompanyIdAndStatus(companyId, PersonStatus.ACTIVE);
     }
+
     private PersonDTO toDTO(Person person) {
 
         PersonDTO dto = new PersonDTO();

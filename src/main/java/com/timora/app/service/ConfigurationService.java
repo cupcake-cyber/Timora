@@ -6,8 +6,7 @@ import com.timora.app.model.Configuration;
 import com.timora.app.model.User;
 
 public interface ConfigurationService {
-
     ConfigurationDTO getMyConfiguration();
-    public Configuration create(User user);
+    Configuration create(User user);
     ConfigurationDTO updateMyConfiguration(ConfigurationPatchDTO configuration);
 }

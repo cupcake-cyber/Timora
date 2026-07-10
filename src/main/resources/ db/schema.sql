@@ -77,11 +77,11 @@ CREATE TABLE user_supplier_permission (
                                           user_id BIGINT NOT NULL,
                                           supplier_id BIGINT NOT NULL,
                                           permission ENUM(
-        'BOOKING_CREATE', 'BOOKING_READ', 'BOOKING_UPDATE', 'BOOKING_DELETE',
-        'ABILITY_CREATE', 'ABILITY_READ', 'ABILITY_UPDATE', 'ABILITY_DELETE',
-        'SERVICE_CREATE', 'SERVICE_READ', 'SERVICE_UPDATE', 'SERVICE_DELETE',
-        'CLIENT_CREATE', 'CLIENT_READ', 'CLIENT_UPDATE', 'CLIENT_DELETE'
-    ) NOT NULL,
+	'BOOKING_CREATE', 'BOOKING_READ', 'BOOKING_UPDATE', 'BOOKING_DELETE',
+	'ABILITY_CREATE', 'ABILITY_READ', 'ABILITY_UPDATE', 'ABILITY_DELETE',
+	'SERVICE_CREATE', 'SERVICE_READ', 'SERVICE_UPDATE', 'SERVICE_DELETE',
+	'CUSTOMER_CREATE', 'CUSTOMER_READ', 'CUSTOMER_UPDATE', 'CUSTOMER_DELETE'
+	) NOT NULL,
                                           assigned_by_user_id BIGINT,
                                           created_at DATETIME NOT NULL,
                                           PRIMARY KEY (user_id, supplier_id, permission),
@@ -112,17 +112,37 @@ CREATE TABLE availability (
                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
                               company_id BIGINT NOT NULL,
                               supplier_id BIGINT NOT NULL,
+
+    -- Fechas del rango de validez
                               start_date DATE,
                               end_date DATE,
-                              day_of_week ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'),
+
+    -- Horario dentro del día
                               start_time TIME,
                               end_time TIME,
+
+    -- Días de la semana (booleanos)
+                              monday BOOLEAN DEFAULT FALSE,
+                              tuesday BOOLEAN DEFAULT FALSE,
+                              wednesday BOOLEAN DEFAULT FALSE,
+                              thursday BOOLEAN DEFAULT FALSE,
+                              friday BOOLEAN DEFAULT FALSE,
+                              saturday BOOLEAN DEFAULT FALSE,
+                              sunday BOOLEAN DEFAULT FALSE,
+
+    -- Configuración de recurrencia
                               recurrence_type ENUM('NONE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'CUSTOM') DEFAULT 'NONE',
+
+    -- Configuración de slots
                               slot_duration_minutes INT,
                               capacity INT,
+
+    -- Estado y metadata
                               status ENUM('ACTIVE', 'INACTIVE', 'DELETED') NOT NULL DEFAULT 'ACTIVE',
                               notes TEXT,
-                              created_at DATETIME,
+                              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Llaves foráneas
                               FOREIGN KEY (company_id) REFERENCES company(id),
                               FOREIGN KEY (supplier_id) REFERENCES supplier(id)
 );

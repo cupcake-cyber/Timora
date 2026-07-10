@@ -13,72 +13,53 @@ import java.util.List;
 @Repository
 public interface AvailabilityRepository extends JpaRepository<Availability, Long> {
 
-    // Métodos existentes
-    List<Availability> findByCompanyIdAndStatus(Long companyId, AvailabilityStatus status);
-
-    List<Availability> findBySupplierIdAndStatus(Long supplierId, AvailabilityStatus status);
-
+    /**
+     * Busca todas las disponibilidades de un supplier (incluyendo INACTIVE)
+     */
     List<Availability> findBySupplierId(Long supplierId);
 
+    /**
+     * Busca todas las disponibilidades de una compañía (incluyendo INACTIVE)
+     */
     List<Availability> findByCompanyId(Long companyId);
 
-    @Query("SELECT a FROM Availability a WHERE a.supplier.id = :supplierId " +
-            "AND a.status = :status " +
-            "AND a.startDate <= :endDate " +
-            "AND a.endDate >= :startDate")
-    List<Availability> findOverlappingBySupplierAndDateRange(
-            @Param("supplierId") Long supplierId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            @Param("status") AvailabilityStatus status
-    );
+    /**
+     * Busca disponibilidades activas de un supplier
+     */
+    List<Availability> findBySupplierIdAndStatus(Long supplierId, AvailabilityStatus status);
 
+    /**
+     * Busca disponibilidades activas de una compañía
+     */
+    List<Availability> findByCompanyIdAndStatus(Long companyId, AvailabilityStatus status);
+
+    /**
+     * Busca disponibilidades de un supplier que cubren una fecha específica
+     */
     @Query("SELECT a FROM Availability a WHERE a.supplier.id = :supplierId " +
             "AND a.status = :status " +
             "AND a.startDate <= :date " +
-            "AND a.endDate >= :date")
+            "AND (a.endDate IS NULL OR a.endDate >= :date)")
     List<Availability> findBySupplierIdAndDate(
             @Param("supplierId") Long supplierId,
             @Param("date") LocalDate date,
             @Param("status") AvailabilityStatus status
     );
 
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
-            "FROM Availability a WHERE a.supplier.id = :supplierId " +
-            "AND a.id != :availabilityId " +
-            "AND a.status = :status " +
-            "AND a.startDate <= :endDate " +
-            "AND a.endDate >= :startDate")
-    boolean existsOverlappingExcludingId(
-            @Param("supplierId") Long supplierId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            @Param("availabilityId") Long availabilityId,
-            @Param("status") AvailabilityStatus status
-    );
-
+    /**
+     * Verifica si existe una disponibilidad que se solape con un rango de fechas
+     */
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
             "FROM Availability a WHERE a.supplier.id = :supplierId " +
             "AND a.status = :status " +
             "AND a.startDate <= :endDate " +
-            "AND a.endDate >= :startDate")
+            "AND (a.endDate IS NULL OR a.endDate >= :startDate) " +
+            "AND (:excludeId IS NULL OR a.id != :excludeId)")
     boolean existsOverlapping(
             @Param("supplierId") Long supplierId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
+            @Param("excludeId") Long excludeId,
             @Param("status") AvailabilityStatus status
     );
-
-    // Nuevo método para filtrar solo ACTIVE por company
-    @Query("SELECT a FROM Availability a WHERE a.company.id = :companyId AND a.status = 'ACTIVE'")
-    List<Availability> findActiveByCompanyId(@Param("companyId") Long companyId);
-
-    // Nuevo método para filtrar solo ACTIVE por supplier
-    @Query("SELECT a FROM Availability a WHERE a.supplier.id = :supplierId AND a.status = 'ACTIVE'")
-    List<Availability> findActiveBySupplierId(@Param("supplierId") Long supplierId);
-
-    // Método para verificar que el supplier pertenece a la compañía
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
-            "FROM Supplier s WHERE s.id = :supplierId AND s.company.id = :companyId")
-    boolean existsSupplierInCompany(@Param("supplierId") Long supplierId, @Param("companyId") Long companyId);
 }
