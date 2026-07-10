@@ -1,142 +1,90 @@
-//package com.timora.app.repository;
-//
-//import com.timora.app.model.Booking;
-//import com.timora.app.model.enums.BookingStatus;
-//import org.springframework.data.jpa.repository.EntityGraph;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//import org.springframework.data.jpa.repository.Query;
-//import org.springframework.data.repository.query.Param;
-//
-//import java.time.LocalDateTime;
-//import java.util.List;
-//import java.util.Optional;
-//
-//public interface BookingRepository extends JpaRepository<Booking, Long> {
-//
-//    // =========================================================
-//    // FETCH FULL DETAIL
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        JOIN FETCH b.service s
-//        JOIN FETCH s.supplier sup
-//        JOIN FETCH sup.person
-//        JOIN FETCH b.customer c
-//        JOIN FETCH c.person
-//        JOIN FETCH b.company
-//        WHERE b.id = :id
-//    """)
-//    Optional<Booking> findByIdFull(@Param("id") Long id);
-//
-//    // =========================================================
-//    // COMPANY BOOKINGS
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        JOIN FETCH b.service s
-//        JOIN FETCH b.customer c
-//        JOIN FETCH c.person
-//        WHERE b.company.id = :companyId
-//    """)
-//    List<Booking> findByCompany(@Param("companyId") Long companyId);
-//
-//    // =========================================================
-//    // CUSTOMER BOOKINGS
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        JOIN FETCH b.service s
-//        JOIN FETCH b.customer c
-//        JOIN FETCH c.person
-//        WHERE b.customer.id = :customerId
-//    """)
-//    List<Booking> findByCustomer(@Param("customerId") Long customerId);
-//
-//    // =========================================================
-//    // SUPPLIER BOOKINGS
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        JOIN FETCH b.service s
-//        JOIN FETCH s.supplier sup
-//        JOIN FETCH sup.person
-//        WHERE s.supplier.id = :supplierId
-//    """)
-//    List<Booking> findBySupplier(@Param("supplierId") Long supplierId);
-//
-//    // 👉 FIX PARA TU SERVICE
-//    List<Booking> findByServiceSupplierId(Long supplierId);
-//
-//    // =========================================================
-//    // STATUS
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        WHERE b.status = :status
-//    """)
-//    List<Booking> findByStatus(@Param("status") BookingStatus status);
-//
-//    // =========================================================
-//    // DATE RANGE
-//    // =========================================================
-//    @Query("""
-//        SELECT b FROM Booking b
-//        WHERE b.startTime BETWEEN :start AND :end
-//    """)
-//    List<Booking> findBetweenDates(
-//            @Param("start") LocalDateTime start,
-//            @Param("end") LocalDateTime end
-//    );
-//
-//    // =========================================================
-//    // OVERLAP CHECK (CRÍTICO)
-//    // =========================================================
-//    @Query("""
-//        SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END
-//        FROM Booking b
-//        WHERE b.service.supplier.id = :supplierId
-//          AND b.status <> com.timora.app.model.enums.BookingStatus.CANCELLED
-//          AND b.startTime < :end
-//          AND b.endTime > :start
-//    """)
-//    boolean existsOverlap(
-//            @Param("supplierId") Long supplierId,
-//            @Param("start") LocalDateTime start,
-//            @Param("end") LocalDateTime end
-//    );
-//
-//    // =========================================================
-//    // ENTITY GRAPH (OPTIONAL OPTIMIZED FETCH)
-//    // =========================================================
-//    @EntityGraph(attributePaths = {
-//            "service",
-//            "service.supplier",
-//            "service.supplier.person",
-//            "customer",
-//            "customer.person",
-//            "company"
-//    })
-//    @Query("SELECT b FROM Booking b WHERE b.id = :id")
-//    Optional<Booking> findByIdGraph(@Param("id") Long id);
-//
-//    @Query("""
-//    SELECT COUNT(a) > 0
-//    FROM Availability a
-//    WHERE a.company.id = :companyId
-//      AND a.supplier.id = :supplierId
-//      AND a.status = com.timora.app.model.enums.AvailabilityStatus.ACTIVE
-//      AND a.startDate <= :date
-//      AND a.endDate >= :date
-//      AND a.startTime <= :startTime
-//      AND a.endTime >= :endTime
-//""")
-//    boolean existsValidSlot(
-//            @Param("companyId") Long companyId,
-//            @Param("supplierId") Long supplierId,
-//            @Param("date") java.time.LocalDate date,
-//            @Param("startTime") java.time.LocalTime startTime,
-//            @Param("endTime") java.time.LocalTime endTime
-//    );
-//
-//
-//}
+package com.timora.app.repository;
+
+import com.timora.app.model.Booking;
+import com.timora.app.model.enums.BookingStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface BookingRepository extends JpaRepository<Booking, Long> {
+
+    /**
+     * Busca bookings de una compañía
+     */
+    List<Booking> findByCompanyId(Long companyId);
+
+    /**
+     * Busca bookings de un cliente
+     */
+    List<Booking> findByCustomerId(Long customerId);
+
+    /**
+     * Busca bookings de un servicio
+     */
+    List<Booking> findByServiceId(Long serviceId);
+
+    /**
+     * Busca bookings por estado
+     */
+    List<Booking> findByStatus(BookingStatus status);
+
+    /**
+     * Busca bookings de una compañía por estado
+     */
+    List<Booking> findByCompanyIdAndStatus(Long companyId, BookingStatus status);
+
+    /**
+     * Busca bookings que se solapan en un rango de tiempo para un servicio específico
+     */
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
+            "FROM Booking b WHERE b.service.id = :serviceId " +
+            "AND b.status IN :activeStatuses " +
+            "AND b.startTime < :endTime " +
+            "AND b.endTime > :startTime " +
+            "AND (:excludeId IS NULL OR b.id != :excludeId)")
+    boolean existsOverlapping(
+            @Param("serviceId") Long serviceId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("excludeId") Long excludeId,
+            @Param("activeStatuses") List<BookingStatus> activeStatuses
+    );
+
+    /**
+     * Verifica si un servicio tiene bookings en un rango de tiempo (para validar disponibilidad)
+     */
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
+            "FROM Booking b WHERE b.service.id = :serviceId " +
+            "AND b.status IN :activeStatuses " +
+            "AND b.startTime < :endTime " +
+            "AND b.endTime > :startTime")
+    boolean hasOverlappingBookings(
+            @Param("serviceId") Long serviceId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("activeStatuses") List<BookingStatus> activeStatuses
+    );
+
+    /**
+     * Obtiene todos los bookings de un proveedor (supplier) a través de sus servicios
+     */
+    @Query("SELECT b FROM Booking b WHERE b.service.supplier.id = :supplierId")
+    List<Booking> findBySupplierId(@Param("supplierId") Long supplierId);
+
+    /**
+     * Obtiene bookings de un proveedor en un rango de fechas
+     */
+    @Query("SELECT b FROM Booking b WHERE b.service.supplier.id = :supplierId " +
+            "AND b.startTime >= :startDate " +
+            "AND b.endTime <= :endDate")
+    List<Booking> findBySupplierIdAndDateRange(
+            @Param("supplierId") Long supplierId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+}

@@ -1,61 +1,489 @@
-//package com.timora.app.service.impl;
-//
-//import java.time.LocalDateTime;
-//import com.timora.app.model.Payment;
-//import com.timora.app.repository.PaymentRepository;
-//import com.timora.app.service.PaymentService;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.List;
-//import java.util.Optional;
-//
-//@Service
-//public class PaymentServiceImpl implements PaymentService {
-//
-//    private final PaymentRepository repository;
-//
-//    public PaymentServiceImpl(PaymentRepository repository) {
-//        this.repository = repository;
-//    }
-//
-//    @Override
-//    public List<Payment> findAll() {
-//        return repository.findAll();
-//    }
-//
-//    @Override
-//    public Optional<Payment> findById(Long id) {
-//        return repository.findById(id);
-//    }
-//
-//    @Override
-//    public Payment save(Payment payment) {
-//        payment.setCreatedAt(LocalDateTime.now());
-//        return repository.save(payment);
-//    }
-//
-//    @Override
-//    public Payment update(Long id, Payment newPayment) {
-//        return repository.findById(id).map(existing -> {
-//
-//            existing.setAmount(newPayment.getAmount());
-//            existing.setStatus(newPayment.getStatus());
-//            existing.setMethod(newPayment.getMethod());
-//            existing.setBooking(newPayment.getBooking());
-//            existing.setCompany(newPayment.getCompany());
-//
-//            return repository.save(existing);
-//
-//        }).orElseThrow(() -> new RuntimeException("Payment no encontrado"));
-//    }
-//
-//    @Override
-//    public void delete(Long id) {
-//        repository.deleteById(id);
-//    }
-//
-//    @Override
-//    public List<Payment> findByBooking(Long bookingId) {
-//        return repository.findByBookingId(bookingId);
-//    }
-//}
+package com.timora.app.service.impl;
+
+import com.timora.app.dto.payment.PaymentCreateDTO;
+import com.timora.app.dto.payment.PaymentDTO;
+import com.timora.app.dto.payment.PaymentPatchDTO;
+import com.timora.app.dto.security.CurrentUser;
+import com.timora.app.exception.BusinessException;
+import com.timora.app.exception.ForbiddenException;
+import com.timora.app.exception.NotFoundException;
+import com.timora.app.model.Booking;
+import com.timora.app.model.Company;
+import com.timora.app.model.Payment;
+import com.timora.app.model.Person;
+import com.timora.app.model.Supplier;
+import com.timora.app.model.enums.PaymentMethod;
+import com.timora.app.model.enums.PaymentStatus;
+import com.timora.app.model.enums.Permission;
+import com.timora.app.repository.PaymentRepository;
+import com.timora.app.security.AccessControlService;
+import com.timora.app.security.SecurityHelper;
+import com.timora.app.service.BookingService;
+import com.timora.app.service.CompanyService;
+import com.timora.app.service.PaymentService;
+import com.timora.app.service.PersonService;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+@AllArgsConstructor
+public class PaymentServiceImpl implements PaymentService {
+
+    private final PaymentRepository paymentRepository;
+    private final CompanyService companyService;
+    private final BookingService bookingService;
+    private final PersonService personService;
+    private final SecurityHelper securityHelper;
+    private final AccessControlService auth;
+
+    // Estados activos para validación de pago único por booking
+    private static final List<PaymentStatus> ACTIVE_PAYMENT_STATUSES = List.of(
+            PaymentStatus.PENDING,
+            PaymentStatus.PAID,
+            PaymentStatus.PARTIALLY_PAID
+    );
+
+    // =========================
+    // CREATE
+    // =========================
+
+    @Override
+    @Transactional
+    public PaymentDTO create(PaymentCreateDTO request) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        // =========================
+        // 1. VALIDACIONES BÁSICAS
+        // =========================
+
+        if (request.getCompanyId() == null) {
+            throw new BusinessException("Company ID is required");
+        }
+
+        if (request.getBookingId() == null) {
+            throw new BusinessException("Booking ID is required");
+        }
+
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Amount must be greater than 0");
+        }
+
+        // =========================
+        // 2. VALIDAR ENTIDADES (usando servicios)
+        // =========================
+
+        Company company = companyService.getByIdEntity(request.getCompanyId());
+
+        Booking booking = bookingService.getByIdEntity(request.getBookingId());
+
+        // Verificar que el booking pertenece a la compañía
+        if (!booking.getCompany().getId().equals(request.getCompanyId())) {
+            throw new BusinessException("Booking does not belong to the specified company");
+        }
+
+        // Verificar que no exista un pago activo para este booking
+        if (paymentRepository.existsByBookingIdAndStatusIn(
+                request.getBookingId(),
+                ACTIVE_PAYMENT_STATUSES
+        )) {
+            throw new BusinessException("This booking already has an active payment");
+        }
+
+        // =========================
+        // 3. 🔐 CONTROL DE ACCESO
+        // =========================
+
+        Supplier supplier = booking.getService().getSupplier();
+        checkCreatePermission(currentUser, supplier, request.getCompanyId());
+
+        // =========================
+        // 4. CREAR PAGO
+        // =========================
+
+        Payment payment = new Payment();
+        payment.setCompany(company);
+        payment.setBooking(booking);
+        payment.setAmount(request.getAmount());
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setMethod(request.getMethod() != null ? request.getMethod() : PaymentMethod.CASH);
+
+        Payment saved = paymentRepository.save(payment);
+
+        return toDTO(saved);
+    }
+
+    // =========================
+    // PATCH (UPDATE)
+    // =========================
+
+    @Override
+    @Transactional
+    public PaymentDTO patch(Long id, PaymentPatchDTO request) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Payment not found"));
+
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        checkUpdatePermission(currentUser, payment);
+
+        // =========================
+        // VALIDACIONES
+        // =========================
+
+        if (request.getAmount() != null && request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Amount must be greater than 0");
+        }
+
+        // =========================
+        // ACTUALIZAR CAMPOS
+        // =========================
+
+        if (request.getAmount() != null) {
+            payment.setAmount(request.getAmount());
+        }
+
+        if (request.getStatus() != null) {
+            payment.setStatus(request.getStatus());
+        }
+
+        if (request.getMethod() != null) {
+            payment.setMethod(request.getMethod());
+        }
+
+        Payment saved = paymentRepository.save(payment);
+
+        return toDTO(saved);
+    }
+
+    // =========================
+    // DELETE (Soft Delete)
+    // =========================
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Payment not found"));
+
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        checkDeletePermission(currentUser, payment);
+
+        // Soft delete - cambiar estado a DELETED
+        payment.setStatus(PaymentStatus.DELETED);
+        paymentRepository.save(payment);
+    }
+
+    // =========================
+    // GET BY ID
+    // =========================
+
+    @Override
+    public PaymentDTO getById(Long id) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Payment not found"));
+
+        // =========================
+        // 🔐 CONTROL DE ACCESO
+        // =========================
+
+        checkReadPermission(currentUser, payment);
+
+        return toDTO(payment);
+    }
+
+    // =========================
+    // GET ALL BY COMPANY
+    // =========================
+
+    @Override
+    public List<PaymentDTO> getAllByCompany() {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        List<Payment> payments;
+
+        if (auth.isOwner(currentUser)) {
+            payments = paymentRepository.findAll();
+        } else {
+            payments = paymentRepository.findByCompanyId(currentUser.getCompanyId());
+
+            // Filtrar por permisos de lectura
+            payments = payments.stream()
+                    .filter(p -> hasReadAccess(currentUser, p))
+                    .toList();
+        }
+
+        return payments.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // =========================
+    // GET BY BOOKING ID
+    // =========================
+
+    @Override
+    public PaymentDTO getByBookingId(Long bookingId) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        // Usar servicio en lugar de repositorio
+        Booking booking = bookingService.getByIdEntity(bookingId);
+
+        // Verificar que pertenece a la compañía
+        if (!auth.isOwner(currentUser) &&
+                !currentUser.getCompanyId().equals(booking.getCompany().getId())) {
+            throw new ForbiddenException("You are not allowed to view payments from another company");
+        }
+
+        Payment payment = paymentRepository.findByBookingId(bookingId);
+
+        if (payment == null) {
+            throw new NotFoundException("Payment not found for booking with id: " + bookingId);
+        }
+
+        // Verificar permisos de lectura
+        checkReadPermission(currentUser, payment);
+
+        return toDTO(payment);
+    }
+
+    // =========================
+    // GET BY STATUS
+    // =========================
+
+    @Override
+    public List<PaymentDTO> getByStatus(PaymentStatus status) {
+
+        CurrentUser currentUser = securityHelper.getCurrentUser();
+
+        List<Payment> payments;
+
+        if (auth.isOwner(currentUser)) {
+            payments = paymentRepository.findByStatus(status);
+        } else {
+            payments = paymentRepository.findByCompanyIdAndStatus(
+                    currentUser.getCompanyId(),
+                    status
+            );
+
+            // Filtrar por permisos de lectura
+            payments = payments.stream()
+                    .filter(p -> hasReadAccess(currentUser, p))
+                    .toList();
+        }
+
+        return payments.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // =========================
+    // MÉTODOS DE PERMISOS
+    // =========================
+
+    private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(companyId)) {
+                throw new ForbiddenException(
+                        "You are not allowed to create payments in another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException(
+                    "You are not allowed to create payments in another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+
+        // CASO A: El usuario ES el supplier
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(supplier.getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso BOOKING_CREATE para este supplier
+        auth.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
+    }
+
+    private void checkReadPermission(CurrentUser currentUser, Payment payment) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to view payments from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to view payments from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = payment.getBooking().getService().getSupplier();
+
+        // CASO A: El usuario ES el supplier del booking
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso BOOKING_READ para este supplier
+        auth.requirePermission(
+                currentUser,
+                bookingSupplier,
+                Permission.BOOKING_READ
+        );
+    }
+
+    private void checkUpdatePermission(CurrentUser currentUser, Payment payment) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to update payments from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to update payments from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = payment.getBooking().getService().getSupplier();
+
+        // CASO A: El usuario ES el supplier del booking
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso BOOKING_UPDATE para este supplier
+        auth.requirePermission(
+                currentUser,
+                bookingSupplier,
+                Permission.BOOKING_UPDATE
+        );
+    }
+
+    private void checkDeletePermission(CurrentUser currentUser, Payment payment) {
+        // OWNER: Acceso total
+        if (auth.isOwner(currentUser)) {
+            return;
+        }
+
+        // ADMIN: Solo dentro de su compañía
+        if (auth.isAdmin(currentUser)) {
+            if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+                throw new ForbiddenException(
+                        "You are not allowed to delete payments from another company"
+                );
+            }
+            return;
+        }
+
+        // USER: Necesita ser supplier o tener permiso
+        if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
+            throw new ForbiddenException(
+                    "You are not allowed to delete payments from another company"
+            );
+        }
+
+        Person currentPerson = personService.findById(currentUser.getPersonId());
+        Supplier currentSupplier = currentPerson.getSupplier();
+        Supplier bookingSupplier = payment.getBooking().getService().getSupplier();
+
+        // CASO A: El usuario ES el supplier del booking
+        if (currentSupplier != null &&
+                currentSupplier.getId().equals(bookingSupplier.getId())) {
+            return;
+        }
+
+        // CASO B: Tiene permiso BOOKING_DELETE para este supplier
+        auth.requirePermission(
+                currentUser,
+                bookingSupplier,
+                Permission.BOOKING_DELETE
+        );
+    }
+
+    private boolean hasReadAccess(CurrentUser currentUser, Payment payment) {
+        try {
+            checkReadPermission(currentUser, payment);
+            return true;
+        } catch (ForbiddenException e) {
+            return false;
+        }
+    }
+
+    // =========================
+    // TO DTO
+    // =========================
+
+    private PaymentDTO toDTO(Payment payment) {
+        PaymentDTO dto = new PaymentDTO();
+
+        dto.setId(payment.getId());
+        dto.setCompanyId(payment.getCompany().getId());
+        dto.setBookingId(payment.getBooking().getId());
+        dto.setAmount(payment.getAmount());
+        dto.setStatus(payment.getStatus());
+        dto.setMethod(payment.getMethod());
+        dto.setCreatedAt(payment.getCreatedAt());
+
+        return dto;
+    }
+}

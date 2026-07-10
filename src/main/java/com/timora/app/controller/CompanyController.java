@@ -43,4 +43,9 @@ public class CompanyController {
         companyService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<CompanyDTO> getMy() {
+        return ResponseEntity.ok(companyService.getMy());
+    }
 }

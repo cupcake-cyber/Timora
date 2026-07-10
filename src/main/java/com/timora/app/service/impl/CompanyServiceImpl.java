@@ -34,6 +34,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDTO create(CompanyCreateDTO companyDTO) {
 
         CurrentUser user = securityHelper.getCurrentUser();
+
         auth.requireOwner(user);
 
         if (companyRepository.existsByRuc(companyDTO.getRuc())) {
@@ -60,22 +61,22 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public List<CompanyDTO> getAll() {
-
         CurrentUser user = securityHelper.getCurrentUser();
+
         auth.requireOwner(user);
 
-//        List<Company> companies = companyRepository.findByStatus(CompanyStatus.ACTIVE);
         List<Company> companies = companyRepository.findAll();
+
         return companies.stream().map(this::toDTO).toList();
     }
 
     @Override
     public CompanyDTO getById(Long id) {
+
         CurrentUser user = securityHelper.getCurrentUser();
 
         auth.requireSameCompany(user, id);
-        System.out.println(user.getCompanyId());
-        System.out.println(id);
+
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company not found"));
 
@@ -152,6 +153,24 @@ public class CompanyServiceImpl implements CompanyService {
         Company saved = companyRepository.save(company);
 
         return toDTO(saved);
+    }
+
+    @Override
+    public CompanyDTO getMy(){
+
+        CurrentUser user = securityHelper.getCurrentUser();
+
+
+        Company company = companyRepository.findById(user.getCompanyId())
+                .orElseThrow(() -> new NotFoundException("Company not found"));
+
+        return toDTO(company);
+    }
+
+    @Override
+    public Company getByIdEntity(Long id) {
+        return companyRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Company not found with id: " + id));
     }
 
     private CompanyDTO toDTO(Company company) {

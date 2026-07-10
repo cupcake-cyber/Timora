@@ -226,4 +226,44 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
         return userSupplierPermissionRepository
                 .existsByUser_Id(resolvedUserId);
     }
+
+    @Override
+    public boolean hasPermission(Long userId, Long supplierId, Permission permission) {
+        // Si userId es null, usar el usuario actual
+        Long resolvedUserId = (userId != null) ? userId : securityHelper.getCurrentUser().getUserId();
+
+        // Si supplierId es null, significa que queremos verificar si tiene el permiso en ALGÚN proveedor
+        if (supplierId == null) {
+            // Obtener todos los permisos del usuario y verificar si tiene ese permiso en algún lado
+            List<UserSupplierPermission> permissions = userSupplierPermissionRepository.findByUserId(resolvedUserId);
+            return permissions.stream()
+                    .anyMatch(p -> p.getId().getPermission() == permission);
+        }
+
+        // Verificar permiso específico para un proveedor
+        return userSupplierPermissionRepository.existsByUser_IdAndSupplier_IdAndId_Permission(
+                resolvedUserId, supplierId, permission
+        );
+    }
+
+    @Override
+    public boolean hasAnyPermissionOnSupplier(Long userId, Long supplierId) {
+        Long resolvedUserId = (userId != null) ? userId : securityHelper.getCurrentUser().getUserId();
+
+        return userSupplierPermissionRepository.existsByUser_IdAndSupplier_Id(resolvedUserId, supplierId);
+    }
+
+    @Override
+    public Set<Permission> getPermissionsForSupplier(Long userId, Long supplierId) {
+        Long resolvedUserId = (userId != null) ? userId : securityHelper.getCurrentUser().getUserId();
+
+        return userSupplierPermissionRepository.findPermissionsByUser_IdAndSupplier_Id(resolvedUserId, supplierId);
+    }
+
+
+    @Override
+    public boolean hasAnyPermission(Long userId, Permission permission) {
+        Long resolvedUserId = (userId != null) ? userId : securityHelper.getCurrentUser().getUserId();
+        return userSupplierPermissionRepository.existsByUser_IdAndId_Permission(resolvedUserId, permission);
+    }
 }

@@ -13,12 +13,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/services")  // ← Asegúrate que sea exactamente /api/services
+@RequestMapping("/api/services")
 public class ServiceController {
 
     private final ServiceService serviceManagementService;
 
-    @PostMapping  // ← Asegúrate que este método existe
+    @PostMapping
     public ResponseEntity<ServiceDTO> create(@RequestBody ServiceCreateDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(serviceManagementService.create(dto));

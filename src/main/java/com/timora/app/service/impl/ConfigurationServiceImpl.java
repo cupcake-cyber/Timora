@@ -5,7 +5,6 @@ import com.timora.app.dto.configuration.ConfigurationPatchDTO;
 import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.model.Configuration;
 import com.timora.app.model.User;
-import com.timora.app.repository.CompanyRepository;
 import com.timora.app.repository.ConfigurationRepository;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.ConfigurationService;

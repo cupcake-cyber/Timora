@@ -3,6 +3,7 @@ package com.timora.app.service;
 import com.timora.app.dto.service.ServiceCreateDTO;
 import com.timora.app.dto.service.ServiceDTO;
 import com.timora.app.dto.service.ServicePatchDTO;
+import com.timora.app.model.Service;
 
 import java.util.List;
 
@@ -12,4 +13,5 @@ public interface ServiceService {
     void delete(Long id);
     List<ServiceDTO> getAll();
     ServiceDTO getById(Long id);
+    Service getByIdEntity(Long id);
 }

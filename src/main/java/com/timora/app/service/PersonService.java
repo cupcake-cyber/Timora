@@ -14,4 +14,5 @@ public interface PersonService {
     void delete(Long id);
     List<Person> findAll();
     List<Person> findByCompanyId(Long companyId);
+    Person getByIdEntity(Long id);
 }
