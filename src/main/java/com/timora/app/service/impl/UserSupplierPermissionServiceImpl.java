@@ -10,6 +10,7 @@ import com.timora.app.model.*;
 import com.timora.app.model.enums.Permission;
 import com.timora.app.repository.SupplierRepository;
 import com.timora.app.repository.UserSupplierPermissionRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.UserService;
@@ -29,7 +30,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
     private final UserService userService;
     private final SupplierRepository supplierRepository;
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlBaseService accessBase;
 
     @Override
     @Transactional
@@ -37,7 +38,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(currentUser) && !auth.isAdmin(currentUser)) {
+        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
             throw new ForbiddenException("You are not allowed to assign permissions");
         }
 
@@ -78,7 +79,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(currentUser) && !auth.isAdmin(currentUser)) {
+        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
             throw new ForbiddenException("You are not allowed to delete permissions");
         }
 
@@ -88,7 +89,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
                 .orElseThrow(() -> new BusinessException("Supplier not found"));
 
         // tenant
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
 
             Long companyId = currentUser.getCompanyId();
 
@@ -116,14 +117,14 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(currentUser) && !auth.isAdmin(currentUser)) {
+        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
             throw new ForbiddenException("You are not allowed to view permissions");
         }
 
         User targetUser = userService.findById(userId);
 
         // tenant
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
 
             Long companyId = currentUser.getCompanyId();
 
@@ -143,7 +144,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(currentUser) && !auth.isAdmin(currentUser)) {
+        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
             throw new ForbiddenException("You are not allowed to view permissions");
         }
 
@@ -151,7 +152,7 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
                 .orElseThrow(() -> new BusinessException("Supplier not found"));
 
         // tenant
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
 
             Long companyId = currentUser.getCompanyId();
 
@@ -181,14 +182,14 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(currentUser) && !auth.isAdmin(currentUser)) {
+        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
             throw new ForbiddenException("You are not allowed to view permissions");
         }
 
         User targetUser = userService.findById(userId);
 
         // Un ADMIN solo puede consultar usuarios de su empresa
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             Long companyId = currentUser.getCompanyId();
 
             if (!targetUser.getCompany().getId().equals(companyId)) {

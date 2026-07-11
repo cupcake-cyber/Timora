@@ -11,6 +11,7 @@ import com.timora.app.model.Service;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.enums.ServiceStatus;
 import com.timora.app.repository.ServiceRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CompanyService;
@@ -29,7 +30,8 @@ import java.util.stream.Collectors;
 public class ServiceServiceImpl implements ServiceService {
 
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlService access;
+    private final AccessControlBaseService accessBase;
     private final ServiceRepository serviceRepository;
     private final CompanyService companyService;
     private final SupplierService supplierService;
@@ -51,7 +53,7 @@ public class ServiceServiceImpl implements ServiceService {
 
         validateSameCompany(request.getCompanyId(), supplier.getCompany().getId(), "Supplier");
 
-        auth.requireCanCreateService(currentUser, supplier);
+        access.requireCanCreateService(currentUser, supplier);
 
         Service service = new Service();
         service.setCompany(company);
@@ -73,7 +75,7 @@ public class ServiceServiceImpl implements ServiceService {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Service not found"));
 
-        auth.requireCanUpdateService(currentUser, service.getSupplier());
+        access.requireCanUpdateService(currentUser, service.getSupplier());
 
         if (request.getSupplierId() != null) {
             Supplier supplier = supplierService.findById(request.getSupplierId());
@@ -108,7 +110,7 @@ public class ServiceServiceImpl implements ServiceService {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Service not found"));
 
-        auth.requireCanDeleteService(currentUser, service.getSupplier());
+        access.requireCanDeleteService(currentUser, service.getSupplier());
 
         service.setStatus(ServiceStatus.INACTIVE);
         serviceRepository.save(service);
@@ -120,9 +122,9 @@ public class ServiceServiceImpl implements ServiceService {
         CurrentUser currentUser = securityHelper.getCurrentUser();
         List<Service> services;
 
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             services = serviceRepository.findAllActive();
-        } else if (auth.isAdmin(currentUser)) {
+        } else if (accessBase.isAdmin(currentUser)) {
             services = serviceRepository.findByCompanyId(currentUser.getCompanyId());
         } else {
             services = serviceRepository.findBySupplierPersonId(currentUser.getPersonId());
@@ -140,7 +142,7 @@ public class ServiceServiceImpl implements ServiceService {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Service not found"));
 
-        auth.requireCanReadService(currentUser, service.getSupplier());
+        access.requireCanReadService(currentUser, service.getSupplier());
 
         return toDTO(service);
     }

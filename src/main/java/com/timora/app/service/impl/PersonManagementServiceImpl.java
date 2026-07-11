@@ -17,6 +17,7 @@ import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.model.enums.Permission;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.*;
@@ -33,7 +34,8 @@ import java.util.Objects;
 public class PersonManagementServiceImpl implements PersonManagementService {
 
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlService access;
+    private final AccessControlBaseService accessBase;
 
     private final PersonService personService;
     private final UserService userService;
@@ -92,11 +94,11 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         // =========================
 
         // OWNER: Puede hacer todo
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             // Pasa sin restricciones
         }
         // ADMIN: Puede hacer todo dentro de su compañía
-        else if (auth.isAdmin(currentUser)) {
+        else if (accessBase.isAdmin(currentUser)) {
             // Verificar que sea de la misma compañía
             if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
@@ -125,7 +127,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 // Pasa sin restricciones
             } else {
                 // No es supplier, necesita permiso CUSTOMER_CREATE en algún proveedor
-                auth.requireCanCreateCustomerAnywhere(currentUser);
+                access.requireCanCreateCustomerAnywhere(currentUser);
             }
         }
 
@@ -160,7 +162,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         // =========================
         // 🔐 ACCESS CONTROL
         // =========================
-        if (!auth.isOwner(currentUser)) {
+        if (!accessBase.isOwner(currentUser)) {
 
             // Validar misma compañía
             if (!currentUser.getCompanyId().equals(current.getCompany().getId())) {
@@ -168,7 +170,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             }
 
             // Si es USER
-            if (!auth.isAdmin(currentUser)) {
+            if (!accessBase.isAdmin(currentUser)) {
 
                 // Solo puede editar su propia persona
                 if (!current.getId().equals(currentUser.getPersonId())) {
@@ -192,7 +194,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
                     if (currentSupplier == null) {
                         // No es supplier, necesita permiso CUSTOMER_UPDATE en algún proveedor
-                        auth.requireCanUpdateCustomerAnywhere(currentUser);
+                        access.requireCanUpdateCustomerAnywhere(currentUser);
                     }
                     // Si es supplier, pasa sin restricciones
                 }
@@ -241,13 +243,13 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
             UserPatchDTO dto = request.getUser();
 
-            if (!auth.isOwner(currentUser)) {
+            if (!accessBase.isOwner(currentUser)) {
 
-                if (auth.isUser(currentUser)) {
+                if (accessBase.isUser(currentUser)) {
                     dto.setRole(GlobalRole.USER);
                 }
 
-                if (auth.isAdmin(currentUser)) {
+                if (accessBase.isAdmin(currentUser)) {
 
                     if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                         throw new ForbiddenException("Admin only within company");
@@ -309,11 +311,11 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         // =========================
 
         // OWNER: Puede eliminar todo
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             // Pasa sin restricciones
         }
         // ADMIN: Puede eliminar todo dentro de su compañía
-        else if (auth.isAdmin(currentUser)) {
+        else if (accessBase.isAdmin(currentUser)) {
             // Verificar que sea de la misma compañía
             if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
@@ -343,7 +345,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
             if (currentSupplier == null) {
                 // No es supplier, necesita permiso CUSTOMER_DELETE en algún proveedor
-                auth.requireCanDeleteCustomerAnywhere(currentUser);
+                access.requireCanDeleteCustomerAnywhere(currentUser);
             }
             // Si es supplier, pasa sin restricciones
         }
@@ -366,7 +368,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         List<Person> persons;
 
-        if (auth.isOwner(user)) {
+        if (accessBase.isOwner(user)) {
             persons = personService.findAll();
         }else{
             persons = personService.findByCompanyId(user.getCompanyId());
@@ -381,7 +383,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     public PersonIdentityDTO getById(Long personId) {
         CurrentUser currentUser = securityHelper.getCurrentUser();
         Person person = personService.findById(personId);
-        if (!auth.isOwner(currentUser)) {
+        if (!accessBase.isOwner(currentUser)) {
             if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }

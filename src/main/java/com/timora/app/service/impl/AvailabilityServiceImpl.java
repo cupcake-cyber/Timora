@@ -14,6 +14,7 @@ import com.timora.app.model.Supplier;
 import com.timora.app.model.enums.AvailabilityStatus;
 import com.timora.app.model.enums.Permission;
 import com.timora.app.repository.AvailabilityRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.AvailabilityService;
@@ -37,8 +38,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     private final SupplierService supplierService;
     private final PersonService personService;
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
-
+    private final AccessControlService access;
+    private final AccessControlBaseService accessBase;
     // =========================
     // CREATE
     // =========================
@@ -351,8 +352,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         checkReadPermission(currentUser, availability);
 
         // Los usuarios normales solo pueden ver ACTIVE
-        if (!auth.isOwner(currentUser) &&
-                !auth.isAdmin(currentUser) &&
+        if (!accessBase.isOwner(currentUser) &&
+                !accessBase.isAdmin(currentUser) &&
                 availability.getStatus() == AvailabilityStatus.INACTIVE) {
             throw new NotFoundException("Availability not found");
         }
@@ -371,7 +372,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         List<Availability> availabilities;
 
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             // Owner ve todas las disponibilidades de todas las compañías
             availabilities = availabilityRepository.findAll();
         } else {
@@ -408,7 +409,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         // =========================
 
         // Verificar que el usuario pueda acceder al supplier
-        auth.requireSupplierAccess(currentUser, supplier);
+        access.requireSupplierAccess(currentUser, supplier);
 
         List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
 
@@ -438,7 +439,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         // 🔐 CONTROL DE ACCESO
         // =========================
 
-        auth.requireSupplierAccess(currentUser, supplier);
+        access.requireSupplierAccess(currentUser, supplier);
 
         List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
 
@@ -483,12 +484,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(companyId)) {
                 throw new ForbiddenException(
                         "You are not allowed to create availability in another company"
@@ -514,17 +515,17 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         }
 
         // CASO B: Tiene permiso AVAILABILITY_CREATE para este supplier
-        auth.requirePermission(currentUser, supplier, Permission.AVAILABILITY_CREATE);
+        access.requirePermission(currentUser, supplier, Permission.AVAILABILITY_CREATE);
     }
 
     private void checkReadPermission(CurrentUser currentUser, Availability availability) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to view availability from another company"
@@ -550,7 +551,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         }
 
         // CASO B: Tiene permiso AVAILABILITY_READ para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
                 Permission.AVAILABILITY_READ
@@ -559,12 +560,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     private void checkUpdatePermission(CurrentUser currentUser, Availability availability) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to update availability from another company"
@@ -590,7 +591,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         }
 
         // CASO B: Tiene permiso AVAILABILITY_UPDATE para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
                 Permission.AVAILABILITY_UPDATE
@@ -599,12 +600,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     private void checkDeletePermission(CurrentUser currentUser, Availability availability) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to delete availability from another company"
@@ -630,7 +631,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         }
 
         // CASO B: Tiene permiso AVAILABILITY_DELETE para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
                 Permission.AVAILABILITY_DELETE

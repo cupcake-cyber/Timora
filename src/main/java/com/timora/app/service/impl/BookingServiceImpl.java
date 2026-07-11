@@ -12,6 +12,7 @@ import com.timora.app.model.enums.BookingStatus;
 import com.timora.app.model.enums.BookingType;
 import com.timora.app.model.enums.Permission;
 import com.timora.app.repository.BookingRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.security.AvailabilityValidatorService;
@@ -34,7 +35,8 @@ public class BookingServiceImpl implements BookingService {
     private final SupplierService supplierService;
     private final PersonService personService;
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlBaseService accessBase;
+    private final AccessControlService access;
     private final AvailabilityValidatorService availabilityValidator;
 
     private static final List<BookingStatus> ACTIVE_STATUSES = List.of(
@@ -237,8 +239,8 @@ public class BookingServiceImpl implements BookingService {
 
         checkReadPermission(currentUser, booking);
 
-        if (!auth.isOwner(currentUser) &&
-                !auth.isAdmin(currentUser) &&
+        if (!accessBase.isOwner(currentUser) &&
+                !accessBase.isAdmin(currentUser) &&
                 booking.getStatus() == BookingStatus.DELETED) {
             throw new NotFoundException("Booking not found");
         }
@@ -253,7 +255,7 @@ public class BookingServiceImpl implements BookingService {
 
         List<Booking> bookings;
 
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             bookings = bookingRepository.findAll();
         } else {
             bookings = bookingRepository.findByCompanyId(currentUser.getCompanyId());
@@ -275,7 +277,7 @@ public class BookingServiceImpl implements BookingService {
 
         Customer customer = customerService.findById(customerId);
 
-        if (!auth.isOwner(currentUser) &&
+        if (!accessBase.isOwner(currentUser) &&
                 !currentUser.getCompanyId().equals(customer.getCompany().getId())) {
             throw new ForbiddenException("You are not allowed to view bookings from another company");
         }
@@ -304,7 +306,7 @@ public class BookingServiceImpl implements BookingService {
 
         Service service = serviceService.getByIdEntity(serviceId);
 
-        if (!auth.isOwner(currentUser) &&
+        if (!accessBase.isOwner(currentUser) &&
                 !currentUser.getCompanyId().equals(service.getCompany().getId())) {
             throw new ForbiddenException("You are not allowed to view bookings from another company");
         }
@@ -327,7 +329,7 @@ public class BookingServiceImpl implements BookingService {
 
         Supplier supplier = supplierService.findById(supplierId);
 
-        auth.requireSupplierAccess(currentUser, supplier);
+        access.requireSupplierAccess(currentUser, supplier);
 
         List<Booking> bookings = bookingRepository.findBySupplierId(supplierId);
 
@@ -347,7 +349,7 @@ public class BookingServiceImpl implements BookingService {
 
         Supplier supplier = supplierService.findById(supplierId);
 
-        auth.requireSupplierAccess(currentUser, supplier);
+        access.requireSupplierAccess(currentUser, supplier);
 
         List<Booking> bookings = bookingRepository.findBySupplierIdAndDateRange(
                 supplierId,
@@ -381,11 +383,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(companyId)) {
                 throw new ForbiddenException("You are not allowed to create bookings in another company");
             }
@@ -403,15 +405,15 @@ public class BookingServiceImpl implements BookingService {
             return;
         }
 
-        auth.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
+        access.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
     }
 
     private void checkReadPermission(CurrentUser currentUser, Booking booking) {
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to view bookings from another company");
             }
@@ -430,15 +432,15 @@ public class BookingServiceImpl implements BookingService {
             return;
         }
 
-        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_READ);
+        access.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_READ);
     }
 
     private void checkUpdatePermission(CurrentUser currentUser, Booking booking) {
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to update bookings from another company");
             }
@@ -457,15 +459,15 @@ public class BookingServiceImpl implements BookingService {
             return;
         }
 
-        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_UPDATE);
+        access.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_UPDATE);
     }
 
     private void checkDeletePermission(CurrentUser currentUser, Booking booking) {
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(booking.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to delete bookings from another company");
             }
@@ -484,7 +486,7 @@ public class BookingServiceImpl implements BookingService {
             return;
         }
 
-        auth.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_DELETE);
+        access.requirePermission(currentUser, bookingSupplier, Permission.BOOKING_DELETE);
     }
 
     private boolean hasReadAccess(CurrentUser currentUser, Booking booking) {

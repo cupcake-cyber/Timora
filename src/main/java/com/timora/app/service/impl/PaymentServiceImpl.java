@@ -16,6 +16,7 @@ import com.timora.app.model.enums.PaymentMethod;
 import com.timora.app.model.enums.PaymentStatus;
 import com.timora.app.model.enums.Permission;
 import com.timora.app.repository.PaymentRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.BookingService;
@@ -38,7 +39,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final BookingService bookingService;
     private final PersonService personService;
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlService access;
+    private final AccessControlBaseService accessBase;
 
     // Estados activos para validación de pago único por booking
     private static final List<PaymentStatus> ACTIVE_PAYMENT_STATUSES = List.of(
@@ -221,7 +223,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         List<Payment> payments;
 
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             payments = paymentRepository.findAll();
         } else {
             payments = paymentRepository.findByCompanyId(currentUser.getCompanyId());
@@ -250,7 +252,7 @@ public class PaymentServiceImpl implements PaymentService {
         Booking booking = bookingService.getByIdEntity(bookingId);
 
         // Verificar que pertenece a la compañía
-        if (!auth.isOwner(currentUser) &&
+        if (!accessBase.isOwner(currentUser) &&
                 !currentUser.getCompanyId().equals(booking.getCompany().getId())) {
             throw new ForbiddenException("You are not allowed to view payments from another company");
         }
@@ -278,7 +280,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         List<Payment> payments;
 
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             payments = paymentRepository.findByStatus(status);
         } else {
             payments = paymentRepository.findByCompanyIdAndStatus(
@@ -303,12 +305,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(companyId)) {
                 throw new ForbiddenException(
                         "You are not allowed to create payments in another company"
@@ -334,17 +336,17 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // CASO B: Tiene permiso BOOKING_CREATE para este supplier
-        auth.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
+        access.requirePermission(currentUser, supplier, Permission.BOOKING_CREATE);
     }
 
     private void checkReadPermission(CurrentUser currentUser, Payment payment) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to view payments from another company"
@@ -371,7 +373,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // CASO B: Tiene permiso BOOKING_READ para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 bookingSupplier,
                 Permission.BOOKING_READ
@@ -380,12 +382,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void checkUpdatePermission(CurrentUser currentUser, Payment payment) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to update payments from another company"
@@ -412,7 +414,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // CASO B: Tiene permiso BOOKING_UPDATE para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 bookingSupplier,
                 Permission.BOOKING_UPDATE
@@ -421,12 +423,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void checkDeletePermission(CurrentUser currentUser, Payment payment) {
         // OWNER: Acceso total
-        if (auth.isOwner(currentUser)) {
+        if (accessBase.isOwner(currentUser)) {
             return;
         }
 
         // ADMIN: Solo dentro de su compañía
-        if (auth.isAdmin(currentUser)) {
+        if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(payment.getCompany().getId())) {
                 throw new ForbiddenException(
                         "You are not allowed to delete payments from another company"
@@ -453,7 +455,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // CASO B: Tiene permiso BOOKING_DELETE para este supplier
-        auth.requirePermission(
+        access.requirePermission(
                 currentUser,
                 bookingSupplier,
                 Permission.BOOKING_DELETE

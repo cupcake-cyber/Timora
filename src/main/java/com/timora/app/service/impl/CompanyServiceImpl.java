@@ -8,10 +8,9 @@ import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
 import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Company;
-import com.timora.app.model.User;
 import com.timora.app.model.enums.CompanyStatus;
-import com.timora.app.model.enums.GlobalRole;
 import com.timora.app.repository.CompanyRepository;
+import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CompanyService;
@@ -27,7 +26,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
     private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
+    private final AccessControlBaseService accessBase;
 
     @Override
     @Transactional
@@ -35,7 +34,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         CurrentUser user = securityHelper.getCurrentUser();
 
-        auth.requireOwner(user);
+        accessBase.requireOwner(user);
 
         if (companyRepository.existsByRuc(companyDTO.getRuc())) {
             throw new BusinessException("The RUC already exists");
@@ -63,7 +62,7 @@ public class CompanyServiceImpl implements CompanyService {
     public List<CompanyDTO> getAll() {
         CurrentUser user = securityHelper.getCurrentUser();
 
-        auth.requireOwner(user);
+        accessBase.requireOwner(user);
 
         List<Company> companies = companyRepository.findAll();
 
@@ -75,7 +74,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         CurrentUser user = securityHelper.getCurrentUser();
 
-        auth.requireSameCompany(user, id);
+        accessBase.requireSameCompany(user, id);
 
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company not found"));
@@ -88,7 +87,7 @@ public class CompanyServiceImpl implements CompanyService {
     public void delete(Long id) {
 
         CurrentUser user = securityHelper.getCurrentUser();
-        auth.requireOwner(user);
+        accessBase.requireOwner(user);
 
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company not found"));
@@ -103,11 +102,11 @@ public class CompanyServiceImpl implements CompanyService {
 
         CurrentUser user = securityHelper.getCurrentUser();
 
-        if (!auth.isOwner(user)) {
+        if (!accessBase.isOwner(user)) {
 
-            auth.requireSameCompany(user, id);
+            accessBase.requireSameCompany(user, id);
 
-            if (auth.isUser(user)) {
+            if (accessBase.isUser(user)) {
                 throw new ForbiddenException("USER cannot update companies");
             }
 
