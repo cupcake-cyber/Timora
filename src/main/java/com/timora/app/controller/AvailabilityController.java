@@ -60,13 +60,13 @@ public class AvailabilityController {
         return ResponseEntity.ok(availabilityService.getById(id));
     }
 
-    @GetMapping("/validate-overlap")
-    public ResponseEntity<Void> validateOverlap(
-            @RequestParam Long supplierId,
-            @RequestParam LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate,  // ← Opcional
-            @RequestParam(required = false) Long excludeId) {   // ← Opcional
-        availabilityService.validateOverlap(supplierId, startDate, endDate, excludeId);
-        return ResponseEntity.ok().build();
-    }
+//    @GetMapping("/validate-overlap")
+//    public ResponseEntity<Void> validateOverlap(
+//            @RequestParam Long supplierId,
+//            @RequestParam LocalDate startDate,
+//            @RequestParam(required = false) LocalDate endDate,  // ← Opcional
+//            @RequestParam(required = false) Long excludeId) {   // ← Opcional
+//        availabilityService.validateOverlap(supplierId, startDate, endDate, excludeId);
+//        return ResponseEntity.ok().build();
+//    }
 }

@@ -40,6 +40,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     private final SecurityHelper securityHelper;
     private final AccessControlService access;
     private final AccessControlBaseService accessBase;
+
     // =========================
     // CREATE
     // =========================
@@ -62,7 +63,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             throw new BusinessException("Supplier ID is required");
         }
 
-        // Usar servicios en lugar de repositorios
         Supplier supplier = supplierService.findById(request.getSupplierId());
 
         if (!supplier.getCompany().getId().equals(request.getCompanyId())) {
@@ -140,18 +140,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         checkCreatePermission(currentUser, supplier, request.getCompanyId());
 
         // =========================
-        // 5. VALIDAR OVERLAPPING
-        // =========================
-
-        validateOverlap(
-                request.getSupplierId(),
-                request.getStartDate(),
-                request.getEndDate(),
-                null
-        );
-
-        // =========================
-        // 6. CREAR ENTIDAD
+        // 5. CREAR ENTIDAD (SIEMPRE ACTIVE)
         // =========================
 
         Availability availability = new Availability();
@@ -175,7 +164,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         availability.setSlotDurationMinutes(request.getSlotDurationMinutes());
         availability.setCapacity(request.getCapacity());
         availability.setNotes(request.getNotes());
-        availability.setStatus(AvailabilityStatus.ACTIVE);
+        availability.setStatus(AvailabilityStatus.ACTIVE); // 🔴 SIEMPRE ACTIVE al crear
 
         Availability saved = availabilityRepository.save(availability);
 
@@ -183,7 +172,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     // =========================
-    // PATCH (UPDATE)
+    // PATCH (UPDATE) - Permite cambiar status
     // =========================
 
     @Override
@@ -206,14 +195,14 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         // =========================
 
         // Validar fechas si vienen en el request
-        LocalDate startDate = request.getStartDate() != null
-                ? request.getStartDate()
-                : availability.getStartDate();
-        LocalDate endDate = request.getEndDate() != null
-                ? request.getEndDate()
-                : availability.getEndDate();
-
         if (request.getStartDate() != null || request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate() != null
+                    ? request.getStartDate()
+                    : availability.getStartDate();
+            LocalDate endDate = request.getEndDate() != null
+                    ? request.getEndDate()
+                    : availability.getEndDate();
+
             if (startDate.isAfter(endDate)) {
                 throw new BusinessException("Start date must be before end date");
             }
@@ -221,8 +210,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             if (startDate.isBefore(LocalDate.now())) {
                 throw new BusinessException("Start date cannot be in the past");
             }
-
-            validateOverlap(availability.getSupplier().getId(), startDate, endDate, id);
         }
 
         // Validar tiempos si vienen en el request
@@ -261,7 +248,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             availability.setEndTime(request.getEndTime());
         }
 
-        // Días de la semana (si vienen en el request)
+        // Días de la semana
         if (request.getMonday() != null) {
             availability.setMonday(request.getMonday());
         }
@@ -300,6 +287,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             availability.setNotes(request.getNotes());
         }
 
+        // 🔴 PERMITIR CAMBIAR EL STATUS (ACTIVE/INACTIVE)
         if (request.getStatus() != null) {
             availability.setStatus(request.getStatus());
         }
@@ -310,7 +298,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     // =========================
-    // DELETE (Soft Delete)
+    // DELETE - Hard Delete (Eliminación física)
     // =========================
 
     @Override
@@ -328,9 +316,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         checkDeletePermission(currentUser, availability);
 
-        // Soft delete - cambiar estado a INACTIVE
-        availability.setStatus(AvailabilityStatus.INACTIVE);
-        availabilityRepository.save(availability);
+        // 🔴 HARD DELETE - Eliminación física de la base de datos
+        availabilityRepository.delete(availability);
     }
 
     // =========================
@@ -345,18 +332,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Availability availability = availabilityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Availability not found"));
 
-        // =========================
-        // 🔐 CONTROL DE ACCESO
-        // =========================
-
         checkReadPermission(currentUser, availability);
-
-        // Los usuarios normales solo pueden ver ACTIVE
-        if (!accessBase.isOwner(currentUser) &&
-                !accessBase.isAdmin(currentUser) &&
-                availability.getStatus() == AvailabilityStatus.INACTIVE) {
-            throw new NotFoundException("Availability not found");
-        }
 
         return toDTO(availability);
     }
@@ -373,15 +349,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         List<Availability> availabilities;
 
         if (accessBase.isOwner(currentUser)) {
-            // Owner ve todas las disponibilidades de todas las compañías
             availabilities = availabilityRepository.findAll();
         } else {
-            // Admin y User solo ven de su compañía
             availabilities = availabilityRepository.findByCompanyId(
                     currentUser.getCompanyId()
             );
 
-            // Filtrar por permisos de lectura
             availabilities = availabilities.stream()
                     .filter(a -> hasReadAccess(currentUser, a))
                     .toList();
@@ -401,19 +374,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        // Usar servicio en lugar de repositorio
         Supplier supplier = supplierService.findById(supplierId);
 
-        // =========================
-        // 🔐 CONTROL DE ACCESO
-        // =========================
-
-        // Verificar que el usuario pueda acceder al supplier
         access.requireSupplierAccess(currentUser, supplier);
 
         List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
 
-        // Filtrar por permisos de lectura
         availabilities = availabilities.stream()
                 .filter(a -> hasReadAccess(currentUser, a))
                 .toList();
@@ -432,18 +398,13 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        // Usar servicio en lugar de repositorio
         Supplier supplier = supplierService.findById(supplierId);
-
-        // =========================
-        // 🔐 CONTROL DE ACCESO
-        // =========================
 
         access.requireSupplierAccess(currentUser, supplier);
 
         List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
 
-        // Filtrar por fecha y permisos
+        // 🔴 SOLO disponibilidades ACTIVE para el calendario
         availabilities = availabilities.stream()
                 .filter(a -> a.getStatus() == AvailabilityStatus.ACTIVE)
                 .filter(a -> isDateInRange(date, a))
@@ -456,26 +417,13 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     // =========================
-    // VALIDACIÓN DE OVERLAPPING
+    // VALIDACIÓN DE OVERLAPPING - ELIMINADA
     // =========================
 
     @Override
     public void validateOverlap(Long supplierId, LocalDate startDate, LocalDate endDate, Long excludeId) {
-
-        // Si endDate es null, usamos una fecha muy lejana para la validación
-        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.of(2999, 12, 31);
-
-        boolean hasOverlap = availabilityRepository.existsOverlapping(
-                supplierId,
-                startDate,
-                effectiveEndDate,
-                excludeId,
-                AvailabilityStatus.ACTIVE
-        );
-
-        if (hasOverlap) {
-            throw new BusinessException("Availability overlaps with existing availability for this supplier");
-        }
+        // 🔴 NO HACE NADA - Overlapping no se valida
+        // Puedes dejarlo vacío o lanzar un mensaje de que no se usa
     }
 
     // =========================
@@ -483,12 +431,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     // =========================
 
     private void checkCreatePermission(CurrentUser currentUser, Supplier supplier, Long companyId) {
-        // OWNER: Acceso total
         if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        // ADMIN: Solo dentro de su compañía
         if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(companyId)) {
                 throw new ForbiddenException(
@@ -498,7 +444,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             return;
         }
 
-        // USER: Necesita ser supplier o tener permiso
         if (!currentUser.getCompanyId().equals(companyId)) {
             throw new ForbiddenException(
                     "You are not allowed to create availability in another company"
@@ -508,23 +453,19 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Person currentPerson = personService.findById(currentUser.getPersonId());
         Supplier currentSupplier = currentPerson.getSupplier();
 
-        // CASO A: El usuario ES el supplier
         if (currentSupplier != null &&
                 currentSupplier.getId().equals(supplier.getId())) {
             return;
         }
 
-        // CASO B: Tiene permiso AVAILABILITY_CREATE para este supplier
         access.requirePermission(currentUser, supplier, Permission.AVAILABILITY_CREATE);
     }
 
     private void checkReadPermission(CurrentUser currentUser, Availability availability) {
-        // OWNER: Acceso total
         if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        // ADMIN: Solo dentro de su compañía
         if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
@@ -534,7 +475,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             return;
         }
 
-        // USER: Necesita ser supplier o tener permiso
         if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
             throw new ForbiddenException(
                     "You are not allowed to view availability from another company"
@@ -544,13 +484,11 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Person currentPerson = personService.findById(currentUser.getPersonId());
         Supplier currentSupplier = currentPerson.getSupplier();
 
-        // CASO A: El usuario ES el supplier
         if (currentSupplier != null &&
                 currentSupplier.getId().equals(availability.getSupplier().getId())) {
             return;
         }
 
-        // CASO B: Tiene permiso AVAILABILITY_READ para este supplier
         access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
@@ -559,12 +497,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     private void checkUpdatePermission(CurrentUser currentUser, Availability availability) {
-        // OWNER: Acceso total
         if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        // ADMIN: Solo dentro de su compañía
         if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
@@ -574,7 +510,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             return;
         }
 
-        // USER: Necesita ser supplier o tener permiso
         if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
             throw new ForbiddenException(
                     "You are not allowed to update availability from another company"
@@ -584,13 +519,11 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Person currentPerson = personService.findById(currentUser.getPersonId());
         Supplier currentSupplier = currentPerson.getSupplier();
 
-        // CASO A: El usuario ES el supplier
         if (currentSupplier != null &&
                 currentSupplier.getId().equals(availability.getSupplier().getId())) {
             return;
         }
 
-        // CASO B: Tiene permiso AVAILABILITY_UPDATE para este supplier
         access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
@@ -599,12 +532,10 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     private void checkDeletePermission(CurrentUser currentUser, Availability availability) {
-        // OWNER: Acceso total
         if (accessBase.isOwner(currentUser)) {
             return;
         }
 
-        // ADMIN: Solo dentro de su compañía
         if (accessBase.isAdmin(currentUser)) {
             if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
                 throw new ForbiddenException(
@@ -614,7 +545,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             return;
         }
 
-        // USER: Necesita ser supplier o tener permiso
         if (!currentUser.getCompanyId().equals(availability.getCompany().getId())) {
             throw new ForbiddenException(
                     "You are not allowed to delete availability from another company"
@@ -624,13 +554,11 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         Person currentPerson = personService.findById(currentUser.getPersonId());
         Supplier currentSupplier = currentPerson.getSupplier();
 
-        // CASO A: El usuario ES el supplier
         if (currentSupplier != null &&
                 currentSupplier.getId().equals(availability.getSupplier().getId())) {
             return;
         }
 
-        // CASO B: Tiene permiso AVAILABILITY_DELETE para este supplier
         access.requirePermission(
                 currentUser,
                 availability.getSupplier(),
@@ -673,7 +601,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             return false;
         }
 
-        // Verificar día de la semana si es WEEKLY
         if (availability.getRecurrenceType() != null) {
             switch (availability.getRecurrenceType()) {
                 case WEEKLY:
@@ -719,7 +646,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         dto.setStartTime(availability.getStartTime());
         dto.setEndTime(availability.getEndTime());
 
-        // Días de la semana
         dto.setMonday(availability.getMonday());
         dto.setTuesday(availability.getTuesday());
         dto.setWednesday(availability.getWednesday());
