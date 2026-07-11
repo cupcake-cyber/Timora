@@ -47,7 +47,6 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
         Supplier supplier = supplierRepository.findById(dto.getSupplierId())
                 .orElseThrow(() -> new BusinessException("Supplier not found"));
 
-        // misma empresa (muy importante en tu modelo)
         if (!user.getCompany().getId().equals(supplier.getCompany().getId())) {
             throw new BusinessException("User and Supplier must belong to the same company");
         }

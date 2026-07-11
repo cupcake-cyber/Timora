@@ -41,7 +41,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final UserService userService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
-    private final UserSupplierPermissionService permissionService;
 
     private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
 

@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 public class SupplierServiceImpl implements SupplierService {
 
     private final SupplierRepository supplierRepository;
-    private final SecurityHelper securityHelper;
-    private final AccessControlService auth;
 
     @Override
     public Supplier findById(Long id){
