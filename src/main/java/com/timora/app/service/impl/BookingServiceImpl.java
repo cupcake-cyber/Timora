@@ -161,7 +161,8 @@ public class BookingServiceImpl implements BookingService {
             availabilityValidator.validateBookingAvailability(
                     booking.getService().getSupplier().getId(),
                     startTime,
-                    endTime
+                    endTime,
+                    booking.getId()
             );
         }
 

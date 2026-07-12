@@ -45,7 +45,7 @@ public class AvailabilityValidatorService {
 
         if (availability == null) {
             throw new BusinessException(
-                    "No availability found for the selected date and time. " +
+                    "No availability found for the selected date anda time. " +
                             "Please check the supplier's schedule."
             );
         }
@@ -351,5 +351,70 @@ public class AvailabilityValidatorService {
 
         int currentBookings = countBookingsForSlot(supplierId, startTime, endTime);
         return Math.max(0, availability.getCapacity() - currentBookings);
+    }
+    /**
+     * Valida disponibilidad excluyendo un booking específico (para updates)
+     */
+    public void validateBookingAvailability(Long supplierId, LocalDateTime startTime,
+                                            LocalDateTime endTime, Long excludeBookingId) {
+        log.debug("Validating booking availability for supplier {}: {} - {}, excluding booking {}",
+                supplierId, startTime, endTime, excludeBookingId);
+
+        Availability availability = findMatchingAvailability(supplierId, startTime, endTime);
+
+        if (availability == null) {
+            throw new BusinessException(
+                    "No availability found for the selected date and time. " +
+                            "Please check the supplier's schedule."
+            );
+        }
+
+        validateCapacity(availability, startTime, endTime, excludeBookingId);
+    }
+
+    /**
+     * Valida capacidad excluyendo un booking específico
+     */
+    private void validateCapacity(Availability availability, LocalDateTime startTime,
+                                  LocalDateTime endTime, Long excludeBookingId) {
+        if (availability.getCapacity() == null) {
+            return;
+        }
+
+        int currentBookings = countBookingsForSlot(
+                availability.getSupplier().getId(),
+                startTime,
+                endTime,
+                excludeBookingId  // 🔴 Pasar el ID a excluir
+        );
+
+        if (currentBookings >= availability.getCapacity()) {
+            throw new BusinessException(
+                    String.format(
+                            "No capacity available for this time slot. " +
+                                    "Current bookings: %d, Max capacity: %d",
+                            currentBookings,
+                            availability.getCapacity()
+                    )
+            );
+        }
+    }
+
+    /**
+     * Cuenta bookings excluyendo uno específico
+     */
+    private int countBookingsForSlot(Long supplierId, LocalDateTime startTime,
+                                     LocalDateTime endTime, Long excludeBookingId) {
+        List<Booking> bookings = bookingRepository.findBySupplierIdAndDateRange(
+                supplierId,
+                startTime,
+                endTime
+        );
+
+        return (int) bookings.stream()
+                .filter(b -> ACTIVE_BOOKING_STATUSES.contains(b.getStatus()))
+                .filter(b -> !b.getId().equals(excludeBookingId)) // 🔴 Excluir el booking actual
+                .filter(b -> isSameSlot(b, startTime, endTime))
+                .count();
     }
 }
