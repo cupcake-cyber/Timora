@@ -9,6 +9,7 @@ import com.timora.app.model.enums.BookingStatus;
 import com.timora.app.repository.AvailabilityRepository;
 import com.timora.app.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -16,12 +17,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
 
-/**
- * Servicio utilitario para validar disponibilidad de suppliers
- * Similar a AccessControlService pero para reglas de negocio de availability
- */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AvailabilityValidatorService {
@@ -29,7 +28,6 @@ public class AvailabilityValidatorService {
     private final AvailabilityRepository availabilityRepository;
     private final BookingRepository bookingRepository;
 
-    // Estados activos para contar bookings
     private static final List<BookingStatus> ACTIVE_BOOKING_STATUSES = List.of(
             BookingStatus.PENDING,
             BookingStatus.CONFIRMED,
@@ -38,15 +36,11 @@ public class AvailabilityValidatorService {
 
     /**
      * Valida si un booking puede ser creado dentro de la disponibilidad del supplier
-     *
-     * @param supplierId ID del supplier
-     * @param startTime Inicio del booking
-     * @param endTime Fin del booking
-     * @throws BusinessException si la validación falla
      */
     public void validateBookingAvailability(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.debug("Validating booking availability for supplier {}: {} - {}",
+                supplierId, startTime, endTime);
 
-        // 1. Buscar availability que cubra el booking
         Availability availability = findMatchingAvailability(supplierId, startTime, endTime);
 
         if (availability == null) {
@@ -56,30 +50,31 @@ public class AvailabilityValidatorService {
             );
         }
 
-        // 2. Validar capacidad
+        log.debug("Found matching availability: ID {}, recurrence: {}",
+                availability.getId(), availability.getRecurrenceType());
+
         validateCapacity(availability, startTime, endTime);
     }
 
     /**
      * Encuentra la availability que cubre un booking específico
-     *
-     * @return Availability que cubre el booking, o null si no existe
      */
     public Availability findMatchingAvailability(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
-
         LocalDate bookingDate = startTime.toLocalDate();
         LocalTime bookingStartTime = startTime.toLocalTime();
         LocalTime bookingEndTime = endTime.toLocalTime();
         long bookingDurationMinutes = Duration.between(startTime, endTime).toMinutes();
 
-        // Obtener todas las disponibilidades activas del supplier
         List<Availability> availabilities = availabilityRepository.findBySupplierIdAndStatus(
                 supplierId,
                 AvailabilityStatus.ACTIVE
         );
 
+        log.debug("Found {} active availabilities for supplier {}", availabilities.size(), supplierId);
+
         for (Availability availability : availabilities) {
-            if (isBookingWithinAvailability(availability, bookingDate, bookingStartTime, bookingEndTime, bookingDurationMinutes)) {
+            if (isBookingWithinAvailability(availability, bookingDate, bookingStartTime,
+                    bookingEndTime, bookingDurationMinutes)) {
                 return availability;
             }
         }
@@ -97,13 +92,13 @@ public class AvailabilityValidatorService {
             LocalTime bookingEndTime,
             long bookingDurationMinutes) {
 
-        // 1. Validar rango de fechas
+        // 1. Validar rango de fechas (startDate - endDate)
         if (!isDateInRange(availability, bookingDate)) {
             return false;
         }
 
-        // 2. Validar día de la semana (si aplica)
-        if (!isDayOfWeekActive(availability, bookingDate)) {
+        // 2. Validar según el tipo de recurrencia
+        if (!isRecurrenceValid(availability, bookingDate)) {
             return false;
         }
 
@@ -112,7 +107,7 @@ public class AvailabilityValidatorService {
             return false;
         }
 
-        // 4. Validar duración (solo si slot_duration está definido)
+        // 4. Validar duración
         if (!isDurationValid(availability, bookingDurationMinutes)) {
             return false;
         }
@@ -121,9 +116,98 @@ public class AvailabilityValidatorService {
     }
 
     /**
+     * 🔥 VALIDACIÓN DE RECURRENCIA (CORREGIDA)
+     */
+    private boolean isRecurrenceValid(Availability availability, LocalDate bookingDate) {
+        AvailabilityRecurring recurrenceType = availability.getRecurrenceType();
+
+        // Si no tiene recurrencia definida, usar NONE como default
+        if (recurrenceType == null) {
+            recurrenceType = AvailabilityRecurring.NONE;
+        }
+
+        switch (recurrenceType) {
+            case NONE:
+                // 🔴 SOLO permite la fecha exacta de startDate
+                // Ej: startDate=15/07/2026 → Solo 15/07/2026
+                return bookingDate.equals(availability.getStartDate());
+
+            case DAILY:
+                // ✅ Todos los días son válidos (ya validado por rango de fechas)
+                // Ej: 01/07-31/07 → Cualquier día en ese rango
+                return true;
+
+            case WEEKLY:
+                // ✅ Validar día de la semana específico
+                // Ej: Lunes y Miércoles → Solo esos días cada semana
+                return isDayOfWeekActive(availability, bookingDate);
+
+            case MONTHLY:
+                // 🔥 MISMO DÍA DEL MES (TODOS LOS MESES)
+                // Ej: startDate=15/07/2026 → 15 de cada mes
+                // ⚠️ Problema: ¿Qué pasa si el mes no tiene ese día?
+                // Ej: 31 de febrero no existe → no debería permitirse
+                return isSameDayOfMonth(availability, bookingDate);
+
+            case YEARLY:
+                // 🔥 MISMO DÍA Y MES (TODOS LOS AÑOS)
+                // Ej: startDate=20/08/2026 → 20 de agosto de cada año
+                return isSameDayAndMonth(availability, bookingDate);
+
+            case CUSTOM:
+                // 🔴 SIN IMPLEMENTACIÓN - Solo validación básica de rango
+                // En el futuro podría implementarse con RRULE
+                log.warn("CUSTOM recurrence not implemented for availability {}. " +
+                        "Only range validation applied.", availability.getId());
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Verifica que sea el mismo día del mes
+     * ⚠️ Maneja casos donde el mes no tiene ese día (ej: 31 de febrero)
+     */
+    private boolean isSameDayOfMonth(Availability availability, LocalDate bookingDate) {
+        int targetDay = availability.getStartDate().getDayOfMonth();
+        int bookingDay = bookingDate.getDayOfMonth();
+
+        // Si el día objetivo es 31, y el mes actual tiene menos de 31 días,
+        // no debería permitirse (ej: 31 de febrero no existe)
+        if (targetDay > 28) {
+            YearMonth yearMonth = YearMonth.of(bookingDate.getYear(), bookingDate.getMonth());
+            int maxDays = yearMonth.lengthOfMonth();
+
+            // Si el mes no tiene el día objetivo, no es válido
+            if (targetDay > maxDays) {
+                log.trace("Day {} does not exist in month {}/{}",
+                        targetDay, bookingDate.getMonth(), bookingDate.getYear());
+                return false;
+            }
+        }
+
+        return bookingDay == targetDay;
+    }
+
+    /**
+     * Verifica que sea el mismo día y mes (para YEARLY)
+     */
+    private boolean isSameDayAndMonth(Availability availability, LocalDate bookingDate) {
+        return bookingDate.getMonth() == availability.getStartDate().getMonth() &&
+                isSameDayOfMonth(availability, bookingDate);
+    }
+
+    /**
      * Verifica que la fecha esté dentro del rango de la availability
      */
     private boolean isDateInRange(Availability availability, LocalDate date) {
+        // Para NONE, solo permite la fecha exacta
+        if (availability.getRecurrenceType() == AvailabilityRecurring.NONE) {
+            return date.equals(availability.getStartDate());
+        }
+
         if (date.isBefore(availability.getStartDate())) {
             return false;
         }
@@ -136,15 +220,9 @@ public class AvailabilityValidatorService {
     }
 
     /**
-     * Verifica que el día de la semana esté activo (solo para WEEKLY)
+     * Verifica que el día de la semana esté activo (para WEEKLY)
      */
     private boolean isDayOfWeekActive(Availability availability, LocalDate date) {
-
-        // Si no es WEEKLY, todos los días son válidos (o depende de la lógica)
-        if (availability.getRecurrenceType() != AvailabilityRecurring.WEEKLY) {
-            return true;
-        }
-
         DayOfWeek dayOfWeek = date.getDayOfWeek();
 
         return switch (dayOfWeek) {
@@ -171,7 +249,7 @@ public class AvailabilityValidatorService {
      */
     private boolean isDurationValid(Availability availability, long bookingDurationMinutes) {
         if (availability.getSlotDurationMinutes() == null) {
-            return true; // No hay restricción de duración
+            return true;
         }
 
         return bookingDurationMinutes == availability.getSlotDurationMinutes();
@@ -182,7 +260,7 @@ public class AvailabilityValidatorService {
      */
     private void validateCapacity(Availability availability, LocalDateTime startTime, LocalDateTime endTime) {
         if (availability.getCapacity() == null) {
-            return; // No hay límite de capacidad
+            return;
         }
 
         int currentBookings = countBookingsForSlot(
@@ -207,14 +285,12 @@ public class AvailabilityValidatorService {
      * Cuenta cuántos bookings activos hay en un slot específico
      */
     private int countBookingsForSlot(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
-        // Buscar bookings del supplier que se solapen con el slot
         List<Booking> bookings = bookingRepository.findBySupplierIdAndDateRange(
                 supplierId,
                 startTime,
                 endTime
         );
 
-        // Filtrar solo bookings activos
         return (int) bookings.stream()
                 .filter(b -> ACTIVE_BOOKING_STATUSES.contains(b.getStatus()))
                 .filter(b -> isSameSlot(b, startTime, endTime))
@@ -223,7 +299,6 @@ public class AvailabilityValidatorService {
 
     /**
      * Verifica si un booking ocupa exactamente el mismo slot
-     * (mismo inicio y fin)
      */
     private boolean isSameSlot(Booking booking, LocalDateTime startTime, LocalDateTime endTime) {
         return booking.getStartTime().equals(startTime) &&
@@ -234,28 +309,20 @@ public class AvailabilityValidatorService {
     // MÉTODOS DE UTILIDAD PÚBLICOS
     // =========================
 
-    /**
-     * Verifica si un supplier tiene disponibilidad para una fecha y hora específicas
-     */
     public boolean hasAvailability(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
         try {
             validateBookingAvailability(supplierId, startTime, endTime);
             return true;
         } catch (BusinessException e) {
+            log.debug("Availability check failed: {}", e.getMessage());
             return false;
         }
     }
 
-    /**
-     * Obtiene la disponibilidad que cubre un booking (si existe)
-     */
     public Availability getAvailabilityForBooking(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
         return findMatchingAvailability(supplierId, startTime, endTime);
     }
 
-    /**
-     * Verifica si hay capacidad disponible en un slot
-     */
     public boolean hasCapacity(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
         Availability availability = findMatchingAvailability(supplierId, startTime, endTime);
 
@@ -271,9 +338,6 @@ public class AvailabilityValidatorService {
         return currentBookings < availability.getCapacity();
     }
 
-    /**
-     * Obtiene la capacidad restante en un slot
-     */
     public int getRemainingCapacity(Long supplierId, LocalDateTime startTime, LocalDateTime endTime) {
         Availability availability = findMatchingAvailability(supplierId, startTime, endTime);
 
