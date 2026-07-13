@@ -13,6 +13,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class SupplierServiceImpl implements SupplierService {
@@ -24,7 +26,12 @@ public class SupplierServiceImpl implements SupplierService {
         return  supplierRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
     }
-
+    @Override
+    public List<Supplier> findByUserId(Long userId) {
+        // Obtener todos los suppliers a los que el usuario tiene permisos
+        // Esto requiere una consulta que una user_supplier_permissions con supplier
+        return supplierRepository.findByUserIdWithPermissions(userId);
+    }
     @Override
     @Transactional
     public Supplier create(Person person, SupplierCreateDTO supplierDTO) {

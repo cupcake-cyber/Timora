@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 @AllArgsConstructor
@@ -38,6 +39,7 @@ public class BookingServiceImpl implements BookingService {
     private final AccessControlBaseService accessBase;
     private final AccessControlService access;
     private final AvailabilityValidatorService availabilityValidator;
+    private final NotificationService notificationService;
 
     private static final List<BookingStatus> ACTIVE_STATUSES = List.of(
             BookingStatus.PENDING,
@@ -121,6 +123,47 @@ public class BookingServiceImpl implements BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
+        // =========================
+        // 🔔 NOTIFICACIONES
+        // =========================
+
+        // 1. Notificar al creador de la reserva (el usuario que la creó)
+        notificationService.notifyNewBooking(
+                currentUser.getUserId(),
+                booking.getName(),
+                booking.getId()
+        );
+
+        // 2. Notificar al supplier (dueño del servicio)
+        try {
+            User supplierUser = userService.findByPersonId(supplier.getPerson().getId());
+            if (supplierUser != null && !supplierUser.getId().equals(currentUser.getUserId())) {
+                notificationService.notifyNewBooking(
+                        supplierUser.getId(),
+                        booking.getName(),
+                        booking.getId()
+                );
+            }
+        } catch (Exception e) {
+            // Si falla la notificación al supplier, no detener el flujo
+            System.err.println("Error sending notification to supplier: " + e.getMessage());
+        }
+
+        // 3. Notificar al customer (cliente de la reserva)
+        try {
+            User customerUser = userService.findByPersonId(customer.getPerson().getId());
+            if (customerUser != null && !customerUser.getId().equals(currentUser.getUserId())) {
+                notificationService.notifyNewBooking(
+                        customerUser.getId(),
+                        booking.getName(),
+                        booking.getId()
+                );
+            }
+        } catch (Exception e) {
+            // Si falla la notificación al customer, no detener el flujo
+            System.err.println("Error sending notification to customer: " + e.getMessage());
+        }
+
         return toDTO(saved);
     }
 
@@ -194,6 +237,9 @@ public class BookingServiceImpl implements BookingService {
             booking.setEndTime(request.getEndTime());
         }
 
+        // 🔔 Guardar el estado anterior antes de actualizar
+        BookingStatus previousStatus = booking.getStatus();
+
         if (request.getStatus() != null) {
             booking.setStatus(request.getStatus());
         }
@@ -212,11 +258,70 @@ public class BookingServiceImpl implements BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
-        Service service = booking.getService(); // ✅ Obtener del booking
+        // =========================
+        // 🔔 NOTIFICACIONES POR CAMBIO DE ESTADO
+        // =========================
+
+        // Si el estado cambió a CONFIRMED
+        if (request.getStatus() != null &&
+                request.getStatus() == BookingStatus.CONFIRMED &&
+                previousStatus != BookingStatus.CONFIRMED) {
+
+            // Notificar al usuario actual
+            notificationService.notifyBookingConfirmed(
+                    currentUser.getUserId(),
+                    booking.getName(),
+                    booking.getId()
+            );
+
+            // Notificar al customer (cliente de la reserva)
+            try {
+                User customerUser = userService.findByPersonId(booking.getCustomer().getPerson().getId());
+                if (customerUser != null && !customerUser.getId().equals(currentUser.getUserId())) {
+                    notificationService.notifyBookingConfirmed(
+                            customerUser.getId(),
+                            booking.getName(),
+                            booking.getId()
+                    );
+                }
+            } catch (Exception e) {
+                System.err.println("Error sending notification to customer: " + e.getMessage());
+            }
+        }
+
+        // Si el estado cambió a CANCELLED
+        if (request.getStatus() != null &&
+                request.getStatus() == BookingStatus.CANCELLED &&
+                previousStatus != BookingStatus.CANCELLED) {
+
+            // Notificar al usuario actual
+            notificationService.notifyBookingCancelled(
+                    currentUser.getUserId(),
+                    booking.getName(),
+                    booking.getId()
+            );
+
+            // Notificar al customer (cliente de la reserva)
+            try {
+                User customerUser = userService.findByPersonId(booking.getCustomer().getPerson().getId());
+                if (customerUser != null && !customerUser.getId().equals(currentUser.getUserId())) {
+                    notificationService.notifyBookingCancelled(
+                            customerUser.getId(),
+                            booking.getName(),
+                            booking.getId()
+                    );
+                }
+            } catch (Exception e) {
+                System.err.println("Error sending notification to customer: " + e.getMessage());
+            }
+        }
+
+        Service service = booking.getService();
         Supplier supplier = service.getSupplier();
         System.out.println("🔍 Supplier ID: " + supplier.getId());
         System.out.println("🔍 Start: " + request.getStartTime());
         System.out.println("🔍 End: " + request.getEndTime());
+
         return toDTO(saved);
     }
 
@@ -255,27 +360,46 @@ public class BookingServiceImpl implements BookingService {
         return toDTO(booking);
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public List<BookingDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
-
         List<Booking> bookings;
 
         if (accessBase.isOwner(currentUser)) {
             bookings = bookingRepository.findAll();
-        } else {
+        } else if (accessBase.isAdmin(currentUser)) {
             bookings = bookingRepository.findByCompanyId(currentUser.getCompanyId());
+            bookings = bookings.stream()
+                    .filter(b -> hasReadAccess(currentUser, b))
+                    .toList();
+        } else {
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
 
+            if (accessibleSuppliers.isEmpty()) {
+                return List.of();
+            }
+
+            List<Long> supplierIds = accessibleSuppliers.stream()
+                    .map(Supplier::getId)
+                    .collect(Collectors.toList());
+
+            // ✅ Usar findBySupplierIdsWithDetails
+            bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
             bookings = bookings.stream()
                     .filter(b -> hasReadAccess(currentUser, b))
                     .toList();
         }
 
+        bookings = bookings.stream()
+                .filter(b -> b.getStatus() != BookingStatus.DELETED)
+                .collect(Collectors.toList());
+
         return bookings.stream()
                 .map(this::toDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

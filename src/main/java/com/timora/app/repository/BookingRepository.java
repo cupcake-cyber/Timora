@@ -87,4 +87,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+    @Query("SELECT b FROM Booking b WHERE b.service.supplier.id IN :supplierIds AND b.status != 'DELETED'")
+    List<Booking> findBySupplierIds(@Param("supplierIds") List<Long> supplierIds);
+    @Query("SELECT DISTINCT b FROM Booking b " +
+            "LEFT JOIN FETCH b.customer c " +
+            "LEFT JOIN FETCH c.person cp " +
+            "LEFT JOIN FETCH b.service s " +
+            "LEFT JOIN FETCH s.supplier sp " +
+            "LEFT JOIN FETCH sp.person spp " +
+            "WHERE b.service.supplier.id IN :supplierIds " +
+            "AND b.status != 'DELETED'")
+    List<Booking> findBySupplierIdsWithDetails(@Param("supplierIds") List<Long> supplierIds);
 }

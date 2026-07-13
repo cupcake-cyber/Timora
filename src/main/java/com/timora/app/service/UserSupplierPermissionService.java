@@ -19,4 +19,5 @@ public interface UserSupplierPermissionService {
     boolean hasAnyPermissionOnSupplier(Long userId, Long supplierId);
     Set<Permission> getPermissionsForSupplier(Long userId, Long supplierId);
     boolean hasAnyPermission(Long userId, Permission permission);
+
 }

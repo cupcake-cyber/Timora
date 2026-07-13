@@ -6,6 +6,7 @@ import com.timora.app.dto.user.UserCreateDTO;
 import com.timora.app.dto.user.UserDTO;
 import com.timora.app.dto.user.UserPatchDTO;
 import com.timora.app.exception.BusinessException;
+import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Person;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.UserStatus;
@@ -26,6 +27,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ConfigurationService configurationService;
+    @Override
+    public User findByPersonId(Long personId) {
+        return userRepository.findByPersonId(personId)
+                .orElseThrow(() -> new NotFoundException("User not found for person with id: " + personId));
+    }
 
     @Override
     public User findById(Long id){
@@ -56,6 +62,8 @@ public class UserServiceImpl implements UserService {
 
         return saved;
     }
+
+
     @Override
     @Transactional
     public User patch(Long id, UserPatchDTO dto) {

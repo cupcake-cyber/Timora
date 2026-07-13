@@ -12,4 +12,5 @@ public interface SupplierService {
     Supplier create(Person person, SupplierCreateDTO supplierDTO);
     Supplier findById(Long id);
     Supplier patch(Long id, SupplierPatchDTO dto);
+    List<Supplier> findByUserId(Long userId);
 }

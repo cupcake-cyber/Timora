@@ -1,5 +1,6 @@
 package com.timora.app.service.impl;
 
+import com.timora.app.dto.payment.PaymentDTO;
 import com.timora.app.dto.personidentity.PersonIdentityCreateDTO;
 import com.timora.app.dto.personidentity.PersonIdentityDTO;
 import com.timora.app.dto.customer.CustomerDTO;
@@ -11,12 +12,12 @@ import com.timora.app.dto.user.UserDTO;
 import com.timora.app.dto.user.UserPatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.ForbiddenException;
-import com.timora.app.model.Customer;
-import com.timora.app.model.Person;
-import com.timora.app.model.Supplier;
-import com.timora.app.model.User;
+import com.timora.app.model.*;
 import com.timora.app.model.enums.GlobalRole;
+import com.timora.app.model.enums.PaymentStatus;
 import com.timora.app.model.enums.Permission;
+import com.timora.app.repository.BookingRepository;
+import com.timora.app.repository.PaymentRepository;
 import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
@@ -26,8 +27,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -41,6 +42,10 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final UserService userService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
+
+
+    private final BookingRepository bookingRepository;
+    private final PaymentRepository paymentRepository;
 
     private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
 
@@ -361,22 +366,66 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonIdentityDTO> getAll() {
 
         CurrentUser user = securityHelper.getCurrentUser();
-
         List<Person> persons;
 
         if (accessBase.isOwner(user)) {
+            // OWNER: Ve todo
             persons = personService.findAll();
-        }else{
+        } else if (accessBase.isAdmin(user)) {
+            // ADMIN: Ve solo de su compañía
             persons = personService.findByCompanyId(user.getCompanyId());
+        } else {
+            // USER: Solo personas relacionadas con sus bookings
+            // 1. Obtener suppliers a los que tiene acceso (con permisos)
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(user.getUserId());
+
+            if (accessibleSuppliers.isEmpty()) {
+                return List.of();
+            }
+
+            List<Long> supplierIds = accessibleSuppliers.stream()
+                    .map(Supplier::getId)
+                    .collect(Collectors.toList());
+
+            // 2. Obtener bookings de esos suppliers CON RELACIONES CARGADAS
+            // ✅ Usar findBySupplierIdsWithDetails en lugar de findBySupplierIds
+            List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
+
+            if (bookings.isEmpty()) {
+                return List.of();
+            }
+
+            // 3. Obtener IDs de personas relevantes
+            Set<Long> personIds = new HashSet<>();
+            personIds.add(user.getPersonId()); // Incluir al propio usuario
+
+            for (Booking booking : bookings) {
+                // Customer
+                if (booking.getCustomer() != null && booking.getCustomer().getPerson() != null) {
+                    personIds.add(booking.getCustomer().getPerson().getId());
+                }
+                // Supplier del servicio
+                if (booking.getService() != null && booking.getService().getSupplier() != null) {
+                    personIds.add(booking.getService().getSupplier().getPerson().getId());
+                }
+            }
+
+            // 4. Obtener personas por IDs
+            if (personIds.isEmpty()) {
+                return List.of();
+            }
+            persons = personService.findByIds(new ArrayList<>(personIds));
         }
 
         return persons.stream()
                 .map(p -> toDTO(p, p.getUser(), p.getCustomer(), p.getSupplier()))
                 .toList();
     }
+
 
     @Override
     public PersonIdentityDTO getById(Long personId) {

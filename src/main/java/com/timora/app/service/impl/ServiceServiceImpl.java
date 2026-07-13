@@ -127,7 +127,20 @@ public class ServiceServiceImpl implements ServiceService {
         } else if (accessBase.isAdmin(currentUser)) {
             services = serviceRepository.findByCompanyId(currentUser.getCompanyId());
         } else {
-            services = serviceRepository.findBySupplierPersonId(currentUser.getPersonId());
+            // ✅ USER: Debe poder ver servicios de suppliers donde tenga permisos
+            // Primero obtenemos los suppliers a los que tiene acceso
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+
+            // Luego obtenemos los servicios de esos suppliers
+            List<Long> supplierIds = accessibleSuppliers.stream()
+                    .map(Supplier::getId)
+                    .collect(Collectors.toList());
+
+            if (supplierIds.isEmpty()) {
+                return List.of();
+            }
+
+            services = serviceRepository.findBySupplierIds(supplierIds);
         }
 
         return services.stream()

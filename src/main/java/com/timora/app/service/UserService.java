@@ -13,4 +13,5 @@ public interface UserService {
     User patch(Long id, UserPatchDTO dto);
     void delete(Long id);
     CurrentUser buildCurrentUser(User user);
+    User findByPersonId(Long personId);
 }

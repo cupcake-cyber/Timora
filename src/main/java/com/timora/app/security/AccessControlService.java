@@ -39,9 +39,15 @@ public class AccessControlService {
             return baseService.isSameCompany(user, supplier.getCompany().getId());
         }
         if (baseService.isUser(user)) {
-            return baseService.isSameCompany(user, supplier.getCompany().getId()) &&
-                    user.getPersonId() != null &&
-                    user.getPersonId().equals(supplier.getPerson().getId());
+            // ✅ UN USER PUEDE ACCEDER A UN SUPPLIER SI:
+            // 1. Es de su misma compañía
+            // 2. TIENE ALGÚN PERMISO ASIGNADO EN user_supplier_permissions
+            if (!baseService.isSameCompany(user, supplier.getCompany().getId())) {
+                return false;
+            }
+
+            // Verificar si tiene algún permiso para este supplier
+            return permissionService.hasAnyPermissionOnSupplier(user.getUserId(), supplier.getId());
         }
         return false;
     }

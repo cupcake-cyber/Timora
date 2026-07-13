@@ -23,7 +23,10 @@ public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
     private final CompanyService companyService;
-
+    @Override
+    public List<Person> findByIds(List<Long> ids) {
+        return personRepository.findByIds(ids);
+    }
     @Override
     @Transactional
     public Person patch(Long id, PersonPatchDTO dto) {

@@ -27,4 +27,7 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     // Para owner que ve todos los NO INACTIVE
     @Query("SELECT s FROM Service s WHERE s.status != 'INACTIVE'")
     List<Service> findAllActive();
+
+    @Query("SELECT s FROM Service s WHERE s.supplier.id IN :supplierIds AND s.status = 'ACTIVE'")
+    List<Service> findBySupplierIds(@Param("supplierIds") List<Long> supplierIds);
 }

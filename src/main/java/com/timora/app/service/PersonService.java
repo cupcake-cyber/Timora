@@ -15,4 +15,5 @@ public interface PersonService {
     List<Person> findAll();
     List<Person> findByCompanyId(Long companyId);
     Person getByIdEntity(Long id);
+    List<Person> findByIds(List<Long> ids);
 }

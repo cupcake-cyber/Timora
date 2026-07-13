@@ -15,20 +15,19 @@ import com.timora.app.model.Supplier;
 import com.timora.app.model.enums.PaymentMethod;
 import com.timora.app.model.enums.PaymentStatus;
 import com.timora.app.model.enums.Permission;
+import com.timora.app.repository.BookingRepository;
 import com.timora.app.repository.PaymentRepository;
 import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
-import com.timora.app.service.BookingService;
-import com.timora.app.service.CompanyService;
-import com.timora.app.service.PaymentService;
-import com.timora.app.service.PersonService;
+import com.timora.app.service.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -41,6 +40,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final SecurityHelper securityHelper;
     private final AccessControlService access;
     private final AccessControlBaseService accessBase;
+    private final SupplierService supplierService;
+    private final BookingRepository bookingRepository;
 
     // Estados activos para validación de pago único por booking
     private static final List<PaymentStatus> ACTIVE_PAYMENT_STATUSES = List.of(
@@ -216,29 +217,59 @@ public class PaymentServiceImpl implements PaymentService {
     // GET ALL BY COMPANY
     // =========================
 
+
     @Override
     public List<PaymentDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
-
         List<Payment> payments;
 
         if (accessBase.isOwner(currentUser)) {
             payments = paymentRepository.findAll();
-        } else {
+        } else if (accessBase.isAdmin(currentUser)) {
             payments = paymentRepository.findByCompanyId(currentUser.getCompanyId());
+            payments = payments.stream()
+                    .filter(p -> hasReadAccess(currentUser, p))
+                    .toList();
+        } else {
+            // USER: Ve pagos de bookings donde tiene permisos
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
 
-            // Filtrar por permisos de lectura
+            if (accessibleSuppliers.isEmpty()) {
+                return List.of();
+            }
+
+            List<Long> supplierIds = accessibleSuppliers.stream()
+                    .map(Supplier::getId)
+                    .collect(Collectors.toList());
+
+            // ✅ USAR findBySupplierIdsWithDetails en lugar de findBySupplierIds
+            List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
+
+            if (bookings.isEmpty()) {
+                return List.of();
+            }
+
+            List<Long> bookingIds = bookings.stream()
+                    .map(Booking::getId)
+                    .collect(Collectors.toList());
+
+            payments = paymentRepository.findByBookingIds(bookingIds);
+
             payments = payments.stream()
                     .filter(p -> hasReadAccess(currentUser, p))
                     .toList();
         }
 
+        // Filtrar pagos eliminados
+        payments = payments.stream()
+                .filter(p -> p.getStatus() != PaymentStatus.DELETED)
+                .toList();
+
         return payments.stream()
                 .map(this::toDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
-
     // =========================
     // GET BY BOOKING ID
     // =========================
