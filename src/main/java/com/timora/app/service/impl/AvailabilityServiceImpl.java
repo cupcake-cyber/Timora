@@ -27,7 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -345,16 +349,50 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     public List<AvailabilityDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
-
         List<Availability> availabilities;
 
         if (accessBase.isOwner(currentUser)) {
             availabilities = availabilityRepository.findAll();
+        } else if (accessBase.isAdmin(currentUser)) {
+            availabilities = availabilityRepository.findByCompanyId(currentUser.getCompanyId());
+            availabilities = availabilities.stream()
+                    .filter(a -> hasReadAccess(currentUser, a))
+                    .toList();
         } else {
-            availabilities = availabilityRepository.findByCompanyId(
-                    currentUser.getCompanyId()
-            );
+            // USER: Debe poder ver disponibilidades donde:
+            // 1. Es supplier (sus propias disponibilidades)
+            // 2. Tiene permisos en user_supplier_permissions
 
+            Set<Long> supplierIds = new HashSet<>();
+
+            // 🔥 CASO 1: Si el usuario es supplier, agregar su propio supplierId
+            try {
+                Person currentPerson = personService.findById(currentUser.getPersonId());
+                Supplier currentSupplier = currentPerson.getSupplier();
+                if (currentSupplier != null) {
+                    supplierIds.add(currentSupplier.getId());
+                }
+            } catch (Exception e) {
+                // Si falla, continuar
+            }
+
+            // 🔥 CASO 2: Suppliers donde tiene permisos (user_supplier_permissions)
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            if (!accessibleSuppliers.isEmpty()) {
+                supplierIds.addAll(
+                        accessibleSuppliers.stream()
+                                .map(Supplier::getId)
+                                .collect(Collectors.toSet())
+                );
+            }
+
+            if (supplierIds.isEmpty()) {
+                return List.of();
+            }
+
+            availabilities = availabilityRepository.findBySupplierIds(new ArrayList<>(supplierIds));
+
+            // Filtrar por permisos de lectura
             availabilities = availabilities.stream()
                     .filter(a -> hasReadAccess(currentUser, a))
                     .toList();
@@ -362,9 +400,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         return availabilities.stream()
                 .map(this::toDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
-
     // =========================
     // GET ALL BY SUPPLIER
     // =========================
@@ -376,6 +413,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         Supplier supplier = supplierService.findById(supplierId);
 
+        // Verificar acceso al supplier
         access.requireSupplierAccess(currentUser, supplier);
 
         List<Availability> availabilities = availabilityRepository.findBySupplierId(supplierId);
@@ -388,7 +426,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 .map(this::toDTO)
                 .toList();
     }
-
     // =========================
     // GET BY SUPPLIER AND DATE
     // =========================

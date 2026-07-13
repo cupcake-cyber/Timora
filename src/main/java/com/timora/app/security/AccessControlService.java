@@ -2,9 +2,11 @@ package com.timora.app.security;
 
 import com.timora.app.dto.security.CurrentUser;
 import com.timora.app.exception.ForbiddenException;
+import com.timora.app.model.Person;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.User;
 import com.timora.app.model.enums.Permission;
+import com.timora.app.service.PersonService;
 import com.timora.app.service.UserSupplierPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,7 +17,7 @@ public class AccessControlService {
 
     private final AccessControlBaseService baseService;
     private final UserSupplierPermissionService permissionService;
-
+    private final PersonService personService;
     // =========================
     // SUPPLIER ACCESS - COMPLETE
     // =========================
@@ -33,6 +35,8 @@ public class AccessControlService {
         return false;
     }
 
+// AccessControlService.java
+
     public boolean hasAccessToSupplier(CurrentUser user, Supplier supplier) {
         if (baseService.isOwner(user)) return true;
         if (baseService.isAdmin(user)) {
@@ -41,17 +45,28 @@ public class AccessControlService {
         if (baseService.isUser(user)) {
             // ✅ UN USER PUEDE ACCEDER A UN SUPPLIER SI:
             // 1. Es de su misma compañía
-            // 2. TIENE ALGÚN PERMISO ASIGNADO EN user_supplier_permissions
             if (!baseService.isSameCompany(user, supplier.getCompany().getId())) {
                 return false;
             }
 
-            // Verificar si tiene algún permiso para este supplier
+            // 🔥 2. Es su propio supplier (el vinculado a su persona)
+            if (user.getPersonId() != null) {
+                try {
+                    Person currentPerson = personService.findById(user.getPersonId());
+                    Supplier currentSupplier = currentPerson.getSupplier();
+                    if (currentSupplier != null && currentSupplier.getId().equals(supplier.getId())) {
+                        return true;
+                    }
+                } catch (Exception e) {
+                    // Si falla, continuar
+                }
+            }
+
+            // 3. Tiene algún permiso en user_supplier_permissions
             return permissionService.hasAnyPermissionOnSupplier(user.getUserId(), supplier.getId());
         }
         return false;
     }
-
     public void requireSupplierAccess(User user, Supplier supplier) {
         if (!hasAccessToSupplier(user, supplier)) {
             throw new ForbiddenException("Access denied to this supplier");

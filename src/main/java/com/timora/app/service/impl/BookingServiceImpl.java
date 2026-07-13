@@ -21,7 +21,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
@@ -376,18 +379,38 @@ public class BookingServiceImpl implements BookingService {
                     .filter(b -> hasReadAccess(currentUser, b))
                     .toList();
         } else {
-            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            // USER: Debe poder ver bookings donde:
+            // 1. Es supplier (sus propios bookings)
+            // 2. Tiene permisos en user_supplier_permissions
 
-            if (accessibleSuppliers.isEmpty()) {
+            Set<Long> supplierIds = new HashSet<>();
+
+            // 🔥 CASO 1: Si el usuario es supplier, agregar su propio supplierId
+            try {
+                Person currentPerson = personService.findById(currentUser.getPersonId());
+                Supplier currentSupplier = currentPerson.getSupplier();
+                if (currentSupplier != null) {
+                    supplierIds.add(currentSupplier.getId());
+                }
+            } catch (Exception e) {
+                // Si falla, continuar
+            }
+
+            // 🔥 CASO 2: Suppliers donde tiene permisos (user_supplier_permissions)
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            if (!accessibleSuppliers.isEmpty()) {
+                supplierIds.addAll(
+                        accessibleSuppliers.stream()
+                                .map(Supplier::getId)
+                                .collect(Collectors.toSet())
+                );
+            }
+
+            if (supplierIds.isEmpty()) {
                 return List.of();
             }
 
-            List<Long> supplierIds = accessibleSuppliers.stream()
-                    .map(Supplier::getId)
-                    .collect(Collectors.toList());
-
-            // ✅ Usar findBySupplierIdsWithDetails
-            bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
+            bookings = bookingRepository.findBySupplierIdsWithDetails(new ArrayList<>(supplierIds));
             bookings = bookings.stream()
                     .filter(b -> hasReadAccess(currentUser, b))
                     .toList();
@@ -401,7 +424,6 @@ public class BookingServiceImpl implements BookingService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<BookingDTO> getAllByCustomer(Long customerId) {

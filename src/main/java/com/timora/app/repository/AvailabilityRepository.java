@@ -62,4 +62,6 @@ public interface AvailabilityRepository extends JpaRepository<Availability, Long
             @Param("excludeId") Long excludeId,
             @Param("status") AvailabilityStatus status
     );
+    @Query("SELECT a FROM Availability a WHERE a.supplier.id IN :supplierIds AND a.status = 'ACTIVE'")
+    List<Availability> findBySupplierIds(@Param("supplierIds") List<Long> supplierIds);
 }

@@ -373,51 +373,54 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         List<Person> persons;
 
         if (accessBase.isOwner(user)) {
-            // OWNER: Ve todo
             persons = personService.findAll();
         } else if (accessBase.isAdmin(user)) {
-            // ADMIN: Ve solo de su compañía
             persons = personService.findByCompanyId(user.getCompanyId());
         } else {
-            // USER: Solo personas relacionadas con sus bookings
-            // 1. Obtener suppliers a los que tiene acceso (con permisos)
+            // USER: Personas relacionadas con sus bookings + su propia persona
+            Set<Long> personIds = new HashSet<>();
+
+            // 🔥 CASO 1: Siempre incluir al propio usuario
+            personIds.add(user.getPersonId());
+
+            // 🔥 CASO 2: Obtener suppliers donde tiene permisos
             List<Supplier> accessibleSuppliers = supplierService.findByUserId(user.getUserId());
 
-            if (accessibleSuppliers.isEmpty()) {
-                return List.of();
-            }
+            if (!accessibleSuppliers.isEmpty()) {
+                List<Long> supplierIds = accessibleSuppliers.stream()
+                        .map(Supplier::getId)
+                        .collect(Collectors.toList());
 
-            List<Long> supplierIds = accessibleSuppliers.stream()
-                    .map(Supplier::getId)
-                    .collect(Collectors.toList());
+                // Obtener bookings de esos suppliers CON RELACIONES CARGADAS
+                List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
 
-            // 2. Obtener bookings de esos suppliers CON RELACIONES CARGADAS
-            // ✅ Usar findBySupplierIdsWithDetails en lugar de findBySupplierIds
-            List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
-
-            if (bookings.isEmpty()) {
-                return List.of();
-            }
-
-            // 3. Obtener IDs de personas relevantes
-            Set<Long> personIds = new HashSet<>();
-            personIds.add(user.getPersonId()); // Incluir al propio usuario
-
-            for (Booking booking : bookings) {
-                // Customer
-                if (booking.getCustomer() != null && booking.getCustomer().getPerson() != null) {
-                    personIds.add(booking.getCustomer().getPerson().getId());
-                }
-                // Supplier del servicio
-                if (booking.getService() != null && booking.getService().getSupplier() != null) {
-                    personIds.add(booking.getService().getSupplier().getPerson().getId());
+                for (Booking booking : bookings) {
+                    // Customer
+                    if (booking.getCustomer() != null && booking.getCustomer().getPerson() != null) {
+                        personIds.add(booking.getCustomer().getPerson().getId());
+                    }
+                    // Supplier del servicio
+                    if (booking.getService() != null && booking.getService().getSupplier() != null) {
+                        personIds.add(booking.getService().getSupplier().getPerson().getId());
+                    }
                 }
             }
 
-            // 4. Obtener personas por IDs
+            // 🔥 CASO 3: Si el usuario es supplier, agregar su propio supplier
+            try {
+                Person currentPerson = personService.findById(user.getPersonId());
+                Supplier currentSupplier = currentPerson.getSupplier();
+                if (currentSupplier != null) {
+                    personIds.add(currentSupplier.getPerson().getId());
+                }
+            } catch (Exception e) {
+                // Si falla, continuar
+            }
+
             if (personIds.isEmpty()) {
                 return List.of();
             }
+
             persons = personService.findByIds(new ArrayList<>(personIds));
         }
 
@@ -425,7 +428,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 .map(p -> toDTO(p, p.getUser(), p.getCustomer(), p.getSupplier()))
                 .toList();
     }
-
 
     @Override
     public PersonIdentityDTO getById(Long personId) {

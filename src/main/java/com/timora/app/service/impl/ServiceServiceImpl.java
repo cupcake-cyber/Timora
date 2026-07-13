@@ -7,6 +7,7 @@ import com.timora.app.dto.service.ServicePatchDTO;
 import com.timora.app.exception.BusinessException;
 import com.timora.app.exception.NotFoundException;
 import com.timora.app.model.Company;
+import com.timora.app.model.Person;
 import com.timora.app.model.Service;
 import com.timora.app.model.Supplier;
 import com.timora.app.model.enums.ServiceStatus;
@@ -15,14 +16,14 @@ import com.timora.app.security.AccessControlBaseService;
 import com.timora.app.security.AccessControlService;
 import com.timora.app.security.SecurityHelper;
 import com.timora.app.service.CompanyService;
+import com.timora.app.service.PersonService;
 import com.timora.app.service.ServiceService;
 import com.timora.app.service.SupplierService;
 import lombok.AllArgsConstructor;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
@@ -35,7 +36,7 @@ public class ServiceServiceImpl implements ServiceService {
     private final ServiceRepository serviceRepository;
     private final CompanyService companyService;
     private final SupplierService supplierService;
-
+    private final PersonService personService;
     private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
         if (entityCompanyId == null) return;
         if (!Objects.equals(baseCompanyId, entityCompanyId)) {
@@ -127,27 +128,44 @@ public class ServiceServiceImpl implements ServiceService {
         } else if (accessBase.isAdmin(currentUser)) {
             services = serviceRepository.findByCompanyId(currentUser.getCompanyId());
         } else {
-            // ✅ USER: Debe poder ver servicios de suppliers donde tenga permisos
-            // Primero obtenemos los suppliers a los que tiene acceso
-            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            // USER: Debe poder ver servicios donde:
+            // 1. Es supplier (sus propios servicios)
+            // 2. Tiene permisos en user_supplier_permissions
 
-            // Luego obtenemos los servicios de esos suppliers
-            List<Long> supplierIds = accessibleSuppliers.stream()
-                    .map(Supplier::getId)
-                    .collect(Collectors.toList());
+            Set<Long> supplierIds = new HashSet<>();
+
+            // 🔥 CASO 1: Si el usuario es supplier, agregar su propio supplierId
+            try {
+                Person currentPerson = personService.findById(currentUser.getPersonId());
+                Supplier currentSupplier = currentPerson.getSupplier();
+                if (currentSupplier != null) {
+                    supplierIds.add(currentSupplier.getId());
+                }
+            } catch (Exception e) {
+                // Si falla, continuar
+            }
+
+            // 🔥 CASO 2: Suppliers donde tiene permisos (user_supplier_permissions)
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            if (!accessibleSuppliers.isEmpty()) {
+                supplierIds.addAll(
+                        accessibleSuppliers.stream()
+                                .map(Supplier::getId)
+                                .collect(Collectors.toSet())
+                );
+            }
 
             if (supplierIds.isEmpty()) {
                 return List.of();
             }
 
-            services = serviceRepository.findBySupplierIds(supplierIds);
+            services = serviceRepository.findBySupplierIds(new ArrayList<>(supplierIds));
         }
 
         return services.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional(readOnly = true)
     public ServiceDTO getById(Long id) {
