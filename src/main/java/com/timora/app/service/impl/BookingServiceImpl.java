@@ -236,6 +236,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingDTO getById(Long id) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -255,6 +256,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -277,6 +279,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDTO> getAllByCustomer(Long customerId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -300,12 +303,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Booking getByIdEntity(Long id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Booking not found with id: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDTO> getAllByService(Long serviceId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -329,6 +334,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDTO> getAllBySupplier(Long supplierId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -349,6 +355,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDTO> getBySupplierAndDateRange(Long supplierId, LocalDateTime startDate, LocalDateTime endDate) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -373,6 +380,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void validateOverlap(Long serviceId, LocalDateTime startTime, LocalDateTime endTime, Long excludeId) {
 
         boolean hasOverlap = bookingRepository.existsOverlapping(
