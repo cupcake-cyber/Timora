@@ -336,18 +336,25 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<BookingDTO> getAllBySupplier(Long supplierId) {
-
+        System.out.println("🔍 getAllBySupplier - supplierId: " + supplierId);
         CurrentUser currentUser = securityHelper.getCurrentUser();
+        System.out.println("🔍 currentUser: " + currentUser);
+        System.out.println("🔍 personId: " + currentUser.getPersonId());
+        System.out.println("🔍 companyId: " + currentUser.getCompanyId());
 
         Supplier supplier = supplierService.findById(supplierId);
+        System.out.println("🔍 supplier: " + supplier);
 
         access.requireSupplierAccess(currentUser, supplier);
+        System.out.println("✅ Access granted");
 
         List<Booking> bookings = bookingRepository.findBySupplierId(supplierId);
+        System.out.println("🔍 Bookings found: " + bookings.size());
 
         bookings = bookings.stream()
                 .filter(b -> hasReadAccess(currentUser, b))
                 .toList();
+        System.out.println("🔍 Bookings after filter: " + bookings.size());
 
         return bookings.stream()
                 .map(this::toDTO)
