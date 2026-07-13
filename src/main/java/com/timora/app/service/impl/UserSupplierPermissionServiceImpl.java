@@ -319,15 +319,42 @@ public class UserSupplierPermissionServiceImpl implements UserSupplierPermission
         CurrentUser currentUser = securityHelper.getCurrentUser();
         System.out.println("👤 CurrentUser: " + currentUser.getUserId() + ", role: " + currentUser.getRole());
 
-        if (!accessBase.isOwner(currentUser) && !accessBase.isAdmin(currentUser)) {
+        // 🔥 PERMITIR QUE EL USUARIO VEA SUS PROPIOS PERMISOS
+        boolean isOwner = accessBase.isOwner(currentUser);
+        boolean isAdmin = accessBase.isAdmin(currentUser);
+        boolean isSelf = currentUser.getUserId().equals(userId);
+
+        System.out.println("🔍 Verificando permisos:");
+        System.out.println("  - isOwner: " + isOwner);
+        System.out.println("  - isAdmin: " + isAdmin);
+        System.out.println("  - isSelf: " + isSelf);
+
+        if (!isOwner && !isAdmin && !isSelf) {
             System.out.println("⛔ Usuario no autorizado");
             throw new ForbiddenException("You are not allowed to view permissions");
         }
+        System.out.println("✅ Usuario autorizado");
 
+        // Si es USER viendo sus propios permisos, no necesita validación de compañía
+        if (isSelf && !isOwner && !isAdmin) {
+            System.out.println("👤 USER viendo sus propios permisos - acceso permitido");
+            // Solo buscar sus permisos
+            List<UserSupplierPermission> permissions = userSupplierPermissionRepository.findByUserId(userId);
+            Map<Long, Set<Permission>> map = new HashMap<>();
+            for (UserSupplierPermission permission : permissions) {
+                map.computeIfAbsent(
+                        permission.getSupplier().getId(),
+                        k -> new HashSet<>()
+                ).add(permission.getId().getPermission());
+            }
+            return new UserPermissionMapDTO(map);
+        }
+
+        // Para OWNER y ADMIN, validar que el usuario existe
         User targetUser = userService.findById(userId);
         System.out.println("✅ TargetUser encontrado: id=" + targetUser.getId() + ", companyId=" + targetUser.getCompany().getId());
 
-        if (accessBase.isAdmin(currentUser)) {
+        if (isAdmin) {
             Long companyId = currentUser.getCompanyId();
             System.out.println("🔍 Validando compañía para ADMIN: " + companyId);
 
