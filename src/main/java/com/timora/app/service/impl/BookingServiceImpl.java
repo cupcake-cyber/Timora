@@ -390,7 +390,6 @@ public class BookingServiceImpl implements BookingService {
                 excludeId,
                 ACTIVE_STATUSES
         );
-
         if (hasOverlap) {
             throw new BusinessException("Booking overlaps with existing booking for this service");
         }
