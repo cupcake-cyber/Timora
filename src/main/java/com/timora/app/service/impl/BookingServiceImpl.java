@@ -212,6 +212,11 @@ public class BookingServiceImpl implements BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
+        Service service = booking.getService(); // ✅ Obtener del booking
+        Supplier supplier = service.getSupplier();
+        System.out.println("🔍 Supplier ID: " + supplier.getId());
+        System.out.println("🔍 Start: " + request.getStartTime());
+        System.out.println("🔍 End: " + request.getEndTime());
         return toDTO(saved);
     }
 

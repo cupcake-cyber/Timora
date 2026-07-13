@@ -71,6 +71,7 @@ public class AvailabilityValidatorService {
         );
 
         log.debug("Found {} active availabilities for supplier {}", availabilities.size(), supplierId);
+        System.out.println("📋 Disponibilidades activas encontradas: " + availabilities.size());
 
         for (Availability availability : availabilities) {
             if (isBookingWithinAvailability(availability, bookingDate, bookingStartTime,
