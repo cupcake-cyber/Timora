@@ -91,27 +91,22 @@ public class AvailabilityValidatorService {
             LocalTime bookingStartTime,
             LocalTime bookingEndTime,
             long bookingDurationMinutes) {
-
-        // 1. Validar rango de fechas (startDate - endDate)
         if (!isDateInRange(availability, bookingDate)) {
+            log.debug("❌ Falla date range");
             return false;
         }
-
-        // 2. Validar según el tipo de recurrencia
         if (!isRecurrenceValid(availability, bookingDate)) {
+            log.debug("❌ Falla recurrence");
             return false;
         }
-
-        // 3. Validar horario
         if (!isTimeWithinRange(availability, bookingStartTime, bookingEndTime)) {
+            log.debug("❌ Falla time range");
             return false;
         }
-
-        // 4. Validar duración
         if (!isDurationValid(availability, bookingDurationMinutes)) {
+            log.debug("❌ Falla duration");
             return false;
         }
-
         return true;
     }
 
@@ -251,8 +246,7 @@ public class AvailabilityValidatorService {
         if (availability.getSlotDurationMinutes() == null) {
             return true;
         }
-
-        return bookingDurationMinutes == availability.getSlotDurationMinutes();
+        return bookingDurationMinutes <= availability.getSlotDurationMinutes();
     }
 
     /**
