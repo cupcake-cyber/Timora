@@ -121,18 +121,20 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 throw new ForbiddenException("You are not allowed to create Users or Suppliers");
             }
 
+            // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER crear customers
             // 🔥 Si el USER es SUPPLIER, puede crear customers sin permisos adicionales
             // Obtener el supplier del usuario actual
-            Person currentPerson = personService.findById(currentUser.getPersonId());
-            Supplier currentSupplier = currentPerson.getSupplier();
-
-            if (currentSupplier != null) {
-                // Es supplier, puede crear customers libremente (dentro de su compañía)
-                // Pasa sin restricciones
-            } else {
-                // No es supplier, necesita permiso CUSTOMER_CREATE en algún proveedor
-                access.requireCanCreateCustomerAnywhere(currentUser);
-            }
+            // Person currentPerson = personService.findById(currentUser.getPersonId());
+            // Supplier currentSupplier = currentPerson.getSupplier();
+            //
+            // if (currentSupplier != null) {
+            //     // Es supplier, puede crear customers libremente (dentro de su compañía)
+            //     // Pasa sin restricciones
+            // } else {
+            //     // No es supplier, necesita permiso CUSTOMER_CREATE en algún proveedor
+            //     access.requireCanCreateCustomerAnywhere(currentUser);
+            // }
+            // ✅ TEMPORAL: Permitir sin verificar permisos
         }
 
         // =========================
@@ -155,7 +157,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         return toDTO(person, user, customer, supplier);
     }
-
     @Override
     @Transactional
     public PersonIdentityDTO patch(Long id, PersonIdentityPatchDTO request) {
@@ -172,51 +173,58 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }
 
-            // Si es USER (no ADMIN ni OWNER)
-            if (!accessBase.isAdmin(currentUser)) {
+            // Si es ADMIN
+            if (accessBase.isAdmin(currentUser)) {
+                // ADMIN puede editar cualquier persona de su compañía
+                // Pasa sin restricciones adicionales
+            }
+            // Si es USER
+            else if (accessBase.isUser(currentUser)) {
 
-                // Solo puede editar su propia persona
-                if (!current.getId().equals(currentUser.getPersonId())) {
-                    throw new ForbiddenException("You can only edit your own profile");
-                }
+                // 🔥 Verificar si el usuario es SUPPLIER
+                Person currentPerson = personService.findById(currentUser.getPersonId());
+                Supplier currentSupplier = currentPerson.getSupplier();
+                boolean isSupplier = currentSupplier != null;
 
-                // Verificar que sea Customer o Supplier
-                if (current.getCustomer() == null && current.getSupplier() == null) {
-                    throw new ForbiddenException("You are not a customer or supplier");
-                }
-
-                // 🔥 REGLAS ESPECÍFICAS SEGÚN EL TIPO
-                boolean isCustomer = current.getCustomer() != null;
-                boolean isSupplier = current.getSupplier() != null;
-
-                // Si es CUSTOMER: solo puede editar CUSTOMER (no USER ni SUPPLIER)
-                if (isCustomer && !isSupplier) {
-                    if (request.getUser() != null || request.getSupplier() != null) {
-                        throw new ForbiddenException("You are not allowed to modify user or supplier data");
-                    }
-                }
-
-                // Si es SUPPLIER: puede editar su PERSON y SUPPLIER
-                if (isSupplier) {
-                    // ✅ Supplier puede editar su persona y supplier
-                    // No necesita permisos adicionales para su propio supplier
-
-                    // Pero no puede modificar USER (no debe poder cambiar su rol)
+                // Si está editando su propia persona
+                if (current.getId().equals(currentUser.getPersonId())) {
+                    // ✅ Puede editar su propia persona
+                    // No puede modificar USER (no debe poder cambiar su rol)
                     if (request.getUser() != null) {
                         throw new ForbiddenException("You are not allowed to modify user data");
                     }
-                }
-
-                // 🔥 Si el USER es SUPPLIER, puede actualizar customers sin permisos adicionales
-                if (request.getCustomer() != null) {
-                    Person currentPerson = personService.findById(currentUser.getPersonId());
-                    Supplier currentSupplier = currentPerson.getSupplier();
-
-                    if (currentSupplier == null) {
-                        // No es supplier, necesita permiso CUSTOMER_UPDATE en algún proveedor
-                        access.requireCanUpdateCustomerAnywhere(currentUser);
+                    // Si es supplier y está editando su supplier, permitir
+                    if (request.getSupplier() != null && !isSupplier) {
+                        throw new ForbiddenException("You are not a supplier");
                     }
-                    // Si es supplier, pasa sin restricciones
+                }
+                // Si está editando la persona de un customer
+                else {
+                    // Verificar que la persona tenga un customer asociado
+                    if (current.getCustomer() == null) {
+                        throw new ForbiddenException("You can only edit customers");
+                    }
+
+                    // 🔥 Si es SUPPLIER, puede editar a sus customers
+                    if (isSupplier) {
+                        // ✅ Supplier puede editar a sus customers
+                        // No necesita permisos adicionales
+                    }
+                    // 🔥 Si NO es SUPPLIER, necesita permiso CUSTOMER_UPDATE
+                    else {
+                        // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER editar customers
+                        // if (!access.hasPermissionAnywhere(currentUser, Permission.CUSTOMER_UPDATE)) {
+                        //     throw new ForbiddenException(
+                        //             "You don't have permission to update customers"
+                        //     );
+                        // }
+                        // ✅ TEMPORAL: Permitir sin verificar permisos
+                    }
+
+                    // No puede modificar USER ni SUPPLIER del customer
+                    if (request.getUser() != null || request.getSupplier() != null) {
+                        throw new ForbiddenException("You are not allowed to modify user or supplier data");
+                    }
                 }
             }
         }
@@ -343,31 +351,39 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             // ADMIN puede eliminar lo que sea dentro de su empresa
         }
         // USER: Solo puede eliminar CUSTOMER
-        else {
+        else if (accessBase.isUser(currentUser)) {
+
             // Verificar que sea de la misma compañía
             if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }
 
-            // Un USER solo puede eliminar CUSTOMER (no USER ni SUPPLIER)
+            // Solo puede eliminar CUSTOMER (no USER ni SUPPLIER)
             if (person.getCustomer() == null) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+                throw new ForbiddenException("You can only delete customers");
             }
 
-            // Solo puede eliminar su propio perfil
-            if (!person.getId().equals(currentUser.getPersonId())) {
-                throw new ForbiddenException("You can only delete your own profile");
-            }
-
-            // 🔥 Si el USER es SUPPLIER, puede eliminar customers sin permisos adicionales
-            Person currentPerson = personService.findById(currentUser.getPersonId());
-            Supplier currentSupplier = currentPerson.getSupplier();
-
-            if (currentSupplier == null) {
-                // No es supplier, necesita permiso CUSTOMER_DELETE en algún proveedor
-                access.requireCanDeleteCustomerAnywhere(currentUser);
-            }
-            // Si es supplier, pasa sin restricciones
+            // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER eliminar customers
+            // 🔥 Verificar si el usuario es SUPPLIER o tiene permisos
+            // Person currentPerson = personService.findById(currentUser.getPersonId());
+            // Supplier currentSupplier = currentPerson.getSupplier();
+            // boolean isSupplier = currentSupplier != null;
+            //
+            // // 🔥 Verificar si tiene permisos en algún supplier
+            // List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+            // boolean hasPermissions = !accessibleSuppliers.isEmpty();
+            //
+            // // 🔥 Si es SUPPLIER O tiene permisos → Puede eliminar customers
+            // if (isSupplier || hasPermissions) {
+            //     // ✅ Puede eliminar customers (no solo el suyo propio)
+            //     // Pasa sin restricciones adicionales
+            // } else {
+            //     // ❌ Si NO es supplier Y NO tiene permisos → Solo puede eliminar su propio perfil
+            //     if (!person.getId().equals(currentUser.getPersonId())) {
+            //         throw new ForbiddenException("You can only delete your own profile");
+            //     }
+            // }
+            // ✅ TEMPORAL: Permitir sin verificar permisos
         }
 
         // =========================
@@ -393,44 +409,57 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         } else if (accessBase.isAdmin(user)) {
             persons = personService.findByCompanyId(user.getCompanyId());
         } else {
-            // USER: Personas relacionadas con sus bookings + su propia persona
+            // ✅ USER: Puede ser supplier o no
             Set<Long> personIds = new HashSet<>();
 
-            // 🔥 CASO 1: Siempre incluir al propio usuario
+            // 🔥 1. SIEMPRE incluir al propio usuario
             personIds.add(user.getPersonId());
 
-            // 🔥 CASO 2: Obtener suppliers donde tiene permisos
-            List<Supplier> accessibleSuppliers = supplierService.findByUserId(user.getUserId());
-
-            if (!accessibleSuppliers.isEmpty()) {
-                List<Long> supplierIds = accessibleSuppliers.stream()
-                        .map(Supplier::getId)
-                        .collect(Collectors.toList());
-
-                // Obtener bookings de esos suppliers CON RELACIONES CARGADAS
-                List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
-
-                for (Booking booking : bookings) {
-                    // Customer
-                    if (booking.getCustomer() != null && booking.getCustomer().getPerson() != null) {
-                        personIds.add(booking.getCustomer().getPerson().getId());
-                    }
-                    // Supplier del servicio
-                    if (booking.getService() != null && booking.getService().getSupplier() != null) {
-                        personIds.add(booking.getService().getSupplier().getPerson().getId());
-                    }
-                }
-            }
-
-            // 🔥 CASO 3: Si el usuario es supplier, agregar su propio supplier
+            // 🔥 2. Verificar si el usuario es SUPPLIER O TIENE PERMISOS
+            boolean isSupplier = false;
+            Long ownSupplierId = null;
             try {
                 Person currentPerson = personService.findById(user.getPersonId());
                 Supplier currentSupplier = currentPerson.getSupplier();
                 if (currentSupplier != null) {
+                    isSupplier = true;
+                    ownSupplierId = currentSupplier.getId();
+                    // Agregar al supplier como persona
                     personIds.add(currentSupplier.getPerson().getId());
                 }
             } catch (Exception e) {
                 // Si falla, continuar
+            }
+
+            // 🔥 3. Verificar si tiene permisos en algún supplier
+            List<Supplier> accessibleSuppliers = supplierService.findByUserId(user.getUserId());
+            boolean hasPermissions = !accessibleSuppliers.isEmpty();
+
+            // 🔥 4. Si es SUPPLIER O TIENE PERMISOS → Ver TODOS los customers de su compañía
+            if (isSupplier || hasPermissions) {
+                // ✅ Ve todos los customers de su compañía
+                List<Person> allPersonsInCompany = personService.findByCompanyId(user.getCompanyId());
+                for (Person p : allPersonsInCompany) {
+                    // Solo agregar personas que tienen customer
+                    if (p.getCustomer() != null) {
+                        personIds.add(p.getId());
+                    }
+                }
+
+                // ✅ Si es supplier, también agregar suppliers relacionados
+                if (isSupplier) {
+                    // Ya se agregó el propio supplier
+                }
+
+                // ✅ Agregar suppliers donde tiene permisos
+                if (hasPermissions) {
+                    for (Supplier supplier : accessibleSuppliers) {
+                        personIds.add(supplier.getPerson().getId());
+                    }
+                }
+            } else {
+                // 🔥 5. Si NO es supplier Y NO tiene permisos → Solo su propia persona
+                // (ya está en personIds)
             }
 
             if (personIds.isEmpty()) {

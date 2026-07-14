@@ -43,13 +43,12 @@ public class AccessControlService {
             return baseService.isSameCompany(user, supplier.getCompany().getId());
         }
         if (baseService.isUser(user)) {
-            // ✅ UN USER PUEDE ACCEDER A UN SUPPLIER SI:
-            // 1. Es de su misma compañía
+            // 1. Misma compañía
             if (!baseService.isSameCompany(user, supplier.getCompany().getId())) {
                 return false;
             }
 
-            // 🔥 2. Es su propio supplier (el vinculado a su persona)
+            // 2. Es su propio supplier (el vinculado a su persona)
             if (user.getPersonId() != null) {
                 try {
                     Person currentPerson = personService.findById(user.getPersonId());
@@ -67,6 +66,8 @@ public class AccessControlService {
         }
         return false;
     }
+
+
     public void requireSupplierAccess(User user, Supplier supplier) {
         if (!hasAccessToSupplier(user, supplier)) {
             throw new ForbiddenException("Access denied to this supplier");
