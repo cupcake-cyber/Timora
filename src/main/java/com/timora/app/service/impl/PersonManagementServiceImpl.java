@@ -162,7 +162,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
         Person current = personService.findById(id);
-
         // =========================
         // 🔐 ACCESS CONTROL
         // =========================
@@ -173,7 +172,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                 throw new ForbiddenException("You are not allowed to perform this action");
             }
 
-            // Si es USER
+            // Si es USER (no ADMIN ni OWNER)
             if (!accessBase.isAdmin(currentUser)) {
 
                 // Solo puede editar su propia persona
@@ -181,13 +180,31 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                     throw new ForbiddenException("You can only edit your own profile");
                 }
 
+                // Verificar que sea Customer o Supplier
                 if (current.getCustomer() == null && current.getSupplier() == null) {
                     throw new ForbiddenException("You are not a customer or supplier");
                 }
 
-                // Solo puede editar CUSTOMER (no USER ni SUPPLIER)
-                if (request.getUser() != null || request.getSupplier() != null) {
-                    throw new ForbiddenException("You are not allowed to modify user or supplier data");
+                // 🔥 REGLAS ESPECÍFICAS SEGÚN EL TIPO
+                boolean isCustomer = current.getCustomer() != null;
+                boolean isSupplier = current.getSupplier() != null;
+
+                // Si es CUSTOMER: solo puede editar CUSTOMER (no USER ni SUPPLIER)
+                if (isCustomer && !isSupplier) {
+                    if (request.getUser() != null || request.getSupplier() != null) {
+                        throw new ForbiddenException("You are not allowed to modify user or supplier data");
+                    }
+                }
+
+                // Si es SUPPLIER: puede editar su PERSON y SUPPLIER
+                if (isSupplier) {
+                    // ✅ Supplier puede editar su persona y supplier
+                    // No necesita permisos adicionales para su propio supplier
+
+                    // Pero no puede modificar USER (no debe poder cambiar su rol)
+                    if (request.getUser() != null) {
+                        throw new ForbiddenException("You are not allowed to modify user data");
+                    }
                 }
 
                 // 🔥 Si el USER es SUPPLIER, puede actualizar customers sin permisos adicionales
