@@ -220,6 +220,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<PaymentDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
