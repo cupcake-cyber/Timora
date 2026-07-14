@@ -181,9 +181,8 @@ public class PersonManagementServiceImpl implements PersonManagementService {
                     throw new ForbiddenException("You can only edit your own profile");
                 }
 
-                // Solo puede editar si es CUSTOMER
-                if (current.getCustomer() == null) {
-                    throw new ForbiddenException("You are not a customer");
+                if (current.getCustomer() == null && current.getSupplier() == null) {
+                    throw new ForbiddenException("You are not a customer or supplier");
                 }
 
                 // Solo puede editar CUSTOMER (no USER ni SUPPLIER)
