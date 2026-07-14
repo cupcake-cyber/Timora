@@ -197,6 +197,7 @@ public class PaymentServiceImpl implements PaymentService {
     // =========================
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentDTO getById(Long id) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -275,6 +276,7 @@ public class PaymentServiceImpl implements PaymentService {
     // =========================
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentDTO getByBookingId(Long bookingId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
@@ -305,6 +307,7 @@ public class PaymentServiceImpl implements PaymentService {
     // =========================
 
     @Override
+    @Transactional(readOnly = true)
     public List<PaymentDTO> getByStatus(PaymentStatus status) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
