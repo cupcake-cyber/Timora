@@ -499,9 +499,17 @@ public class PaymentServiceImpl implements PaymentService {
 
     private boolean hasReadAccess(CurrentUser currentUser, Payment payment) {
         try {
-            checkReadPermission(currentUser, payment);
-            return true;
+            // Asegurar que las relaciones estén cargadas
+            if (payment.getBooking() != null && payment.getBooking().getService() != null) {
+                // Ya están cargadas con JOIN FETCH
+                checkReadPermission(currentUser, payment);
+                return true;
+            }
+            return false;
         } catch (ForbiddenException e) {
+            return false;
+        } catch (Exception e) {
+            // Si hay LazyInitializationException, retornar false
             return false;
         }
     }
