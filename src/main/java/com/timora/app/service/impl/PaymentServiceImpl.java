@@ -282,13 +282,13 @@ public class PaymentServiceImpl implements PaymentService {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
 
-        // Usar servicio en lugar de repositorio
+
         Booking booking = bookingService.getByIdEntity(bookingId);
 
-        // Verificar que pertenece a la compañía
-        if (!accessBase.isOwner(currentUser) &&
-                !currentUser.getCompanyId().equals(booking.getCompany().getId())) {
-            throw new ForbiddenException("You are not allowed to view payments from another company");
+        if(accessBase.isOwner(currentUser)) {
+            if(!accessBase.isSameCompany(currentUser,booking.getCompany().getId())){
+                throw new ForbiddenException("You are not allowed to perform this action");
+            }
         }
 
         Payment payment = paymentRepository.findByBookingId(bookingId);

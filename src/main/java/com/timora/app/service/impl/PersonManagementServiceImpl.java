@@ -47,15 +47,6 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
 
-    private void validateSameCompany(Long baseCompanyId, Long entityCompanyId, String entityName) {
-
-        if (entityCompanyId == null) return;
-
-        if (!Objects.equals(baseCompanyId, entityCompanyId)) {
-            throw new BusinessException(entityName + " must belong to the same company");
-        }
-    }
-
     @Override
     @Transactional
     public PersonIdentityDTO create(PersonIdentityCreateDTO request) {
@@ -65,6 +56,7 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         if (request.getPerson() == null) {
             throw new BusinessException("You need to define a person.");
         }
+
         Long baseCompanyId = request.getPerson().getCompanyId();
 
         boolean hasUser = request.getUser() != null;
@@ -74,67 +66,27 @@ public class PersonManagementServiceImpl implements PersonManagementService {
         if (!hasUser && !hasCustomer && !hasSupplier) {
             throw new BusinessException("A person must be created as a User, Supplier or Customer.");
         }
+
         if (hasCustomer && hasUser) {
             throw new BusinessException("A customer cannot be a user.");
         }
+
         if (hasCustomer && hasSupplier) {
             throw new BusinessException("A customer cannot be a supplier.");
         }
 
-        validateSameCompany(baseCompanyId,
-                request.getUser() != null ? request.getUser().getCompanyId() : null,
-                "User");
-
-        validateSameCompany(baseCompanyId,
-                request.getSupplier() != null ? request.getSupplier().getCompanyId() : null,
-                "Supplier");
-
-        validateSameCompany(baseCompanyId,
-                request.getCustomer() != null ? request.getCustomer().getCompanyId() : null,
-                "Customer");
-
         // =========================
         // PERMISOS
         // =========================
-
-        // OWNER: Puede hacer todo
-        if (accessBase.isOwner(currentUser)) {
-            // Pasa sin restricciones
-        }
-        // ADMIN: Puede hacer todo dentro de su compañía
-        else if (accessBase.isAdmin(currentUser)) {
-            // Verificar que sea de la misma compañía
-            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+        if (!accessBase.isOwner(currentUser)) {
+            if(!accessBase.isSameCompany(currentUser, baseCompanyId)){
+                throw new BusinessException("You are not allowed to perform this operation.");
             }
-            // ADMIN puede crear lo que sea dentro de su empresa
-        }
-        // USER: Solo puede crear CUSTOMER
-        else {
-            // Verificar que sea de la misma compañía
-            if (!currentUser.getCompanyId().equals(request.getPerson().getCompanyId())) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+            if (!accessBase.isAdmin(currentUser)) {
+                if (!hasCustomer) {
+                    throw new BusinessException("You are not allowed to perform this operation.");
+                }
             }
-
-            // Un USER solo puede crear CUSTOMER (no USER ni SUPPLIER)
-            if (!hasCustomer) {
-                throw new ForbiddenException("You are not allowed to create Users or Suppliers");
-            }
-
-            // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER crear customers
-            // 🔥 Si el USER es SUPPLIER, puede crear customers sin permisos adicionales
-            // Obtener el supplier del usuario actual
-            // Person currentPerson = personService.findById(currentUser.getPersonId());
-            // Supplier currentSupplier = currentPerson.getSupplier();
-            //
-            // if (currentSupplier != null) {
-            //     // Es supplier, puede crear customers libremente (dentro de su compañía)
-            //     // Pasa sin restricciones
-            // } else {
-            //     // No es supplier, necesita permiso CUSTOMER_CREATE en algún proveedor
-            //     access.requireCanCreateCustomerAnywhere(currentUser);
-            // }
-            // ✅ TEMPORAL: Permitir sin verificar permisos
         }
 
         // =========================
@@ -157,101 +109,37 @@ public class PersonManagementServiceImpl implements PersonManagementService {
 
         return toDTO(person, user, customer, supplier);
     }
+
     @Override
     @Transactional
     public PersonIdentityDTO patch(Long id, PersonIdentityPatchDTO request) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
+
         Person current = personService.findById(id);
+
+        Long baseCompanyId = current.getCompany().getId();
+
+        boolean hasUser = current.getUser() != null;
+        boolean hasCustomer = current.getCustomer() != null;
+        boolean hasSupplier = current.getSupplier() != null;
         // =========================
-        // 🔐 ACCESS CONTROL
+        // ACCESS CONTROL
         // =========================
-        if (!accessBase.isOwner(currentUser)) {
-
-            // Validar misma compañía
-            if (!currentUser.getCompanyId().equals(current.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+        if(!accessBase.isOwner(currentUser)){
+            if(!accessBase.isSameCompany(currentUser, baseCompanyId)){
+                throw new BusinessException("You are not allowed to perform this operation.");
             }
-
-            // Si es ADMIN
-            if (accessBase.isAdmin(currentUser)) {
-                // ADMIN puede editar cualquier persona de su compañía
-                // Pasa sin restricciones adicionales
-            }
-            // Si es USER
-            else if (accessBase.isUser(currentUser)) {
-
-                // 🔥 Verificar si el usuario es SUPPLIER
-                Person currentPerson = personService.findById(currentUser.getPersonId());
-                Supplier currentSupplier = currentPerson.getSupplier();
-                boolean isSupplier = currentSupplier != null;
-
-                // Si está editando su propia persona
-                if (current.getId().equals(currentUser.getPersonId())) {
-                    // ✅ Puede editar su propia persona
-                    // No puede modificar USER (no debe poder cambiar su rol)
-                    if (request.getUser() != null) {
-                        throw new ForbiddenException("You are not allowed to modify user data");
-                    }
-                    // Si es supplier y está editando su supplier, permitir
-                    if (request.getSupplier() != null && !isSupplier) {
-                        throw new ForbiddenException("You are not a supplier");
-                    }
-                }
-                // Si está editando la persona de un customer
-                else {
-                    // Verificar que la persona tenga un customer asociado
-                    if (current.getCustomer() == null) {
-                        throw new ForbiddenException("You can only edit customers");
-                    }
-
-                    // 🔥 Si es SUPPLIER, puede editar a sus customers
-                    if (isSupplier) {
-                        // ✅ Supplier puede editar a sus customers
-                        // No necesita permisos adicionales
-                    }
-                    // 🔥 Si NO es SUPPLIER, necesita permiso CUSTOMER_UPDATE
-                    else {
-                        // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER editar customers
-                        // if (!access.hasPermissionAnywhere(currentUser, Permission.CUSTOMER_UPDATE)) {
-                        //     throw new ForbiddenException(
-                        //             "You don't have permission to update customers"
-                        //     );
-                        // }
-                        // ✅ TEMPORAL: Permitir sin verificar permisos
-                    }
-
-                    // No puede modificar USER ni SUPPLIER del customer
-                    if (request.getUser() != null || request.getSupplier() != null) {
-                        throw new ForbiddenException("You are not allowed to modify user or supplier data");
+            if(!currentUser.getPersonId().equals(id)) {
+                if(!accessBase.isAdmin(currentUser)) {
+                    if(!hasCustomer){
+                        throw new BusinessException("You are not allowed to perform this operation.");
                     }
                 }
             }
         }
 
-        // =========================
-        // 🔒 BUSINESS RULES
-        // =========================
 
-        if (request.getCustomer() != null && current.getCustomer() == null) {
-            throw new BusinessException("Customer cannot be added through this endpoint.");
-        }
-
-        if (request.getCustomer() != null && current.getCustomer() != null) {
-            throw new BusinessException("Customer relationship cannot be modified.");
-        }
-
-        if (request.getUser() != null && current.getUser() == null && current.getSupplier() == null) {
-            throw new BusinessException("Only supplier can be promoted to user.");
-        }
-
-        if (request.getUser() != null && request.getCustomer() != null) {
-            throw new BusinessException("Customer cannot be a user.");
-        }
-
-        if (request.getSupplier() != null && request.getCustomer() != null) {
-            throw new BusinessException("Customer cannot be a supplier.");
-        }
 
         // =========================
         // PERSON PATCH
@@ -270,27 +158,15 @@ public class PersonManagementServiceImpl implements PersonManagementService {
             }
 
             UserPatchDTO dto = request.getUser();
-
-            if (!accessBase.isOwner(currentUser)) {
-
-                if (accessBase.isUser(currentUser)) {
-                    dto.setRole(GlobalRole.USER);
+            switch (request.getUser().getRole()){
+                case OWNER->{
+                    if(!accessBase.isOwner(currentUser)){
+                        throw new BusinessException("You are not allowed to perform this operation.");
+                    }
                 }
-
-                if (accessBase.isAdmin(currentUser)) {
-
-                    if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
-                        throw new ForbiddenException("Admin only within company");
-                    }
-
-                    if (dto.getRole() == GlobalRole.OWNER) {
-                        throw new ForbiddenException("You are not allowed to assign OWNER");
-                    }
-
-                    // ADMIN solo USER → ADMIN
-                    if (person.getUser().getRole() == GlobalRole.ADMIN &&
-                            dto.getRole() == GlobalRole.USER) {
-                        throw new ForbiddenException("Admin cannot downgrade ADMIN");
+                case ADMIN, USER -> {
+                    if(!accessBase.isSameCompany(currentUser, baseCompanyId)){
+                        throw new BusinessException("You are not allowed to perform this operation.");
                     }
                 }
             }
@@ -332,65 +208,30 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     public void delete(Long personId) {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
-        Person person = personService.findById(personId);
-
+        Person current = personService.findById(personId);
+        Long baseCompanyId = current.getCompany().getId();
+        boolean hasUser = current.getUser() != null;
+        boolean hasCustomer = current.getCustomer() != null;
+        boolean hasSupplier = current.getSupplier() != null;
         // =========================
-        // 🔐 ACCESS CONTROL
+        // ACCESS CONTROL
         // =========================
-
-        // OWNER: Puede eliminar todo
-        if (accessBase.isOwner(currentUser)) {
-            // Pasa sin restricciones
-        }
-        // ADMIN: Puede eliminar todo dentro de su compañía
-        else if (accessBase.isAdmin(currentUser)) {
-            // Verificar que sea de la misma compañía
-            if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+        if(!accessBase.isOwner(currentUser)){
+            if(!accessBase.isSameCompany(currentUser, baseCompanyId)){
+                throw new BusinessException("You are not allowed to perform this operation.");
             }
-            // ADMIN puede eliminar lo que sea dentro de su empresa
-        }
-        // USER: Solo puede eliminar CUSTOMER
-        else if (accessBase.isUser(currentUser)) {
-
-            // Verificar que sea de la misma compañía
-            if (!currentUser.getCompanyId().equals(person.getCompany().getId())) {
-                throw new ForbiddenException("You are not allowed to perform this action");
+            if(!accessBase.isAdmin(currentUser)) {
+                if(!hasCustomer){
+                    throw new BusinessException("You are not allowed to perform this operation.");
+                }
             }
-
-            // Solo puede eliminar CUSTOMER (no USER ni SUPPLIER)
-            if (person.getCustomer() == null) {
-                throw new ForbiddenException("You can only delete customers");
-            }
-
-            // ⚠️ TEMPORALMENTE DESACTIVADO - Permitir a cualquier USER eliminar customers
-            // 🔥 Verificar si el usuario es SUPPLIER o tiene permisos
-            // Person currentPerson = personService.findById(currentUser.getPersonId());
-            // Supplier currentSupplier = currentPerson.getSupplier();
-            // boolean isSupplier = currentSupplier != null;
-            //
-            // // 🔥 Verificar si tiene permisos en algún supplier
-            // List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
-            // boolean hasPermissions = !accessibleSuppliers.isEmpty();
-            //
-            // // 🔥 Si es SUPPLIER O tiene permisos → Puede eliminar customers
-            // if (isSupplier || hasPermissions) {
-            //     // ✅ Puede eliminar customers (no solo el suyo propio)
-            //     // Pasa sin restricciones adicionales
-            // } else {
-            //     // ❌ Si NO es supplier Y NO tiene permisos → Solo puede eliminar su propio perfil
-            //     if (!person.getId().equals(currentUser.getPersonId())) {
-            //         throw new ForbiddenException("You can only delete your own profile");
-            //     }
-            // }
-            // ✅ TEMPORAL: Permitir sin verificar permisos
         }
 
         // =========================
         // ELIMINACIÓN
         // =========================
 
-        User user = person.getUser();
+        User user = current.getUser();
         personService.delete(personId);
         if (user != null) {
             userService.delete(user.getId());
@@ -401,73 +242,47 @@ public class PersonManagementServiceImpl implements PersonManagementService {
     @Transactional(readOnly = true)
     public List<PersonIdentityDTO> getAll() {
 
-        CurrentUser user = securityHelper.getCurrentUser();
+        CurrentUser currentUser = securityHelper.getCurrentUser();
         List<Person> persons;
-
-        if (accessBase.isOwner(user)) {
-            persons = personService.findAll();
-        } else if (accessBase.isAdmin(user)) {
-            persons = personService.findByCompanyId(user.getCompanyId());
-        } else {
-            // ✅ USER: Puede ser supplier o no
-            Set<Long> personIds = new HashSet<>();
-
-            // 🔥 1. SIEMPRE incluir al propio usuario
-            personIds.add(user.getPersonId());
-
-            // 🔥 2. Verificar si el usuario es SUPPLIER O TIENE PERMISOS
-            boolean isSupplier = false;
-            Long ownSupplierId = null;
-            try {
-                Person currentPerson = personService.findById(user.getPersonId());
-                Supplier currentSupplier = currentPerson.getSupplier();
-                if (currentSupplier != null) {
-                    isSupplier = true;
-                    ownSupplierId = currentSupplier.getId();
-                    // Agregar al supplier como persona
-                    personIds.add(currentSupplier.getPerson().getId());
-                }
-            } catch (Exception e) {
-                // Si falla, continuar
+        switch (currentUser.getRole()) {
+            case OWNER->{
+                persons = personService.findAll();
             }
-
-            // 🔥 3. Verificar si tiene permisos en algún supplier
-            List<Supplier> accessibleSuppliers = supplierService.findByUserId(user.getUserId());
-            boolean hasPermissions = !accessibleSuppliers.isEmpty();
-
-            // 🔥 4. Si es SUPPLIER O TIENE PERMISOS → Ver TODOS los customers de su compañía
-            if (isSupplier || hasPermissions) {
-                // ✅ Ve todos los customers de su compañía
-                List<Person> allPersonsInCompany = personService.findByCompanyId(user.getCompanyId());
-                for (Person p : allPersonsInCompany) {
-                    // Solo agregar personas que tienen customer
-                    if (p.getCustomer() != null) {
-                        personIds.add(p.getId());
-                    }
-                }
-
-                // ✅ Si es supplier, también agregar suppliers relacionados
-                if (isSupplier) {
-                    // Ya se agregó el propio supplier
-                }
-
-                // ✅ Agregar suppliers donde tiene permisos
-                if (hasPermissions) {
-                    for (Supplier supplier : accessibleSuppliers) {
-                        personIds.add(supplier.getPerson().getId());
-                    }
-                }
-            } else {
-                // 🔥 5. Si NO es supplier Y NO tiene permisos → Solo su propia persona
-                // (ya está en personIds)
+            case ADMIN-> {
+                persons = personService.findByCompanyId(currentUser.getCompanyId());
             }
-
-            if (personIds.isEmpty()) {
+            case USER -> {
+                    persons = personService.findByCompanyId(currentUser.getCompanyId());
+//                Set<Long> personIds = new HashSet<>();
+//
+//                personIds.add(currentUser.getPersonId());
+//
+//                List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+//                boolean hasPermissions = !accessibleSuppliers.isEmpty();
+//
+//                List<Person> allPersonsInCompany = personService.findByCompanyId(currentUser.getCompanyId());
+//                for (Person p : allPersonsInCompany) {
+//                    if (p.getCustomer() != null) {
+//                        personIds.add(p.getId());
+//                    }
+//                }
+//                if (hasPermissions) {
+//                    for (Supplier supplier : accessibleSuppliers) {
+//                        personIds.add(supplier.getPerson().getId());
+//                    }
+//                }
+//                if (personIds.isEmpty()) {
+//                    return List.of();
+//                }
+//
+//                persons = personService.findByIds(new ArrayList<>(personIds));
+            }
+            default -> {
                 return List.of();
             }
-
-            persons = personService.findByIds(new ArrayList<>(personIds));
         }
+
+
 
         return persons.stream()
                 .map(p -> toDTO(p, p.getUser(), p.getCustomer(), p.getSupplier()))
