@@ -209,7 +209,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 🔐 CONTROL DE ACCESO
         // =========================
 
-        checkReadPermission(currentUser, payment);
+        //checkReadPermission(currentUser, payment);
 
         return toDTO(payment);
     }
@@ -224,46 +224,58 @@ public class PaymentServiceImpl implements PaymentService {
     public List<PaymentDTO> getAllByCompany() {
 
         CurrentUser currentUser = securityHelper.getCurrentUser();
+
         List<Payment> payments;
 
-        if (accessBase.isOwner(currentUser)) {
-            payments = paymentRepository.findAll();
-        } else if (accessBase.isAdmin(currentUser)) {
-            payments = paymentRepository.findByCompanyId(currentUser.getCompanyId());
-            payments = payments.stream()
-                    .filter(p -> hasReadAccess(currentUser, p))
-                    .toList();
-        } else {
-            // USER: Ve pagos de bookings donde tiene permisos
-            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+        switch (currentUser.getRole()){
+            case OWNER->{
+                payments = paymentRepository.findAll();
+            }
+            case ADMIN,USER->{
+                payments = paymentRepository.findByCompanyId(currentUser.getCompanyId());
 
-            if (accessibleSuppliers.isEmpty()) {
+            }
+            default -> {
                 return List.of();
             }
 
-            List<Long> supplierIds = accessibleSuppliers.stream()
-                    .map(Supplier::getId)
-                    .collect(Collectors.toList());
-
-            // ✅ USAR findBySupplierIdsWithDetails en lugar de findBySupplierIds
-            List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
-
-            if (bookings.isEmpty()) {
-                return List.of();
-            }
-
-            List<Long> bookingIds = bookings.stream()
-                    .map(Booking::getId)
-                    .collect(Collectors.toList());
-
-            payments = paymentRepository.findByBookingIds(bookingIds);
-
-            payments = payments.stream()
-                    .filter(p -> hasReadAccess(currentUser, p))
-                    .toList();
         }
-
-        // Filtrar pagos eliminados
+//        if (accessBase.isOwner(currentUser)) {
+//            payments = paymentRepository.findAll();
+//        } else if (accessBase.isAdmin(currentUser)) {
+//
+//
+//        } else {
+//            // USER: Ve pagos de bookings donde tiene permisos
+//            List<Supplier> accessibleSuppliers = supplierService.findByUserId(currentUser.getUserId());
+//
+//            if (accessibleSuppliers.isEmpty()) {
+//                return List.of();
+//            }
+//
+//            List<Long> supplierIds = accessibleSuppliers.stream()
+//                    .map(Supplier::getId)
+//                    .collect(Collectors.toList());
+//
+//            // ✅ USAR findBySupplierIdsWithDetails en lugar de findBySupplierIds
+//            List<Booking> bookings = bookingRepository.findBySupplierIdsWithDetails(supplierIds);
+//
+//            if (bookings.isEmpty()) {
+//                return List.of();
+//            }
+//
+//            List<Long> bookingIds = bookings.stream()
+//                    .map(Booking::getId)
+//                    .collect(Collectors.toList());
+//
+//            payments = paymentRepository.findByBookingIds(bookingIds);
+//
+//            payments = payments.stream()
+//                    .filter(p -> hasReadAccess(currentUser, p))
+//                    .toList();
+//        }
+//
+//        // Filtrar pagos eliminados
         payments = payments.stream()
                 .filter(p -> p.getStatus() != PaymentStatus.DELETED)
                 .toList();
@@ -297,8 +309,8 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotFoundException("Payment not found for booking with id: " + bookingId);
         }
 
-        // Verificar permisos de lectura
-        checkReadPermission(currentUser, payment);
+//        // Verificar permisos de lectura
+//        checkReadPermission(currentUser, payment);
 
         return toDTO(payment);
     }
