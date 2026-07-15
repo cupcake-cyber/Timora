@@ -335,7 +335,7 @@ public class PaymentServiceImpl implements PaymentService {
                     status
             );
 
-            // Filtrar por permisos de lectura
+
             payments = payments.stream()
                     .filter(p -> hasReadAccess(currentUser, p))
                     .toList();
